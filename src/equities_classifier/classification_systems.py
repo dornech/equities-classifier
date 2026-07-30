@@ -1,5 +1,5 @@
-from enums import ClassificationSystemID
-from models import ClassificationSystem
+from equities_classifier.enums import ClassificationSystemID
+from equities_classifier.models import ClassificationSystem
 
 
 GICS = ClassificationSystem(

@@ -4,9 +4,12 @@ Package to retrieve sector/industry assignments based on a flexible connector ar
 
 ## Features
 
-* Feature 1
-* Feature 2
-* ...
+* retrieve sector / industry classification for companies with listed equities
+* support different types of equities identifier types cation (i. e. ISIN ...)
+* support different classificaiton data sources
+* extendable arhcitecture for additional data sources
+
+Due to license issues for MSCI GICS only first two levels are retrievable.
 
 ## Development
 

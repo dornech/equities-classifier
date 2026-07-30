@@ -1,15 +1,15 @@
-from equity_classifier.connectors.base import ClassificationProvider
-from equity_classifier.enums import (
+from equities_classifier.enums import (
     SecurityIdentifierType,
     ClassificationSystemID,
     ClassificationLevel
- )
-from equity_classifier.models import (
-    ClassificationSystem,
+)
+from equities_classifier.models import (
     ClassificationNode,
     SecurityIdentifier,
+    Security,
     SecurityClassification
 )
+from equities_classifier.connectors.base import ClassificationProvider
 
 
 _DATA = {
@@ -18,17 +18,23 @@ _DATA = {
 }
 
 
+# based on ClassificationProvider and adjusted - might be deleted
+# Note: parameter is a list of securityidentifiers of type ISIN, not security class object!
 class DummyProvider(ClassificationProvider):
 
-    def classify(self, securities):
+    def classify(self, securityidentifiers):
         out = []
-        for s in securities:
-            company, names = _DATA.get(s.isin, ("Unknown", ("Unknown",)))
+        for si in securityidentifiers:
+            company, names = _DATA.get(si.value, ("Unknown", ("Unknown",)))
+            security = Security(
+                figi="test-FIGI",
+                company_name=company,
+                identifiers=tuple(SecurityIdentifier(type=SecurityIdentifierType.ISIN, value=si.value),)
+            )
             nodes = tuple(ClassificationNode(ClassificationLevel(i + 1), n) for i, n in enumerate(names))
             out.append(
                 SecurityClassification(
-                    SecurityIdentifier(type=SecurityIdentifierType.ISIN, value=s),
-                    company,
+                    security,
                     ClassificationSystemID.GECS,
                     nodes
                 )

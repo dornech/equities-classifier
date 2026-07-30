@@ -1,5 +1,9 @@
 from dataclasses import dataclass
-from equities_classifier.enums import ClassificationLevel, ClassificationSystemID, SecurityIdentifierType
+from equities_classifier.enums import (
+    ClassificationSystemID,
+    ClassificationLevel,
+    SecurityIdentifierType
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -13,7 +17,7 @@ class ClassificationSystem:
     supports_codes: bool
 
 
-@dataclass(slots=True, frozen=True)
+@dataclass(frozen=True, slots=True)
 class ClassificationNode:
     """Single hierarchy node."""
 
@@ -22,7 +26,6 @@ class ClassificationNode:
     code: str | None = None
 
 
-@dataclass(slots=True, frozen=True)
 @dataclass(frozen=True, slots=True)
 class SecurityIdentifier:
     """Security identifier."""
@@ -30,12 +33,41 @@ class SecurityIdentifier:
     type: SecurityIdentifierType
     value: str
 
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "value", self.value.strip())
 
-@dataclass(slots=True, frozen=True)
+
+@dataclass(frozen=True, slots=True)
+class Security:
+    figi: str
+    company_name: str
+    identifiers: tuple[SecurityIdentifier, ...]
+
+    def identifier(self, identifier_type: SecurityIdentifierType,) -> SecurityIdentifier | None:
+        """Return the first identifier of the requested type."""
+
+        return next(
+            (identifier for identifier in self.identifiers if identifier.type is identifier_type),
+            None,
+        )
+
+    def identifier_value(self, identifier_type: SecurityIdentifierType,) -> str | None:
+        """Return the value of the requested identifier type."""
+
+        identifier = self.identifier(identifier_type)
+        return None if identifier is None else identifier.value
+
+    def has_identifier(self, identifier_type: SecurityIdentifierType,) -> bool:
+        """Return whether an identifier of the requested type exists."""
+
+        return self.identifier(identifier_type) is not None
+
+
+@dataclass(frozen=True, slots=True)
 class SecurityClassification:
     """Classification of one company."""
 
-    securityID: SecurityIdentifier
-    company: str
+    security: Security
+    # company: str
     system: ClassificationSystem
     nodes: tuple[ClassificationNode, ...]
