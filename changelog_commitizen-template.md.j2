@@ -1,0 +1,27 @@
+{% if not incremental %}
+# CHANGELOG
+{% endif %}
+{# Macro: Capitalize the first letter of a string only #}
+{% macro capitalize_first_letter_only(sentence) %}
+{{    (sentence[0] | upper) ~ sentence[1:] }}
+{% endmacro %}
+
+{% for entry in tree %}
+
+
+## [{{ entry.version }}](https://github.com/dornech/equities-classifier/releases/tag/{{ entry.version }}) {% if entry.date %} ({{ entry.date }}) {% endif %}
+
+{% for change_type, changes in entry.changes.items() %}
+
+{% if change_type %}
+### {{ capitalize_first_letter_only(change_type) }}
+{% endif %}
+{% for change in changes %}
+{% if change.scope %}
+- **{{ change.scope }}**: {{ capitalize_first_letter_only(change.message) }} (['{{ change.sha1[:7] }}'](https://github.com/dornech/equities-classifier/commit/{{ change.sha1 }}))
+{% elif change.message %}
+- {{ capitalize_first_letter_only(change.message) }}(['{{ change.sha1[:7] }}'](https://github.com/dornech/equities-classifier/commit/{{ change.sha1 }}))
+{% endif %}
+{% endfor %}
+{% endfor %}
+{% endfor %}

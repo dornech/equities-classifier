@@ -1,0 +1,32 @@
+name: Release Drafter
+
+on:
+  push:
+    branches:
+      - main
+    tags-ignore:
+      # no drafting if release tag x.y.z (preceded by v)
+      - 'v?[0-9]+.[0-9]+.[0-9]+*'
+
+jobs:
+
+  dump-context:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump context "GitHub"
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
+  update-draft:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      # Drafts your next Release notes as Pull Requests are merged into "main"
+      - name: Release draft action
+        uses: release-drafter/release-drafter@v7
+        with:
+          disable-autolabeler: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

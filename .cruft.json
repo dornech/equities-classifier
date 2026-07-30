@@ -1,0 +1,31 @@
+{
+  "template": "https://github.com/dornech/the-hatchlor-enhanced",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "full_name": "dornech",
+      "email": "dornech@gmx.de",
+      "project_name": "Sector/industry classifier for equities",
+      "project_slug": "equities-classifier",
+      "pkg_name": "equities_classifier",
+      "project_short_description": "Package to retrieve sector/industry assignments based on a flexible connector architecture for different data sources",
+      "open_source_license": "GPL-3.0-only",
+      "target_python_version": "3.11",
+      "target_os_platform": "ubuntu-latest",
+      "github_username": "dornech",
+      "project_repo": "https://github.com/dornech/equities-classifier",
+      "pypi_username": "dornech",
+      "tooling_environment": "commitizen",
+      "__tooling_packages": "{'commitizen': ['commitizen'], 'semantic-release': ['semantic-release'], 'bump-my-version_and_generate-changelog': ['bump-my-version', 'generate-changelog'], 'none': []}",
+      "commitmsg_linter": "toolchain_default",
+      "__tooling_commitmsg_linter": "{'toolchain_default': 'commitizen', 'enforce_commitizen': 'commitizen', 'enforce_gitlint': 'gitlint', 'none': '0'}",
+      "lock_file_support": false,
+      "initial_commit": false,
+      "_template": "https://github.com/dornech/the-hatchlor-enhanced.git"
+    }
+  },
+  "directory": null,
+  "skip": [
+    ".git"
+  ]
+}

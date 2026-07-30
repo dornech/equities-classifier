@@ -1,0 +1,42 @@
+name: Test Documentation Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - '*'
+  pull_request:
+    branches:
+      - '*'
+
+# Default to bash
+defaults:
+  run:
+    shell: bash
+
+jobs:
+
+  dump-context:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump context "GitHub"
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
+  test-build-documentation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install hatch pre-commit
+          hatch env create docs
+      - name: Build documentation
+        run: hatch run docs:build-check

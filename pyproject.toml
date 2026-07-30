@@ -1,0 +1,419 @@
+#########################
+# Build System Settings #
+#########################
+
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+
+####################
+# Project Metadata #
+####################
+
+[project]
+name = "equities-classifier"
+description = "Package to retrieve sector/industry assignments based on a flexible connector architecture for different data sources"
+readme = "README.md"
+requires-python = ">=3.11"
+# only license identifier from https://spdx.org/licenses/ are allowed
+license = { text = "GPL-3.0-only" }
+# keywords for easier look-up on PyPI
+keywords = ["keyword_1", "keyword_2"] # ToDo: Modify according to your needs!
+authors = [
+    { name = "dornech", email = "dornech@gmx.de" },
+]
+# options under https://pypi.org/classifiers/
+classifiers = [  # ToDo: Modify according to your needs!
+    "Development Status :: 2 - Pre-Alpha",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Implementation :: CPython",
+]
+# direct dependencies of this package, installed when users `pip install equities-classifier` later.
+dependencies = [  # ToDo: Modify according to your needs!
+    "typer",
+    # "numpy",
+    # "matplotlib",
+    # "seaborn",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+# n. a.
+
+[project.scripts]
+# Use `fibonacci` as command-line script, comment or remove this section if not needed.
+fibonacci = "equities_classifier.skeleton:app"
+
+[project.urls]
+# important URLs for this project
+# ToDo: Modify according to your needs!
+Documentation = "https://dornech.github.io/equities-classifier"
+Source = "https://github.com/dornech/equities-classifier"
+Tracker = "https://github.com/dornech/equities-classifier/issues"
+Sponsor = "https://github.com/sponsors/dornech"
+
+
+######################
+# Build & Versioning #
+######################
+
+[tool.hatch.metadata]
+# direct dependency references, e.g `pip @ git+https://github.com/pypa/pip.git@master`
+allow-direct-references = true
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.version.raw-options]
+version_scheme = "no-guess-dev"
+local_scheme = "dirty-tag"
+
+[tool.hatch.build]
+packages = ["src/equities_classifier"]
+
+# [tool.hatch.build.hooks.vcs]
+# version-file = "src/equities_classifier/_version.py"
+
+[tool.hatch.build.targets.sdist]
+artifacts = ["_version.py"]
+exclude = [
+    "/.github",
+]
+
+[tool.commitizen]
+name = "cz_customize"
+version_scheme = "pep440"
+version = "0.0.1"
+version_files = ["pyproject.toml:version"]
+tag_format = "v$version"
+# retry_after_failure = false
+update_changelog_on_bump = true
+changelog_file = "CHANGELOG.md"
+template = "changelog_commitizen-template.md.j2"
+post_bump_hooks = [
+    "echo %CZ_POST_CURRENT_TAG_VERSION% pushed to remote GitHub repository",
+    "git push origin HEAD",
+    "git push origin %CZ_POST_CURRENT_TAG_VERSION%",
+]
+
+[tool.commitizen.customize]
+message_template = "{% if scope %} '{{ change_type }}({{ scope }}): {{ message }}' {% else %} '{{ change_type }}: {{ message }}'"
+example = "'feat: add new endpoint'or 'feat(api): add new endpoint'"
+schema = "'<type>: <subject>' or '<type>(<scope>): <subject>'"
+schema_pattern = "(bump|feat|fix|docs|style|refactor|perf|test|chore|build|deps|ci|revert)(\\([^)]+\\))?:\\s.*"
+bump_pattern = "^(feat|fix|BREAKING CHANGE)"
+bump_map = {"feat" = "MINOR", "fix" = "PATCH", "BREAKING CHANGE" = "MAJOR"}
+# user defined changelog format - standard semantic-release + commit-sha and commit-url
+# w/o Initial Commit in changelog
+# commit_parser = "^(?P<change_type>feat|fix|refactor|perf|docs|style|test|chore|build|ci|revert|BREAKING CHANGE)(\\((?P<scope>[^)]+)\\))?:\\s(?P<message>.*)"
+# changelog_pattern = "^(feat|fix|docs|style|refactor|perf|test|chore|build|ci|revert|BREAKING CHANGE).*"
+# with Initial Commit in changelog
+commit_parser ="^(?P<change_type>[Ii]nitial [Cc]ommit|feat|fix|refactor|perf|docs|style|test|chore|build|ci|revert|BREAKING CHANGE)(\\((?P<scope>[^)]+)\\))?(:\\s(?P<message>.*))?"
+changelog_pattern = "^([Ii]nitial [Cc]ommit|feat|fix|docs|style|refactor|perf|test|chore|build|ci|revert|BREAKING CHANGE).*"
+change_type_map = { feat = "Features", fix = "Bug fixes", refactor = "Code refactoring", perf = "Performance improvements", docs = "Documentation", style = "Code style", test = "Testing", chore = "Chores", build = "Build system", ci = "Continuous Integration" }
+change_type_order = ["BREAKING CHANGE", "Features", "Bug fixes", "Code refactoring", "Performance improvements", "Documentation", "Code style", "Testing", "Chore", "Build System", "Continuous Integration", "Initial Commit"]
+
+
+##################
+# External Tools #
+##################
+
+[tool.docsig]
+check-class = false
+check-class-constructor = true
+check-dunders = false
+check-nested = false
+check-overridden = true
+check-protected = false
+check-protected-class-methods = false
+ignore-args = false
+ignore-kwargs = false
+ignore-no-params = true
+ignore_typechecker= false
+# disable = []
+# target = []
+
+[tool.ruff]
+# ruff will use `requires-python` as `target-version` by default
+line-length = 120
+indent-width = 4
+include = [
+    "src/**/*.py",
+    "src/**/*.pyi",
+    "tests/**/*.py",
+    "tests/**/*.pyi"
+]
+
+[tool.ruff.lint]
+preview = true # preview features & checks, use with caution
+extend-select = [ # features in preview
+    "W292", # missing-newline-at-end-of-file
+]
+select = [
+    "A",
+    "B",
+    "C",
+    "DTZ",
+    "E",
+    "EM",
+    "F",
+    "FBT", # Boolean trap
+    "I",
+    "ICN",
+    "ISC",
+    "N",
+    "PLC",
+    "PLE",
+    "PLR",
+    "PLW",
+    "Q",
+    "RUF",
+    "S",
+    "SIM",
+    "T",
+    "TID",
+    "UP",
+    "W",
+    "YTT",
+]
+ignore = [
+    # Allow non-abstract empty methods in abstract base classes
+    "B027",
+    # Allow boolean positional values in function calls, like `dict.get(... True)`
+    "FBT003",
+    # Ignore checks for possible passwords
+    "S105", "S106", "S107",
+    # Ignore complexity
+    "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915",
+    "PLC1901", # empty string comparisons
+    "PLW2901", # `for` loop variable overwritten
+    "SIM114",  # Combine `if` branches using logical `or` operator
+    "E203",    # Whitespace before :, needed for black compatability and also `ruff format`
+    "ISC001",  # causes unexpected behaviour with formatter
+    "I001",    # enforce reorganisation of imports
+    "T201",    # print statements
+    "Q000",    # double quotes found but single quotes preferred
+    "RUF100",  # Automatically remove unused # noqa directives
+]
+unfixable = [
+    # "F401",  # Don't touch unused imports
+]
+exclude = ["__init__.py", "_version.py"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["equities_classifier"]
+
+[tool.ruff.lint.flake8-quotes]
+# inline-quotes = "single"
+inline-quotes = "double"
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.per-file-ignores]
+# Allow print/pprint
+"examples/*" = ["T201"]
+# Tests can use magic values, assertions, and relative imports
+"tests/**/*" = ["PLR2004", "S101", "TID252"]
+# ignore empty lines and naming conventions in source
+# "src/*.py" = ["E302", "E303", "N801", "N802", "N803", "N806", "N812", "N813", "N815", "N816", "N818", "N999"]
+
+[tool.ruff.format]
+preview = true # Enable preview style formatting.
+# quote-style = "single"
+quote-style = "double"
+docstring-code-format = true
+exclude = ["__init__.py", "_version.py"]
+
+[tool.mypy]
+files = ["src/equities_classifier", "tests"]
+disallow_untyped_defs = false
+follow_imports = "normal"  # "silent" for not following
+ignore_missing_imports = true
+pretty = true
+show_column_numbers = true
+warn_no_return = false
+warn_unused_ignores = true
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.cruft]
+skip = ["README.md", "CHANGELOG.MD", "src/", "tests/", "docs/", "notebooks/"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --doctest-glob='*.md'"
+testpaths = [
+    "tests",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["src/equities_classifier"]
+omit = [
+    "_version.py",  # automatically created by hatch-vcs, not in repo
+]
+
+[tool.coverage.paths]
+source = [
+    "src/",
+    "*/site-packages/",
+]
+
+[tool.coverage.report]
+# Regexes for lines to exclude from consideration
+exclude_lines = [
+    # Have to re-enable the standard pragma
+    "pragma: no cover",
+    # Don't complain about missing debug-only code:
+    "def __repr__",
+    "if self\\.debug",
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise AssertionError",
+    "raise NotImplementedError",
+    # Don't complain if non-runnable code isn't run:
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+
+
+#####################
+# Environment Setup #
+#####################
+
+# Hatch default environment
+[tool.hatch.envs.default]
+post-install-commands = ["pre-commit install", "pre-commit install --hook-type commit-msg"]
+dependencies = [
+    "pre-commit",
+    "pre_commit",
+    "commitizen",
+]
+# installer = "pip"
+
+# Hatch default test environment for "hatch test" (also used in GitAction)
+[tool.hatch.envs.hatch-test]
+dependencies = [
+    "pip",
+    "coverage-enable-subprocess==1.0",
+    "coverage[toml]~=7.4",
+    "pytest~=8.1",
+    "pytest-mock~=3.12",
+    "pytest-randomly~=3.15",
+    "pytest-rerunfailures~=14.0",
+    "pytest-xdist[psutil]~=3.5",
+]
+
+# Test environment with test-only dependencies (do not mix up with default hatch-test environment "hatch-test" !)
+[tool.hatch.envs.test]
+dependencies = [
+    # required test dependencies
+    "pip",
+    "coverage[toml]>=7.4",
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-vcr",
+    "pytest-sugar",
+    # additional test & development dependencies
+    # ToDo: Modify according to your needs!
+    "hypothesis",
+    "jupyterlab",
+    "ipython",
+    "seaborn",
+    "pandas",
+]
+[tool.hatch.envs.test.scripts]
+cov = "pytest --cov-report=term-missing --cov-config=pyproject.toml --cov=src/equities_classifier --cov=tests {args}"
+no-cov = "cov --no-cov {args}"
+debug = "cov --no-cov -s --pdb --pdbcls=IPython.core.debugger:Pdb {args}"
+
+# Hatch testing environment matrix for various Python versions replacing the functionality of tox
+[[tool.hatch.envs.test.matrix]]
+template = ["test"]
+python = ["3.11", "3.12", "3.13", "3.14"]
+
+# Hatch default linting environment for "hatch fmt"
+[tool.hatch.envs.hatch-static-analysis]
+dependencies = [
+    "pip",
+    "mypy==1.16.0",
+    "ruff==0.11.12",
+]
+
+# Hatch Linting environment for GitAction
+[tool.hatch.envs.lint]
+template = "lint"  # don't inherit from default!
+dependencies = [
+    "pip",
+    "mypy==1.16.0",
+    "ruff==0.11.12",
+    "docsig==0.71.0",
+]
+[tool.hatch.envs.lint.scripts]
+typing = [
+    "mypy --version",
+    "mypy --install-types --non-interactive {args}"
+]
+style = [
+    "ruff --version",
+    "ruff check {args:.}",
+    "ruff format --check {args:.}",
+]
+fix = [
+    "ruff format {args:.}",
+    "ruff check --fix {args:.}",
+    "style",  # feedback on what is not fixable
+]
+all = [
+    "style",
+    "typing",
+    "docsig src",
+]
+
+# Hatch environment for building documentation
+[tool.hatch.envs.docs]
+dependencies = [
+    "pre-commit",   # needed otherwise error
+    "pre_commit",   # needed otherwise error
+    "properdocs",
+    "mkdocs-materialx[imaging]",
+    # Plugins
+    "mkdocs-include-markdown-plugin",
+    "mkdocs-gen-files",
+    "mkdocs-literate-nav",
+    "mkdocs-minify-plugin~=0.8",
+    "mkdocs-section-index",
+    "mkdocs-git-revision-date-localized-plugin~=1.2",
+    "mkdocstrings[python]",
+    "mkdocs-redirects~=1.2",
+    "mkdocs-glightbox~=0.4.0",
+    "mike~=2.1",
+    # Extensions Hatch
+    "pymdown-extensions~=10.9",
+    # Necessary for syntax highlighting in code blocks
+    "pygments~=2.18",
+    # Validation
+    "linkchecker~=10.4",
+]
+[tool.hatch.envs.docs.env-vars]
+SOURCE_DATE_EPOCH = "1580601600"
+PYTHONUNBUFFERED = "1"
+MKDOCS_CONFIG = "properdocs.yml"
+[tool.hatch.envs.docs.scripts]
+build = "properdocs build --config-file {env:MKDOCS_CONFIG} --clean --strict {args}"
+serve = "properdocs serve --config-file {env:MKDOCS_CONFIG} --dev-addr localhost:8000 {args}"
+ci-build = "mike deploy --config-file {env:MKDOCS_CONFIG} --update-aliases {args}"
+# --ignore-url=None since the SUMMARY.md file leaves a <toc>None</toc> in sitemap.xml
+validate = "linkchecker --config .linkcheckerrc --ignore-url=/reference --ignore-url=None site"
+# https://github.com/linkchecker/linkchecker/issues/678
+build-check = [
+    "build",
+    "validate",
+]
