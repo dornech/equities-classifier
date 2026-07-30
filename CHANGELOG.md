@@ -5,6 +5,13 @@
 - First pre-alpha
 - ...
 
+## [v0.2.0](https://github.com/dornech/equities-classifier/releases/tag/v0.2.0)  (2026-07-30) 
+
+### Features
+
+- Add abstract resolver and connector interfaces
+(['e93b9c3'](https://github.com/dornech/equities-classifier/commit/e93b9c36fb6e44417fb7aae6d29b3e2c0e55034a))
+
 ## [v0.1.0](https://github.com/dornech/equities-classifier/releases/tag/v0.1.0)  (2026-07-30) 
 
 ### Features
