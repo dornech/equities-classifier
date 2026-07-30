@@ -19,12 +19,12 @@ requires-python = ">=3.11"
 # only license identifier from https://spdx.org/licenses/ are allowed
 license = { text = "GPL-3.0-only" }
 # keywords for easier look-up on PyPI
-keywords = ["keyword_1", "keyword_2"] # ToDo: Modify according to your needs!
+keywords = ["equities", "sector", "classification", "GCIS", "MSCI", "Morningstar", "GCES"]
 authors = [
     { name = "dornech", email = "dornech@gmx.de" },
 ]
 # options under https://pypi.org/classifiers/
-classifiers = [  # ToDo: Modify according to your needs!
+classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3.11",
@@ -34,24 +34,20 @@ classifiers = [  # ToDo: Modify according to your needs!
     "Programming Language :: Python :: Implementation :: CPython",
 ]
 # direct dependencies of this package, installed when users `pip install equities-classifier` later.
-dependencies = [  # ToDo: Modify according to your needs!
-    "typer",
-    # "numpy",
-    # "matplotlib",
-    # "seaborn",
+dependencies = [
+    "httpx",
+    "openpyxl"
 ]
+
 dynamic = ["version"]
 
 [project.optional-dependencies]
 # n. a.
 
 [project.scripts]
-# Use `fibonacci` as command-line script, comment or remove this section if not needed.
-fibonacci = "equities_classifier.skeleton:app"
 
 [project.urls]
 # important URLs for this project
-# ToDo: Modify according to your needs!
 Documentation = "https://dornech.github.io/equities-classifier"
 Source = "https://github.com/dornech/equities-classifier"
 Tracker = "https://github.com/dornech/equities-classifier/issues"
