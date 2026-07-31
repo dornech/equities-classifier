@@ -1,16 +1,20 @@
+"""Enumerations used by business domain model of equities_classifier."""
+
+
 from enum import IntEnum, StrEnum
 
 
 class SecurityIdentifierType(StrEnum):
-    """Security identifier type"""
+    """Security identifier type
+    possible types see f. e. https://www.openfigi.com/api/documentation#v3-id-type-values
+    """
 
-    ISIN = "isin"
-    FIGI = "figi"
-    COMPOSITE_FIGI = "composite_figi"
-    SHARE_CLASS_FIGI = "share_class_figi"
-    TICKER = "ticker"
+    CINS = "cins"
     CUSIP = "cusip"
+    ISIN = "isin"
+    FIGI = "FIGI"
     SEDOL = "sedol"
+    TICKER = "ticker"
     WKN = "wkn"
 
 
