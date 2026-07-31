@@ -14,10 +14,10 @@ from equities_classifier.models import (
 # remainder from first approach
 class ClassificationProvider(ABC):
 
-    def __enter__(self):
+    def __enter__(self) -> "ClassificationProvider":
         return self
 
-    def __exit__(self, *_):
+    def __exit__(self, *_) -> None:
         self.close()
 
     def close(self) -> None: ...

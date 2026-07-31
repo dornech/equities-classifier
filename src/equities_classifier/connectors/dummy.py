@@ -1,3 +1,6 @@
+"""Dummy connector"""
+
+
 from equities_classifier.enums import (
     SecurityIdentifierType,
     ClassificationSystemID,
@@ -19,12 +22,12 @@ _DATA = {
 
 
 # based on ClassificationProvider and adjusted - might be deleted
-# Note: parameter is a list of securityidentifiers of type ISIN, not security class object!
+# Note: parameter is a list of identifiers of type ISIN, not security class object!
 class DummyProvider(ClassificationProvider):
 
-    def classify(self, securityidentifiers):
+    def classify(self, identifiers):
         out = []
-        for si in securityidentifiers:
+        for si in identifiers:
             company, names = _DATA.get(si.value, ("Unknown", ("Unknown",)))
             security = Security(
                 figi="test-FIGI",

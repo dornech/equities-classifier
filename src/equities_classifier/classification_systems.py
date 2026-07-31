@@ -1,3 +1,6 @@
+"""Classification Systems supported by equities_classifier."""
+
+
 from equities_classifier.enums import ClassificationSystemID
 from equities_classifier.models import ClassificationSystem
 

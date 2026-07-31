@@ -5,6 +5,13 @@
 - First pre-alpha
 - ...
 
+## [v0.3.0](https://github.com/dornech/equities-classifier/releases/tag/v0.3.0)  (2026-08-01) 
+
+### Features
+
+- OpenFIGI client
+(['f2fb32f'](https://github.com/dornech/equities-classifier/commit/f2fb32fe8198c236db12003ddd4d1a8c796c0a28))
+
 ## [v0.2.0](https://github.com/dornech/equities-classifier/releases/tag/v0.2.0)  (2026-07-30) 
 
 ### Features
