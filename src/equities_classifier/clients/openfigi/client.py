@@ -36,7 +36,7 @@ class OpenFIGIClient:
     _IDENTIFIER_TYPE_MAP: dict[SecurityIdentifierType, str] = {
         SecurityIdentifierType.CINS: "ID_CINS",
         SecurityIdentifierType.CUSIP: "ID_CUSIP",
-        SecurityIdentifierType.FIGI: "ID_BB_GLOBAL",
+        SecurityIdentifierType.SHARE_CLASS_FIGI: "ID_BB_GLOBAL_SHARE_CLASS_LEVEL",
         SecurityIdentifierType.ISIN: "ID_ISIN",
         SecurityIdentifierType.SEDOL: "ID_SEDOL",
         SecurityIdentifierType.TICKER: "TICKER",
@@ -61,7 +61,7 @@ class OpenFIGIClient:
         "cusip": SecurityIdentifierType.CUSIP,
         "cins": SecurityIdentifierType.CINS,
         "isin": SecurityIdentifierType.ISIN,
-        "figi": SecurityIdentifierType.FIGI,
+        "shareClassFIGI": SecurityIdentifierType.SHARE_CLASS_FIGI,
         "sedol": SecurityIdentifierType.SEDOL,
         "ticker": SecurityIdentifierType.TICKER
     }

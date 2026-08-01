@@ -12,7 +12,7 @@ class SecurityIdentifierType(StrEnum):
     CINS = "cins"
     CUSIP = "cusip"
     ISIN = "isin"
-    FIGI = "FIGI"
+    SHARE_CLASS_FIGI = "SHARE_CLASS_FIGI"
     SEDOL = "sedol"
     TICKER = "ticker"
     WKN = "wkn"
