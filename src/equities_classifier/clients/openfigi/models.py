@@ -1,11 +1,8 @@
 """Internal data models for the OpenFIGI REST API."""
 
 
-from typing import Any
+from dataclasses import dataclass
 
-from dataclasses import dataclass, fields, field
-
-from equities_classifier.models import SecurityIdentifier
 from equities_classifier.resolvers.base import SecurityIdentifierResolverRecord
 
 

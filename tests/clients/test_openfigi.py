@@ -174,3 +174,24 @@ def test_missing_data_raises() -> None:
 
     with pytest.raises(OpenFIGIResponseError):
         client._parse_record({}, source_identifier, raise_error=True)
+
+
+def test_map_apple_isin():
+    """Read data from OpenFIGI."""
+
+    client = OpenFIGIClient()
+
+    identifier = SecurityIdentifier(
+        SecurityIdentifierType.ISIN,
+        "US0378331005",
+    )
+
+    with client:
+        records = client.map([identifier])
+
+    assert len([record for record in records if record.share_class_figi is not None]) == 1
+
+    record = records[0]
+
+    assert record.company_name.upper().startswith("APPLE")
+    assert record.ticker == "AAPL"

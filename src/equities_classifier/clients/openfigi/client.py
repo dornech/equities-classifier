@@ -112,20 +112,31 @@ class OpenFIGIClient:
     def map(
         self,
         identifiers: Sequence[SecurityIdentifier],
-        unique_share_class_figi_only: bool = True
+        unique_share_class_figi_only: bool = True,
+        raise_error: bool = True
     ) -> list[OpenFIGIRecord]:
-        """
-        Resolve one or more identifiers via OpenFIGI.
+        """Resolve one or more identifiers via OpenFIGI."""
 
-        Parameters
-        ----------
-        identifiers (Sequence[SecurityIdentifier]):
-            Source identifiers.
-        requested_identifier_types (Collection[SecurityIdentifierType] | None):
-            Identifier types requested by the caller. The client may optimise
-            the number of OpenFIGI requests based on this information.
-        """
-        raise NotImplementedError
+        records: list[OpenFIGIRecord] = []
+
+        request_plan = self._create_request_plan(identifiers)
+        for identifier_type, identifier_list in request_plan.items():
+
+            batches = self._create_batches(identifier_list)
+            for batch in batches:
+
+                response_data=self._execute_request(batch)
+                for source_identifier, item in zip(batch, response_data, strict=True):
+                    records.extend(
+                        self._parse_record(
+                            item=item,
+                            source_identifier=source_identifier,
+                            unique_share_class_figi_only=unique_share_class_figi_only,
+                            raise_error=raise_error
+                        )
+                    )
+
+        return records
 
     def _create_request_plan(
         self,
@@ -156,15 +167,13 @@ class OpenFIGIClient:
 
     def _execute_request(
         self,
-        source_identifier_type: SecurityIdentifierType,
         batch: Sequence[SecurityIdentifier],
-        unique_share_class_figi_only: bool = True
-    ) -> list[OpenFIGIRecord]:
+    ) -> list[dict[str, Any]]:
         """Execute single OpenFIGI mapping request."""
 
         payload = [
             {
-                "idType": self._to_openfigi_identifier_type(source_identifier_type),
+                "idType": self._to_openfigi_identifier_type(identifier.type),
                 "idValue": identifier.value,
             }
             for identifier in batch
@@ -189,17 +198,8 @@ class OpenFIGIClient:
         if len(response_data) != len(batch):
             msg = "Elements in batch and response must match."
             raise ClientResponseError(msg)
-        records: list[OpenFIGIRecord] = []
-        for idx, item  in enumerate(response_data):
-            records.extend(
-                self._parse_record(
-                    item=item,
-                    source_identifier=batch[idx],
-                    unique_share_class_figi_only=unique_share_class_figi_only
-                )
-            )
 
-        return records
+        return response_data
 
     def _parse_record(
         self,
@@ -222,6 +222,8 @@ class OpenFIGIClient:
         if raise_error and len(data) == 0:
             message = "OpenFIGI returned no mapping result."
             raise OpenFIGIResponseError(message)
+        if not data:
+            return []
 
         seen_share_class_figis: set[str] = set()
         records: list[OpenFIGIRecord] = []
@@ -260,3 +262,7 @@ class OpenFIGIClient:
             records.append(record)
 
         return records
+
+
+if __name__ == "__main__":
+    pass
