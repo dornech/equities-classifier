@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from time import monotonic, sleep
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class RateLimits:
     """Rate limit configuration."""
 

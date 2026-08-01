@@ -211,7 +211,7 @@ class OpenFIGIClient:
         """Parse a single OpenFIGI mapping response."""
 
         if raise_error and "error" in item:
-            openFIGI_msg = item["'error"]
+            openFIGI_msg = item["error"]
             message = f"OpenFIGI returned an error: {openFIGI_msg}"
             raise OpenFIGIResponseError(message)
 

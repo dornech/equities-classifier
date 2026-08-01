@@ -17,11 +17,22 @@ from equities_classifier.clients.openfigi import (
 class OpenFIGIResolver(SecurityIdentifierResolver):
     """Resolve security identifiers using the OpenFIGI service."""
 
-    def __init__(self, client: OpenFIGIClient | None = None) -> None:
-        self._client = client or OpenFIGIClient()
+    def __init__(self, client: OpenFIGIClient | None = None, api_key: str | None = None) -> None:
+        if client is None:
+            self._api_key = api_key
+            self._client_not_provided = True
+        else:
+            self._client_not_provided = False
+        self._client = client or OpenFIGIClient(api_key=api_key)
 
     def name(self) -> str:
         return type(self).__name__
+
+    def close(self) -> None:
+        """Release allocated resources."""
+
+        if self._client_not_provided:
+            self._client.close()
 
     def resolve(
         self,
