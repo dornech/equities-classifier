@@ -5,6 +5,13 @@
 - First pre-alpha
 - ...
 
+## [v0.3.2](https://github.com/dornech/equities-classifier/releases/tag/v0.3.2)  (2026-08-01) 
+
+### Bug fixes
+
+- OpenFIGI client - testcase with http-request and corrections
+(['d6bab53'](https://github.com/dornech/equities-classifier/commit/d6bab532eeb5061627721b6592bf0dbb6b12a267))
+
 ## [v0.3.1](https://github.com/dornech/equities-classifier/releases/tag/v0.3.1)  (2026-08-01) 
 
 ### Bug fixes

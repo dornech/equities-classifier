@@ -84,7 +84,7 @@ exclude = [
 [tool.commitizen]
 name = "cz_customize"
 version_scheme = "pep440"
-version = "0.3.1"
+version = "0.3.2"
 version_files = ["pyproject.toml:version"]
 tag_format = "v$version"
 # retry_after_failure = false
