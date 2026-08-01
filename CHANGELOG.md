@@ -5,6 +5,15 @@
 - First pre-alpha
 - ...
 
+## [v0.3.1](https://github.com/dornech/equities-classifier/releases/tag/v0.3.1)  (2026-08-01) 
+
+### Bug fixes
+
+- OpenFIGI client - testcases and corrections
+(['2996b57'](https://github.com/dornech/equities-classifier/commit/2996b57479fa210cb51b31e3c9207aab6252d1b3))
+- OpenFIGI client - use SHARE_CLASS_FIGI instead FIGI
+(['57ea785'](https://github.com/dornech/equities-classifier/commit/57ea785b2f43414d26463fd45a7857c2b016219f))
+
 ## [v0.3.0](https://github.com/dornech/equities-classifier/releases/tag/v0.3.0)  (2026-08-01) 
 
 ### Features
