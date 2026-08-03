@@ -6,10 +6,13 @@ from typing import Any, Self
 from collections.abc import Sequence
 from dataclasses import fields
 
-from playwright.sync_api import sync_playwright, Browser, BrowserContext, APIRequestContext
+# from playwright.sync_api import sync_playwright, Browser, BrowserContext, APIRequestContext
 # from undetected_playwright import Tarnished
 # from playwright_stealth import Stealth
-
+import utils_seleniumxp
+import undetected_chromedriver as uc
+from urllib.parse import urlencode
+import json
 import datetime
 
 from equities_classifier.enums import DataSourceID, SecurityIdentifierType
@@ -98,24 +101,35 @@ class MorningstarClient:
     ) -> None:
         """Initialize Morningstar client."""
 
-        self._playwright = sync_playwright().start()
-        # self._playwright = Stealth().use_sync(sync_playwright()).start()
-        # self._browser: Browser = self._playwright.chromium.launch(headless=True, channel="msedge")
-        self._browser: Browser = self._playwright.chromium.launch(headless=False, channel="msedge")
-        self._context: BrowserContext = self._browser.new_context(
-            locale="en-GB",
-            user_agent=(
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/138.0.0.0 Safari/537.36"
-            ),
-        )
-        # Tarnished.apply_stealth(self._context)
-        self._request: APIRequestContext = self._context.request
+        # approach with playwright (including undetected playwright libraries)
+        # self._playwright = sync_playwright().start()
+        # # self._playwright = Stealth().use_sync(sync_playwright()).start()
+        # # self._browser: Browser = self._playwright.chromium.launch(headless=True, channel="msedge")
+        # self._browser: Browser = self._playwright.chromium.launch(headless=False, channel="msedge")
+        # self._context: BrowserContext = self._browser.new_context(
+        #     locale="en-GB",
+        #     user_agent=(
+        #         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        #         "AppleWebKit/537.36 (KHTML, like Gecko) "
+        #         "Chrome/138.0.0.0 Safari/537.36"
+        #     ),
+        # )
+        # # Tarnished.apply_stealth(self._context)
+        # self._request: APIRequestContext = self._context.request
+        #
+        # # load morningstar page to intialize
+        # self._page = self._context.new_page()
+        # self._page.goto("https://global.morningstar.com/en-eu")
 
-        # load morningstar page to intialize
-        self._page = self._context.new_page()
-        self._page.goto("https://global.morningstar.com/en-eu")
+        # approach with Selenium
+        self._client = utils_seleniumxp.init_webdriver(
+            stealthmode=False,
+            optimizedscraping=False,
+            URL="https://global.morningstar.com/en-eu",
+            browser = "chrome",
+            alt_cls_webdriverwrapper = uc.Chrome,
+            alt_cls_options = uc.ChromeOptions,
+        )
 
         self._timeout = timeout
 
@@ -131,16 +145,20 @@ class MorningstarClient:
     def close(self) -> None:
         """Release browser resources."""
 
-        self._context.close()
-        self._browser.close()
-        self._playwright.stop()
+        # approach with playwright
+        # self._context.close()
+        # self._browser.close()
+        # self._playwright.stop()
+
+        # approach with Selenium
+        self._client.close()
 
     def read_provider_base_data(
         self,
         identifiers: Sequence[SecurityIdentifier],
         raise_error: bool = True
     ) -> list[MorningstarRecord]:
-        """Read base date for one or more identifiers from Monringstar."""
+        """Read base date for one or more identifiers from Morningstar."""
 
         records: list[MorningstarRecord] = []
 
@@ -166,35 +184,63 @@ class MorningstarClient:
 
         return records
 
+    def read_provider_profile_data(
+        self,
+        records: Sequence[MorningstarRecord],
+        raise_error: bool = True
+    ) -> list[MorningstarRecord]:
+
+        for record in records:
+
+            profile_data = self._execute_profile_request(share_class_id = record.security_id[0])
+            record = self._parse_profile_to_record(profile_data, record,raise_error)
+
+
     def _execute_request(
         self,
         method: str,
         url: str,
         *,
         params: dict[str, Any] | None = None,
-        json: Any  | None = None
+        json_param: Any  | None = None
     ) -> dict[str, Any] | list[dict[str, Any]]:
         """Execute a Morningstar request."""
 
         # self._rate_limiter.wait()
 
-        response = self._request.fetch(
-            url,
-            method=method,
-            params=params,
-            data=json,
-            timeout=self._timeout * 1000,
-        )
+        # approach with playwright
+        # response = self._request.fetch(
+        #     url,
+        #     method=method,
+        #     params=params,
+        #     data=json_param,
+        #     timeout=self._timeout * 1000,
+        # )
+        # match response.status:
+        #     case 401 | 403:
+        #         raise ClientAuthenticationError(response.text())
+        #     case 429:
+        #         raise ClientRateLimitError(response.text())
+        #     case _ if response.status >= 400:
+        #         raise ClientResponseError(response.text())
 
-        match response.status:
-            case 401 | 403:
-                raise ClientAuthenticationError(response.text())
-            case 429:
-                raise ClientRateLimitError(response.text())
-            case _ if response.status >= 400:
-                raise ClientResponseError(response.text())
+        # approach with selenium-request
+        # try:
+        #     response = self._client.request(method, url, params=params)
+        # except utils_seleniumxp.TimeoutException as exc:
+        #     raise ClientConnectionError(str(exc)) from exc
+        # match response.status_code:
+        #     case 401 | 403:
+        #         raise ClientAuthenticationError(response.text)
+        #     case _:
+        #         response.raise_for_status()
 
-        response_data = response.json()
+        # response_data = response.json()
+
+        self._client.get(f"{url}?{urlencode(params)}")
+        response = self._client.find_element(utils_seleniumxp.By.XPATH, "//pre").text
+
+        response_data = json.loads(response)
 
         return response_data
 
@@ -224,24 +270,29 @@ class MorningstarClient:
     ) -> list[MorningstarSearchResult]:
         """Parse Morningstar search response."""
 
-        item = response_data[0]
-        count = item["count"]
-        if raise_error and count== 0:
+        count = response_data["count"] - len(response_data)
+        if raise_error and count == 0:
             message = f"Morningstar returned no search data."
             raise MorningstarResponseError(message)
 
         search_results: list[MorningstarSearchResult] = []
 
-        for item in response_data[0].get("results", []):
+        for item in response_data["results"]:
 
-            result = MorningstarSearchResult(source_identifier=identifier)
+            result = MorningstarSearchResult(source_identifier=source_identifier)
             for path, attribute in self._MORNINGSTAR_SEARCH_RESULT_MAP.items():
                 value = self._get_nested_value(item, path)
-                if value is not None:
-                    setattr(result, attribute, value)
+                if hasattr(result, attribute):
+                    if value is not None:
+                        setattr(result, attribute, value)
                 else:
-                    # provider attributes not yet in record definition -> potential logging endpoint
-                    pass
+                    ClientHelper.missing_record_attribute(
+                        DataSourceID.MORNINGSTAR,
+                        attribute,
+                        value,
+                    )
+
+            search_results.append(result)
 
         if count != len(search_results):
             message = f"Morningstar returned inconsistent data or error in evaluation."
@@ -422,6 +473,7 @@ class MorningstarClient:
 
         return provider_attributes
 
+
 if __name__ == "__main__":
 
     client = MorningstarClient()
@@ -432,10 +484,6 @@ if __name__ == "__main__":
     )
 
     with client:
-
-        response = client._execute_search_request(identifier)
-        assert isinstance(response, dict)
-        assert "results" in response
 
         records = client.read_provider_base_data([identifier])
 
