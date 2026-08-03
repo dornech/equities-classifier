@@ -6,7 +6,10 @@ from typing import Any, Self
 from collections.abc import Sequence
 from dataclasses import fields
 
-import httpx
+from playwright.sync_api import sync_playwright, Browser, BrowserContext, APIRequestContext
+# from undetected_playwright import Tarnished
+# from playwright_stealth import Stealth
+
 import datetime
 
 from equities_classifier.enums import DataSourceID, SecurityIdentifierType
@@ -93,21 +96,29 @@ class MorningstarClient:
         self,
         timeout: float = 30.0,
     ) -> None:
-        """Initialize the HTTP client."""
+        """Initialize Morningstar client."""
 
-        headers = {
-            "User-Agent": (
+        self._playwright = sync_playwright().start()
+        # self._playwright = Stealth().use_sync(sync_playwright()).start()
+        # self._browser: Browser = self._playwright.chromium.launch(headless=True, channel="msedge")
+        self._browser: Browser = self._playwright.chromium.launch(headless=False, channel="msedge")
+        self._context: BrowserContext = self._browser.new_context(
+            locale="en-GB",
+            user_agent=(
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                 "AppleWebKit/537.36 (KHTML, like Gecko) "
                 "Chrome/138.0.0.0 Safari/537.36"
             ),
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "en-US,en;q=0.9",
-        }
-        self._client = httpx.Client(
-            headers=headers,
-            timeout=timeout,
         )
+        # Tarnished.apply_stealth(self._context)
+        self._request: APIRequestContext = self._context.request
+
+        # load morningstar page to intialize
+        self._page = self._context.new_page()
+        self._page.goto("https://global.morningstar.com/en-eu")
+
+        self._timeout = timeout
+
         self._access_token: str | None = None
         self._access_token_expires: datetime.date | None = None
 
@@ -118,8 +129,11 @@ class MorningstarClient:
         self.close()
 
     def close(self) -> None:
-        """Close the HTTP client."""
-        self._client.close()
+        """Release browser resources."""
+
+        self._context.close()
+        self._browser.close()
+        self._playwright.stop()
 
     def read_provider_base_data(
         self,
@@ -158,28 +172,31 @@ class MorningstarClient:
         url: str,
         *,
         params: dict[str, Any] | None = None,
-        headers: dict[str, str] | None = None,
+        json: Any  | None = None
     ) -> dict[str, Any] | list[dict[str, Any]]:
         """Execute a Morningstar request."""
 
         # self._rate_limiter.wait()
 
-        try:
-            response = self._client.request(method,url, params=params, headers=headers)
-        except httpx.ConnectError as exc:
-            raise ClientConnectionError(str(exc)) from exc
-        except httpx.TimeoutException as exc:
-            raise ClientConnectionError(str(exc)) from exc
+        response = self._request.fetch(
+            url,
+            method=method,
+            params=params,
+            data=json,
+            timeout=self._timeout * 1000,
+        )
 
-        match response.status_code:
+        match response.status:
             case 401 | 403:
-                raise ClientAuthenticationError(response.text)
+                raise ClientAuthenticationError(response.text())
             case 429:
-                raise ClientRateLimitError(response.text)
-            case _:
-                response.raise_for_status()
+                raise ClientRateLimitError(response.text())
+            case _ if response.status >= 400:
+                raise ClientResponseError(response.text())
 
-        return response.json()
+        response_data = response.json()
+
+        return response_data
 
     def _execute_search_request(
         self,
