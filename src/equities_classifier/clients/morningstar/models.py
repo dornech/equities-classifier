@@ -3,32 +3,47 @@
 
 from dataclasses import dataclass, field
 
-from equities_classifier.models import SecurityIdentifier
+from equities_classifier.models import SecurityIdentifier, SecurityProviderRecord
 
 
 @dataclass(slots=True)
 class MorningstarSearchResult:
     """Internal representation of a Morningstar search result."""
 
-    identifier: SecurityIdentifier
+    source_identifier: SecurityIdentifier
 
-    url: str
-    company_name: str
-    instrument_type: str
-    exchange: str
-    country: str
-    ticker: str
-    currency: str
+    name: str | None = None
+    short_name: str | None = None
+    ticker: str | None = None
+    isin: str | None = None
+    company_id: str | None = None
+    security_id: str | None = None
+    performance_id: str | None = None
+
+    universe: str | None = None
+
+    exchange: str | None = None
+    exchange_name: str | None = None
+    exchange_country: str | None = None
+    exchange_country_name: str | None = None
 
 
 @dataclass(slots=True)
-class MorningstarRecord:
-    """Internal representation of a Morningstar classification."""
+class MorningstarRecord(SecurityProviderRecord):
+    """Internal representation of a Morningstar search result and classification record."""
 
-    identifier: SecurityIdentifier
+    name: str = ""
+    ticker: str | None = None
+    company_id: str | None = None
 
-    company_name: str = ""
+    universe: str | None = None
+
     sector: str | None = None
     industry: str | None = None
 
-    provider_attributes: dict[str, str] = field(default_factory=dict)
+    security_id: list[str] = field(default_factory=list)
+    performance_id: list[str] = field(default_factory=list)
+    exchange: list[str] = field(default_factory=list)
+    exchange_name: list[str] = field(default_factory=list)
+    exchange_country: list[str] = field(default_factory=list)
+    exchange_country_name: list[str] = field(default_factory=list)
