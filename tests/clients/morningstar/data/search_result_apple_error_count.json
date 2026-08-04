@@ -1,0 +1,347 @@
+{
+   "count":8,
+   "pages":2,
+   "maxScore":29.112339,
+   "results":[
+      {
+         "meta":{
+            "securityID":"0P0001ISID",
+            "performanceID":"0P0001ISID",
+            "companyID":"0C00000ADA",
+            "universe":"EQ",
+            "exchange":"PFTS",
+            "ticker":"AAPL"
+         },
+         "fields":{
+            "exchange":{
+               "value":"PFTS",
+               "displayAs":"PFTS Stock Exchange",
+               "sortAs":"pfts stock exchange"
+            },
+            "exchangeCountry":{
+               "value":"UKR",
+               "displayAs":"Ukraine",
+               "sortAs":"ukraine"
+            },
+            "isin":{
+               "value":"US0378331005"
+            },
+            "name":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "shortName":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "ticker":{
+               "value":"AAPL"
+            }
+         },
+         "score":29.112339
+      },
+      {
+         "meta":{
+            "securityID":"0P0001367D",
+            "performanceID":"0P0001367D",
+            "companyID":"0C00000ADA",
+            "universe":"EQ",
+            "exchange":"XSGO",
+            "ticker":"AAPL"
+         },
+         "fields":{
+            "exchange":{
+               "value":"XSGO",
+               "displayAs":"Santiago Stock Exchange",
+               "sortAs":"santiago stock exchange"
+            },
+            "exchangeCountry":{
+               "value":"CHL",
+               "displayAs":"Chile",
+               "sortAs":"chile"
+            },
+            "isin":{
+               "value":"US0378331005"
+            },
+            "marketCap":{
+               "value":4428166095600,
+               "properties":{
+                  "asOfDate":{
+                     "value":"2026-08-03"
+                  },
+                  "currency":{
+                     "value":"USD"
+                  }
+               }
+            },
+            "name":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "shortName":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "ticker":{
+               "value":"AAPL"
+            }
+         },
+         "score":29.112339
+      },
+      {
+         "meta":{
+            "securityID":"0P0001QSNJ",
+            "performanceID":"0P0001QSNJ",
+            "companyID":"0C00000ADA",
+            "universe":"EQ",
+            "exchange":"CEUX",
+            "ticker":"APCd"
+         },
+         "fields":{
+            "exchange":{
+               "value":"CEUX",
+               "displayAs":"CBOE Europe (DXE, NL)",
+               "sortAs":"cboe europe (dxe, nl)"
+            },
+            "exchangeCountry":{
+               "value":"NLD",
+               "displayAs":"Netherlands",
+               "sortAs":"netherlands"
+            },
+            "isin":{
+               "value":"US0378331005"
+            },
+            "name":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "shortName":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "ticker":{
+               "value":"APCd"
+            }
+         },
+         "score":29.112339
+      },
+      {
+         "meta":{
+            "securityID":"0P0000B5FM",
+            "performanceID":"0P0000B5FM",
+            "companyID":"0C00000ADA",
+            "universe":"EQ",
+            "exchange":"XDUS",
+            "ticker":"APC"
+         },
+         "fields":{
+            "exchange":{
+               "value":"XDUS",
+               "displayAs":"Börse Düsseldorf",
+               "sortAs":"börse düsseldorf"
+            },
+            "exchangeCountry":{
+               "value":"DEU",
+               "displayAs":"Germany",
+               "sortAs":"germany"
+            },
+            "isin":{
+               "value":"US0378331005"
+            },
+            "marketCap":{
+               "value":3835987443635,
+               "properties":{
+                  "asOfDate":{
+                     "value":"2026-08-03"
+                  },
+                  "currency":{
+                     "value":"EUR"
+                  }
+               }
+            },
+            "name":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "shortName":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "ticker":{
+               "value":"APC"
+            }
+         },
+         "score":28.463306
+      }
+   ],
+   "aggregations":{
+
+   },
+   "fields":[
+      {
+         "alias":"baseCurrency",
+         "field":"baseCurrency",
+         "name":"Base Currency",
+         "label":"Base Currency",
+         "attributes":{
+            "type":"string",
+            "unit":"keyword",
+            "defaultWidth":100,
+            "displayWeight":1,
+            "defaultSort":"asc"
+         }
+      },
+      {
+         "alias":"dgsCode",
+         "field":"dgsCode",
+         "name":"DGS Code",
+         "label":"DGS Code",
+         "attributes":{
+            "type":"string",
+            "defaultWidth":100,
+            "displayWeight":1,
+            "defaultSort":"asc"
+         }
+      },
+      {
+         "alias":"fundServCodes",
+         "field":"fundServCodes",
+         "name":"FundServ Code",
+         "label":"FundServ Code",
+         "attributes":{
+            "type":"string",
+            "isArray":true,
+            "defaultWidth":100,
+            "displayWeight":1,
+            "defaultSort":"asc"
+         }
+      },
+      {
+         "alias":"exchange",
+         "field":"exchange",
+         "name":"Exchange",
+         "label":"Exchange",
+         "attributes":{
+            "type":"string",
+            "unit":"keyword",
+            "defaultWidth":150,
+            "displayWeight":1,
+            "defaultSort":"asc"
+         }
+      },
+      {
+         "alias":"exchangeCountry",
+         "field":"exchangeCountry",
+         "name":"Exchange Country",
+         "label":"Exchange Country",
+         "attributes":{
+            "defaultWidth":90,
+            "displayWeight":3,
+            "type":"string",
+            "unit":"keyword",
+            "defaultSort":"asc"
+         }
+      },
+      {
+         "alias":"isin",
+         "field":"isin",
+         "name":"ISIN",
+         "label":"ISIN",
+         "attributes":{
+            "type":"string",
+            "defaultWidth":130,
+            "displayWeight":1,
+            "defaultSort":"asc"
+         }
+      },
+      {
+         "alias":"itaCode",
+         "field":"itaCode",
+         "name":"ITA Code",
+         "label":"ITA Code",
+         "attributes":{
+            "type":"string",
+            "defaultWidth":100,
+            "displayWeight":1,
+            "defaultSort":"asc"
+         }
+      },
+      {
+         "alias":"marketCap",
+         "field":"marketCap",
+         "name":"Market Cap",
+         "label":"Market Cap",
+         "attributes":{
+            "defaultSort":"desc",
+            "type":"currency",
+            "magnitude":0,
+            "defaultWidth":80,
+            "displayWeight":1,
+            "fractionalDigits":0
+         },
+         "properties":{
+            "asOfDate":{
+               "alias":"marketCap.asOfDate",
+               "field":"marketCap",
+               "property":"asOfDate",
+               "name":"As of Date",
+               "label":"Market Cap",
+               "attributes":{
+                  "defaultSort":"desc",
+                  "type":"date",
+                  "displayWeight":2
+               }
+            },
+            "currency":{
+               "alias":"marketCap.currency",
+               "field":"marketCap",
+               "property":"currency",
+               "name":"Currency",
+               "label":"Market Cap",
+               "attributes":{
+                  "type":"string",
+                  "defaultWidth":80,
+                  "displayWeight":2,
+                  "defaultSort":"asc"
+               }
+            }
+         }
+      },
+      {
+         "alias":"name",
+         "field":"name",
+         "name":"Name",
+         "label":"Name",
+         "attributes":{
+            "type":"string",
+            "defaultWidth":280,
+            "displayWeight":4,
+            "defaultSort":"asc"
+         }
+      },
+      {
+         "alias":"shortName",
+         "field":"shortName",
+         "name":"Short Name",
+         "label":"Short Name",
+         "attributes":{
+            "type":"string",
+            "defaultWidth":280,
+            "displayWeight":4,
+            "defaultSort":"asc"
+         }
+      },
+      {
+         "alias":"ticker",
+         "field":"ticker",
+         "name":"Ticker",
+         "label":"Ticker",
+         "attributes":{
+            "type":"string",
+            "defaultWidth":90,
+            "displayWeight":1,
+            "defaultSort":"asc"
+         }
+      }
+   ]
+}

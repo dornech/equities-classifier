@@ -1,0 +1,1082 @@
+{
+   "count":25,
+   "pages":2,
+   "maxScore":29.112339,
+   "results":[
+      {
+         "meta":{
+            "securityID":"0P0001QY3U",
+            "performanceID":"0P0001QY3U",
+            "companyID":"0C00000ADA",
+            "universe":"EQ",
+            "exchange":"CHIX",
+            "ticker":"APCd"
+         },
+         "fields":{
+            "exchange":{
+               "value":"CHIX",
+               "displayAs":"CBOE Europe (CXE)",
+               "sortAs":"cboe europe (cxe)"
+            },
+            "exchangeCountry":{
+               "value":"GBR",
+               "displayAs":"United Kingdom",
+               "sortAs":"united kingdom"
+            },
+            "isin":{
+               "value":"US0378331005"
+            },
+            "marketCap":{
+               "value":3835987443635,
+               "properties":{
+                  "asOfDate":{
+                     "value":"2026-08-03"
+                  },
+                  "currency":{
+                     "value":"EUR"
+                  }
+               }
+            },
+            "name":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "shortName":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "ticker":{
+               "value":"APCd"
+            }
+         },
+         "score":29.112339
+      },
+      {
+         "meta":{
+            "securityID":"0P0001ISID",
+            "performanceID":"0P0001ISID",
+            "companyID":"0C00000ADA",
+            "universe":"EQ",
+            "exchange":"PFTS",
+            "ticker":"AAPL"
+         },
+         "fields":{
+            "exchange":{
+               "value":"PFTS",
+               "displayAs":"PFTS Stock Exchange",
+               "sortAs":"pfts stock exchange"
+            },
+            "exchangeCountry":{
+               "value":"UKR",
+               "displayAs":"Ukraine",
+               "sortAs":"ukraine"
+            },
+            "isin":{
+               "value":"US0378331005"
+            },
+            "name":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "shortName":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "ticker":{
+               "value":"AAPL"
+            }
+         },
+         "score":29.112339
+      },
+      {
+         "meta":{
+            "securityID":"0P0001367D",
+            "performanceID":"0P0001367D",
+            "companyID":"0C00000ADA",
+            "universe":"EQ",
+            "exchange":"XSGO",
+            "ticker":"AAPL"
+         },
+         "fields":{
+            "exchange":{
+               "value":"XSGO",
+               "displayAs":"Santiago Stock Exchange",
+               "sortAs":"santiago stock exchange"
+            },
+            "exchangeCountry":{
+               "value":"CHL",
+               "displayAs":"Chile",
+               "sortAs":"chile"
+            },
+            "isin":{
+               "value":"US0378331005"
+            },
+            "marketCap":{
+               "value":4428166095600,
+               "properties":{
+                  "asOfDate":{
+                     "value":"2026-08-03"
+                  },
+                  "currency":{
+                     "value":"USD"
+                  }
+               }
+            },
+            "name":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "shortName":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "ticker":{
+               "value":"AAPL"
+            }
+         },
+         "score":29.112339
+      },
+      {
+         "meta":{
+            "securityID":"0P0001QSNJ",
+            "performanceID":"0P0001QSNJ",
+            "companyID":"0C00000ADA",
+            "universe":"EQ",
+            "exchange":"CEUX",
+            "ticker":"APCd"
+         },
+         "fields":{
+            "exchange":{
+               "value":"CEUX",
+               "displayAs":"CBOE Europe (DXE, NL)",
+               "sortAs":"cboe europe (dxe, nl)"
+            },
+            "exchangeCountry":{
+               "value":"NLD",
+               "displayAs":"Netherlands",
+               "sortAs":"netherlands"
+            },
+            "isin":{
+               "value":"US0378331005"
+            },
+            "name":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "shortName":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "ticker":{
+               "value":"APCd"
+            }
+         },
+         "score":29.112339
+      },
+      {
+         "meta":{
+            "securityID":"0P0000BMP3",
+            "performanceID":"0P0000BMP3",
+            "companyID":"0C00000ADA",
+            "universe":"EQ",
+            "exchange":"XHAM",
+            "ticker":"APC"
+         },
+         "fields":{
+            "exchange":{
+               "value":"XHAM",
+               "displayAs":"Börse Hamburg",
+               "sortAs":"börse hamburg"
+            },
+            "exchangeCountry":{
+               "value":"DEU",
+               "displayAs":"Germany",
+               "sortAs":"germany"
+            },
+            "isin":{
+               "value":"US0378331005"
+            },
+            "marketCap":{
+               "value":3835987443635,
+               "properties":{
+                  "asOfDate":{
+                     "value":"2026-08-03"
+                  },
+                  "currency":{
+                     "value":"EUR"
+                  }
+               }
+            },
+            "name":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "shortName":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "ticker":{
+               "value":"APC"
+            }
+         },
+         "score":29.112339
+      },
+      {
+         "meta":{
+            "securityID":"0P0001MVZ7",
+            "performanceID":"0P0001MVZ7",
+            "companyID":"0C00000ADA",
+            "universe":"EQ",
+            "exchange":"XBUL",
+            "ticker":"APC"
+         },
+         "fields":{
+            "exchange":{
+               "value":"XBUL",
+               "displayAs":"Bulgarian Stock Exchange",
+               "sortAs":"bulgarian stock exchange"
+            },
+            "exchangeCountry":{
+               "value":"BGR",
+               "displayAs":"Bulgaria",
+               "sortAs":"bulgaria"
+            },
+            "isin":{
+               "value":"US0378331005"
+            },
+            "marketCap":{
+               "value":3835987443635,
+               "properties":{
+                  "asOfDate":{
+                     "value":"2026-08-03"
+                  },
+                  "currency":{
+                     "value":"EUR"
+                  }
+               }
+            },
+            "name":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "shortName":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "ticker":{
+               "value":"APC"
+            }
+         },
+         "score":29.112339
+      },
+      {
+         "meta":{
+            "securityID":"0P0001TB4F",
+            "performanceID":"0P0001TB4F",
+            "companyID":"0C00000ADA",
+            "universe":"EQ",
+            "exchange":"XWAR",
+            "ticker":"AAPL"
+         },
+         "fields":{
+            "exchange":{
+               "value":"XWAR",
+               "displayAs":"Warsaw Stock Exchange",
+               "sortAs":"warsaw stock exchange"
+            },
+            "exchangeCountry":{
+               "value":"POL",
+               "displayAs":"Poland",
+               "sortAs":"poland"
+            },
+            "isin":{
+               "value":"US0378331005"
+            },
+            "marketCap":{
+               "value":16543008589908,
+               "properties":{
+                  "asOfDate":{
+                     "value":"2026-08-03"
+                  },
+                  "currency":{
+                     "value":"PLN"
+                  }
+               }
+            },
+            "name":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "shortName":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "ticker":{
+               "value":"AAPL"
+            }
+         },
+         "score":28.809282
+      },
+      {
+         "meta":{
+            "securityID":"0P00014L0O",
+            "performanceID":"0P00014L0O",
+            "companyID":"0C00000ADA",
+            "universe":"EQ",
+            "exchange":"LTS",
+            "ticker":"0R2V"
+         },
+         "fields":{
+            "exchange":{
+               "value":"LTS",
+               "displayAs":"London Stock Exchange",
+               "sortAs":"london stock exchange"
+            },
+            "exchangeCountry":{
+               "value":"GBR",
+               "displayAs":"United Kingdom",
+               "sortAs":"united kingdom"
+            },
+            "isin":{
+               "value":"US0378331005"
+            },
+            "marketCap":{
+               "value":4428166095600,
+               "properties":{
+                  "asOfDate":{
+                     "value":"2026-08-03"
+                  },
+                  "currency":{
+                     "value":"USD"
+                  }
+               }
+            },
+            "name":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "shortName":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "ticker":{
+               "value":"0R2V"
+            }
+         },
+         "score":28.809282
+      },
+      {
+         "meta":{
+            "securityID":"0P0000AQV5",
+            "performanceID":"0P0000AQV5",
+            "companyID":"0C00000ADA",
+            "universe":"EQ",
+            "exchange":"XSWX",
+            "ticker":"AAPL"
+         },
+         "fields":{
+            "exchange":{
+               "value":"XSWX",
+               "displayAs":"SIX Swiss Exchange",
+               "sortAs":"six swiss exchange"
+            },
+            "exchangeCountry":{
+               "value":"CHE",
+               "displayAs":"Switzerland",
+               "sortAs":"switzerland"
+            },
+            "isin":{
+               "value":"US0378331005"
+            },
+            "marketCap":{
+               "value":3573928574098,
+               "properties":{
+                  "asOfDate":{
+                     "value":"2026-08-03"
+                  },
+                  "currency":{
+                     "value":"CHF"
+                  }
+               }
+            },
+            "name":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "shortName":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "ticker":{
+               "value":"AAPL"
+            }
+         },
+         "score":28.809282
+      },
+      {
+         "meta":{
+            "securityID":"0P0000AN6W",
+            "performanceID":"0P0000AN6W",
+            "companyID":"0C00000ADA",
+            "universe":"EQ",
+            "exchange":"TBSX",
+            "ticker":"APC"
+         },
+         "fields":{
+            "exchange":{
+               "value":"TBSX",
+               "displayAs":"Tradegate Berlin Stock Exchange",
+               "sortAs":"tradegate berlin stock exchange"
+            },
+            "exchangeCountry":{
+               "value":"DEU",
+               "displayAs":"Germany",
+               "sortAs":"germany"
+            },
+            "isin":{
+               "value":"US0378331005"
+            },
+            "marketCap":{
+               "value":3835987443635,
+               "properties":{
+                  "asOfDate":{
+                     "value":"2026-08-03"
+                  },
+                  "currency":{
+                     "value":"EUR"
+                  }
+               }
+            },
+            "name":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "shortName":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "ticker":{
+               "value":"APC"
+            }
+         },
+         "score":28.809282
+      },
+      {
+         "meta":{
+            "securityID":"0P0001L5NF",
+            "performanceID":"0P0001L5NF",
+            "companyID":"0C00000ADA",
+            "universe":"EQ",
+            "exchange":"XBOG",
+            "ticker":"AAPLCO"
+         },
+         "fields":{
+            "exchange":{
+               "value":"XBOG",
+               "displayAs":"Bolsa de Valores de Colombia",
+               "sortAs":"bolsa de valores de colombia"
+            },
+            "exchangeCountry":{
+               "value":"COL",
+               "displayAs":"Colombia",
+               "sortAs":"colombia"
+            },
+            "isin":{
+               "value":"US0378331005"
+            },
+            "name":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "shortName":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "ticker":{
+               "value":"AAPLCO"
+            }
+         },
+         "score":28.809282
+      },
+      {
+         "meta":{
+            "securityID":"0P0000EZ8E",
+            "performanceID":"0P0000EZ8E",
+            "companyID":"0C00000ADA",
+            "universe":"EQ",
+            "exchange":"XMIL",
+            "ticker":"1AAPL"
+         },
+         "fields":{
+            "exchange":{
+               "value":"XMIL",
+               "displayAs":"Borsa Italiana",
+               "sortAs":"borsa italiana"
+            },
+            "exchangeCountry":{
+               "value":"ITA",
+               "displayAs":"Italy",
+               "sortAs":"italy"
+            },
+            "isin":{
+               "value":"US0378331005"
+            },
+            "marketCap":{
+               "value":3835987443635,
+               "properties":{
+                  "asOfDate":{
+                     "value":"2026-08-03"
+                  },
+                  "currency":{
+                     "value":"EUR"
+                  }
+               }
+            },
+            "name":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "shortName":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "ticker":{
+               "value":"1AAPL"
+            }
+         },
+         "score":28.802567
+      },
+      {
+         "meta":{
+            "securityID":"0P0001I5X6",
+            "performanceID":"0P0001I5X6",
+            "companyID":"0C00000ADA",
+            "universe":"EQ",
+            "exchange":"UKEX",
+            "ticker":"AAPL"
+         },
+         "fields":{
+            "exchange":{
+               "value":"UKEX",
+               "displayAs":"Ukrainian Exchange",
+               "sortAs":"ukrainian exchange"
+            },
+            "exchangeCountry":{
+               "value":"UKR",
+               "displayAs":"Ukraine",
+               "sortAs":"ukraine"
+            },
+            "isin":{
+               "value":"US0378331005"
+            },
+            "name":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "shortName":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "ticker":{
+               "value":"AAPL"
+            }
+         },
+         "score":28.802567
+      },
+      {
+         "meta":{
+            "securityID":"0P0000EEDJ",
+            "performanceID":"0P0000EEDJ",
+            "companyID":"0C00000ADA",
+            "universe":"EQ",
+            "exchange":"XFRA",
+            "ticker":"APC"
+         },
+         "fields":{
+            "exchange":{
+               "value":"XFRA",
+               "displayAs":"Frankfurt Stock Exchange",
+               "sortAs":"frankfurt stock exchange"
+            },
+            "exchangeCountry":{
+               "value":"DEU",
+               "displayAs":"Germany",
+               "sortAs":"germany"
+            },
+            "isin":{
+               "value":"US0378331005"
+            },
+            "marketCap":{
+               "value":3835987443635,
+               "properties":{
+                  "asOfDate":{
+                     "value":"2026-08-03"
+                  },
+                  "currency":{
+                     "value":"EUR"
+                  }
+               }
+            },
+            "name":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "shortName":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "ticker":{
+               "value":"APC"
+            }
+         },
+         "score":28.802567
+      },
+      {
+         "meta":{
+            "securityID":"0P0000EW3W",
+            "performanceID":"0P0000EW3W",
+            "companyID":"0C00000ADA",
+            "universe":"EQ",
+            "exchange":"XHAN",
+            "ticker":"APC"
+         },
+         "fields":{
+            "exchange":{
+               "value":"XHAN",
+               "displayAs":"Börse Hannover",
+               "sortAs":"börse hannover"
+            },
+            "exchangeCountry":{
+               "value":"DEU",
+               "displayAs":"Germany",
+               "sortAs":"germany"
+            },
+            "isin":{
+               "value":"US0378331005"
+            },
+            "marketCap":{
+               "value":3835987443635,
+               "properties":{
+                  "asOfDate":{
+                     "value":"2026-08-03"
+                  },
+                  "currency":{
+                     "value":"EUR"
+                  }
+               }
+            },
+            "name":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "shortName":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "ticker":{
+               "value":"APC"
+            }
+         },
+         "score":28.802567
+      },
+      {
+         "meta":{
+            "securityID":"0P0000BVN5",
+            "performanceID":"0P0000BVN5",
+            "companyID":"0C00000ADA",
+            "universe":"EQ",
+            "exchange":"XMEX",
+            "ticker":"AAPL"
+         },
+         "fields":{
+            "exchange":{
+               "value":"XMEX",
+               "displayAs":"Bolsa Mexicana de Valores (Mexican Stock Exchange)",
+               "sortAs":"bolsa mexicana de valores (mexican stock exchange)"
+            },
+            "exchangeCountry":{
+               "value":"MEX",
+               "displayAs":"Mexico",
+               "sortAs":"mexico"
+            },
+            "isin":{
+               "value":"US0378331005"
+            },
+            "marketCap":{
+               "value":76641060361189,
+               "properties":{
+                  "asOfDate":{
+                     "value":"2026-08-03"
+                  },
+                  "currency":{
+                     "value":"MXN"
+                  }
+               }
+            },
+            "name":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "shortName":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "ticker":{
+               "value":"AAPL"
+            }
+         },
+         "score":28.802567
+      },
+      {
+         "meta":{
+            "securityID":"0P0001DHX1",
+            "performanceID":"0P0001DHX1",
+            "companyID":"0C00000ADA",
+            "universe":"EQ",
+            "exchange":"MISX",
+            "ticker":"AAPL-RM"
+         },
+         "fields":{
+            "exchange":{
+               "value":"MISX",
+               "displayAs":"Moscow Exchange",
+               "sortAs":"moscow exchange"
+            },
+            "exchangeCountry":{
+               "value":"RUS",
+               "displayAs":"Russia",
+               "sortAs":"russia"
+            },
+            "isin":{
+               "value":"US0378331005"
+            },
+            "name":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "shortName":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "ticker":{
+               "value":"AAPL-RM"
+            }
+         },
+         "score":28.802567
+      },
+      {
+         "meta":{
+            "securityID":"0P000000GY",
+            "performanceID":"0P000000GY",
+            "companyID":"0C00000ADA",
+            "universe":"EQ",
+            "exchange":"XNAS",
+            "ticker":"AAPL"
+         },
+         "fields":{
+            "exchange":{
+               "value":"XNAS",
+               "displayAs":"Nasdaq",
+               "sortAs":"nasdaq"
+            },
+            "exchangeCountry":{
+               "value":"USA",
+               "displayAs":"United States",
+               "sortAs":"united states"
+            },
+            "isin":{
+               "value":"US0378331005"
+            },
+            "marketCap":{
+               "value":4428166095600,
+               "properties":{
+                  "asOfDate":{
+                     "value":"2026-08-03"
+                  },
+                  "currency":{
+                     "value":"USD"
+                  }
+               }
+            },
+            "name":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "shortName":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "ticker":{
+               "value":"AAPL"
+            }
+         },
+         "score":28.463306
+      },
+      {
+         "meta":{
+            "securityID":"0P00009QYY",
+            "performanceID":"0P00009QYY",
+            "companyID":"0C00000ADA",
+            "universe":"EQ",
+            "exchange":"XETR",
+            "ticker":"APC"
+         },
+         "fields":{
+            "exchange":{
+               "value":"XETR",
+               "displayAs":"XETRA",
+               "sortAs":"xetra"
+            },
+            "exchangeCountry":{
+               "value":"DEU",
+               "displayAs":"Germany",
+               "sortAs":"germany"
+            },
+            "isin":{
+               "value":"US0378331005"
+            },
+            "marketCap":{
+               "value":3835987443635,
+               "properties":{
+                  "asOfDate":{
+                     "value":"2026-08-03"
+                  },
+                  "currency":{
+                     "value":"EUR"
+                  }
+               }
+            },
+            "name":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "shortName":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "ticker":{
+               "value":"APC"
+            }
+         },
+         "score":28.463306
+      },
+      {
+         "meta":{
+            "securityID":"0P0000B5FM",
+            "performanceID":"0P0000B5FM",
+            "companyID":"0C00000ADA",
+            "universe":"EQ",
+            "exchange":"XDUS",
+            "ticker":"APC"
+         },
+         "fields":{
+            "exchange":{
+               "value":"XDUS",
+               "displayAs":"Börse Düsseldorf",
+               "sortAs":"börse düsseldorf"
+            },
+            "exchangeCountry":{
+               "value":"DEU",
+               "displayAs":"Germany",
+               "sortAs":"germany"
+            },
+            "isin":{
+               "value":"US0378331005"
+            },
+            "marketCap":{
+               "value":3835987443635,
+               "properties":{
+                  "asOfDate":{
+                     "value":"2026-08-03"
+                  },
+                  "currency":{
+                     "value":"EUR"
+                  }
+               }
+            },
+            "name":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "shortName":{
+               "value":"Apple Inc",
+               "sortAs":"apple inc"
+            },
+            "ticker":{
+               "value":"APC"
+            }
+         },
+         "score":28.463306
+      }
+   ],
+   "aggregations":{
+
+   },
+   "fields":[
+      {
+         "alias":"baseCurrency",
+         "field":"baseCurrency",
+         "name":"Base Currency",
+         "label":"Base Currency",
+         "attributes":{
+            "type":"string",
+            "unit":"keyword",
+            "defaultWidth":100,
+            "displayWeight":1,
+            "defaultSort":"asc"
+         }
+      },
+      {
+         "alias":"dgsCode",
+         "field":"dgsCode",
+         "name":"DGS Code",
+         "label":"DGS Code",
+         "attributes":{
+            "type":"string",
+            "defaultWidth":100,
+            "displayWeight":1,
+            "defaultSort":"asc"
+         }
+      },
+      {
+         "alias":"fundServCodes",
+         "field":"fundServCodes",
+         "name":"FundServ Code",
+         "label":"FundServ Code",
+         "attributes":{
+            "type":"string",
+            "isArray":true,
+            "defaultWidth":100,
+            "displayWeight":1,
+            "defaultSort":"asc"
+         }
+      },
+      {
+         "alias":"exchange",
+         "field":"exchange",
+         "name":"Exchange",
+         "label":"Exchange",
+         "attributes":{
+            "type":"string",
+            "unit":"keyword",
+            "defaultWidth":150,
+            "displayWeight":1,
+            "defaultSort":"asc"
+         }
+      },
+      {
+         "alias":"exchangeCountry",
+         "field":"exchangeCountry",
+         "name":"Exchange Country",
+         "label":"Exchange Country",
+         "attributes":{
+            "defaultWidth":90,
+            "displayWeight":3,
+            "type":"string",
+            "unit":"keyword",
+            "defaultSort":"asc"
+         }
+      },
+      {
+         "alias":"isin",
+         "field":"isin",
+         "name":"ISIN",
+         "label":"ISIN",
+         "attributes":{
+            "type":"string",
+            "defaultWidth":130,
+            "displayWeight":1,
+            "defaultSort":"asc"
+         }
+      },
+      {
+         "alias":"itaCode",
+         "field":"itaCode",
+         "name":"ITA Code",
+         "label":"ITA Code",
+         "attributes":{
+            "type":"string",
+            "defaultWidth":100,
+            "displayWeight":1,
+            "defaultSort":"asc"
+         }
+      },
+      {
+         "alias":"marketCap",
+         "field":"marketCap",
+         "name":"Market Cap",
+         "label":"Market Cap",
+         "attributes":{
+            "defaultSort":"desc",
+            "type":"currency",
+            "magnitude":0,
+            "defaultWidth":80,
+            "displayWeight":1,
+            "fractionalDigits":0
+         },
+         "properties":{
+            "asOfDate":{
+               "alias":"marketCap.asOfDate",
+               "field":"marketCap",
+               "property":"asOfDate",
+               "name":"As of Date",
+               "label":"Market Cap",
+               "attributes":{
+                  "defaultSort":"desc",
+                  "type":"date",
+                  "displayWeight":2
+               }
+            },
+            "currency":{
+               "alias":"marketCap.currency",
+               "field":"marketCap",
+               "property":"currency",
+               "name":"Currency",
+               "label":"Market Cap",
+               "attributes":{
+                  "type":"string",
+                  "defaultWidth":80,
+                  "displayWeight":2,
+                  "defaultSort":"asc"
+               }
+            }
+         }
+      },
+      {
+         "alias":"name",
+         "field":"name",
+         "name":"Name",
+         "label":"Name",
+         "attributes":{
+            "type":"string",
+            "defaultWidth":280,
+            "displayWeight":4,
+            "defaultSort":"asc"
+         }
+      },
+      {
+         "alias":"shortName",
+         "field":"shortName",
+         "name":"Short Name",
+         "label":"Short Name",
+         "attributes":{
+            "type":"string",
+            "defaultWidth":280,
+            "displayWeight":4,
+            "defaultSort":"asc"
+         }
+      },
+      {
+         "alias":"ticker",
+         "field":"ticker",
+         "name":"Ticker",
+         "label":"Ticker",
+         "attributes":{
+            "type":"string",
+            "defaultWidth":90,
+            "displayWeight":1,
+            "defaultSort":"asc"
+         }
+      }
+   ]
+}

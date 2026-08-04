@@ -14,8 +14,10 @@ class MorningstarSearchResult:
 
     name: str | None = None
     short_name: str | None = None
+
     ticker: str | None = None
     isin: str | None = None
+
     company_id: str | None = None
     security_id: str | None = None
     performance_id: str | None = None
@@ -32,7 +34,7 @@ class MorningstarSearchResult:
 class MorningstarRecord(SecurityProviderRecord):
     """Internal representation of a Morningstar search result and classification record."""
 
-    name: str = ""
+    name: str | None = None
     ticker: str | None = None
     company_id: str | None = None
 
@@ -43,6 +45,7 @@ class MorningstarRecord(SecurityProviderRecord):
 
     security_id: list[str] = field(default_factory=list)
     performance_id: list[str] = field(default_factory=list)
+    ticker_exchange: list[str] = field(default_factory=list)
     exchange: list[str] = field(default_factory=list)
     exchange_name: list[str] = field(default_factory=list)
     exchange_country: list[str] = field(default_factory=list)

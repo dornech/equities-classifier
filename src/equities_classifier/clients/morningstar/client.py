@@ -3,12 +3,10 @@
 
 from typing import Any, Self
 
-from collections.abc import Sequence
+from collections import Counter
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import fields
 
-# from playwright.sync_api import sync_playwright, Browser, BrowserContext, APIRequestContext
-# from undetected_playwright import Tarnished
-# from playwright_stealth import Stealth
 import utils_seleniumxp
 import undetected_chromedriver as uc
 from urllib.parse import urlencode
@@ -58,21 +56,28 @@ class MorningstarClient:
     }
 
     _MORNINGSTAR_SEARCH_RESULT_MAP = {
-        ("meta", "companyID"): "company_id",
         ("meta", "securityID"): "security_id",
         ("meta", "performanceID"): "performance_id",
+        ("meta", "companyID"): "company_id",
+        ("meta", "exchange"): "exchange",
         ("meta", "universe"): "universe",
+        ("meta", "ticker"): "ticker",
 
-        ("fields", "name", "value"): "name",
-        ("fields", "shortName", "value"): "short_name",
-        ("fields", "ticker", "value"): "ticker",
-        ("fields", "isin", "value"): "isin",
-
-        ("fields", "exchange", "value"): "exchange",
+        ("fields", "exchange", "value"): None,
         ("fields", "exchange", "displayAs"): "exchange_name",
 
         ("fields", "exchangeCountry", "value"): "exchange_country",
         ("fields", "exchangeCountry", "displayAs"): "exchange_country_name",
+
+        ("fields", "marketCap", "value"): None,
+        ("fields", "marketCap", "properties"): None,
+        ("fields", "marketCap", "properties", "asOfDate", "value"): None,
+        ("fields", "marketCap", "properties", "currency", "value"): None,
+
+        ("fields", "isin", "value"): "isin",
+        ("fields", "name", "value"): "name",
+        ("fields", "shortName", "value"): "short_name",
+        ("fields", "ticker", "value"): None,
     }
 
     _MORNINGSTAR_PROFILE_FIELD_MAP: dict[str, str] = {
@@ -82,7 +87,30 @@ class MorningstarClient:
     }
 
     @staticmethod
-    def _get_nested_value(data: dict[str, Any], path: tuple[str, ...],) -> Any:
+    def leaf_paths(
+        data: Mapping[str, Any],
+        path: tuple[str, ...] = (),
+        exclude_leaves: Collection[str] = []
+    ) -> list[tuple[str, ...]]:
+        """Return all key paths from the root to every leaf."""
+
+        result: list[tuple[str, ...]] = []
+
+        for key, value in data.items():
+
+            if key in exclude_leaves:
+                continue
+
+            current = path + (key,)
+            if isinstance(value, Mapping):
+                result.extend(MorningstarClient.leaf_paths(value, current, exclude_leaves))
+            else:
+                result.append(current)
+
+        return result
+
+    @staticmethod
+    def _get_nested_value(data: dict[str, Any], path: tuple[str, ...], ) -> Any:
         """Return a nested value from a dictionary."""
 
         value: Any = data
@@ -98,38 +126,24 @@ class MorningstarClient:
     def __init__(
         self,
         timeout: float = 30.0,
+        seleniumwrapper: utils_seleniumxp.WebDriver = None,
+        test_wo_browser: bool = False,
     ) -> None:
         """Initialize Morningstar client."""
 
-        # approach with playwright (including undetected playwright libraries)
-        # self._playwright = sync_playwright().start()
-        # # self._playwright = Stealth().use_sync(sync_playwright()).start()
-        # # self._browser: Browser = self._playwright.chromium.launch(headless=True, channel="msedge")
-        # self._browser: Browser = self._playwright.chromium.launch(headless=False, channel="msedge")
-        # self._context: BrowserContext = self._browser.new_context(
-        #     locale="en-GB",
-        #     user_agent=(
-        #         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        #         "AppleWebKit/537.36 (KHTML, like Gecko) "
-        #         "Chrome/138.0.0.0 Safari/537.36"
-        #     ),
-        # )
-        # # Tarnished.apply_stealth(self._context)
-        # self._request: APIRequestContext = self._context.request
-        #
-        # # load morningstar page to intialize
-        # self._page = self._context.new_page()
-        # self._page.goto("https://global.morningstar.com/en-eu")
-
-        # approach with Selenium
-        self._client = utils_seleniumxp.init_webdriver(
-            stealthmode=False,
-            optimizedscraping=False,
-            URL="https://global.morningstar.com/en-eu",
-            browser = "chrome",
-            alt_cls_webdriverwrapper = uc.Chrome,
-            alt_cls_options = uc.ChromeOptions,
-        )
+        if not test_wo_browser:
+            if seleniumwrapper is None:
+                self._client = utils_seleniumxp.init_webdriver(
+                    stealthmode=False,
+                    optimizedscraping=False,
+                    URL="https://global.morningstar.com/en-eu",
+                    browser = "chrome",
+                    alt_cls_webdriverwrapper = uc.Chrome,
+                    alt_cls_options = uc.ChromeOptions,
+                )
+            self._client = seleniumwrapper
+        else:
+            self._client = None
 
         self._timeout = timeout
 
@@ -144,13 +158,6 @@ class MorningstarClient:
 
     def close(self) -> None:
         """Release browser resources."""
-
-        # approach with playwright
-        # self._context.close()
-        # self._browser.close()
-        # self._playwright.stop()
-
-        # approach with Selenium
         self._client.close()
 
     def read_provider_base_data(
@@ -164,17 +171,21 @@ class MorningstarClient:
 
         for source_identifier in identifiers:
 
-            response_data = self._execute_search_request(identifier)
-            search_results = self._parse_search_results(source_identifier, response_data, raise_error)
+            response_data = self._execute_search_request(source_identifier)
+            search_results = self._parse_search_results(
+                source_identifier,
+                response_data,
+                raise_error,
+            )
             search_results = [
                 result for result in search_results
                 if (
-                       identifier.type == SecurityIdentifierType.ISIN
-                       and result.isin == identifier.value
+                       source_identifier.type == SecurityIdentifierType.ISIN
+                       and result.isin == source_identifier.value
                 )
                 or (
-                   identifier.type == SecurityIdentifierType.TICKER
-                   and result.ticker == identifier.value
+                   source_identifier.type == SecurityIdentifierType.TICKER
+                   and result.ticker == source_identifier.value
                )
             ]
 
@@ -186,15 +197,17 @@ class MorningstarClient:
 
     def read_provider_profile_data(
         self,
-        records: Sequence[MorningstarRecord],
+        records: list[MorningstarRecord],
         raise_error: bool = True
     ) -> list[MorningstarRecord]:
+        """Read profile data from Morningstar."""
 
         for record in records:
 
-            profile_data = self._execute_profile_request(share_class_id = record.security_id[0])
+            profile_data = self._execute_profile_request(security_id = record.company_id)
             record = self._parse_profile_to_record(profile_data, record,raise_error)
 
+        return records
 
     def _execute_request(
         self,
@@ -207,35 +220,6 @@ class MorningstarClient:
         """Execute a Morningstar request."""
 
         # self._rate_limiter.wait()
-
-        # approach with playwright
-        # response = self._request.fetch(
-        #     url,
-        #     method=method,
-        #     params=params,
-        #     data=json_param,
-        #     timeout=self._timeout * 1000,
-        # )
-        # match response.status:
-        #     case 401 | 403:
-        #         raise ClientAuthenticationError(response.text())
-        #     case 429:
-        #         raise ClientRateLimitError(response.text())
-        #     case _ if response.status >= 400:
-        #         raise ClientResponseError(response.text())
-
-        # approach with selenium-request
-        # try:
-        #     response = self._client.request(method, url, params=params)
-        # except utils_seleniumxp.TimeoutException as exc:
-        #     raise ClientConnectionError(str(exc)) from exc
-        # match response.status_code:
-        #     case 401 | 403:
-        #         raise ClientAuthenticationError(response.text)
-        #     case _:
-        #         response.raise_for_status()
-
-        # response_data = response.json()
 
         self._client.get(f"{url}?{urlencode(params)}")
         response = self._client.find_element(utils_seleniumxp.By.XPATH, "//pre").text
@@ -270,53 +254,69 @@ class MorningstarClient:
     ) -> list[MorningstarSearchResult]:
         """Parse Morningstar search response."""
 
-        count = response_data["count"] - len(response_data)
-        if raise_error and count == 0:
-            message = f"Morningstar returned no search data."
-            raise MorningstarResponseError(message)
+        count = response_data["count"] - len(response_data) + 1
+        if count == 0:
+            message = f"{DataSourceID.MORNINGSTAR} returned no search data."
+            if raise_error:
+                raise MorningstarResponseError(message)
 
         search_results: list[MorningstarSearchResult] = []
 
         for item in response_data["results"]:
 
+            missing = self.leaf_paths(item,  exclude_leaves=["score", "sortAs"]) - self._MORNINGSTAR_SEARCH_RESULT_MAP.keys()
+            if len(missing) != 0:
+                message = f"{DataSourceID.MORNINGSTAR} fields {missing} not considered in search result mapping."
+                if raise_error:
+                    raise MorningstarResponseError(message)
+
             result = MorningstarSearchResult(source_identifier=source_identifier)
             for path, attribute in self._MORNINGSTAR_SEARCH_RESULT_MAP.items():
-                value = self._get_nested_value(item, path)
-                if hasattr(result, attribute):
-                    if value is not None:
-                        setattr(result, attribute, value)
-                else:
-                    ClientHelper.missing_record_attribute(
-                        DataSourceID.MORNINGSTAR,
-                        attribute,
-                        value,
-                    )
+                if attribute is not None:
+                    value = self._get_nested_value(item, path)
+                    if hasattr(result, attribute):
+                        if value is not None:
+                            setattr(result, attribute, value)
+                    else:
+                        ClientHelper.missing_record_attribute(
+                            DataSourceID.MORNINGSTAR,
+                            attribute,
+                            value,
+                        )
 
             search_results.append(result)
 
         if count != len(search_results):
-            message = f"Morningstar returned inconsistent data or error in evaluation."
-            raise MorningstarResponseError(message)
+            message = f"{DataSourceID.MORNINGSTAR} returned inconsistent data or error in evaluation."
+            if raise_error:
+                raise MorningstarResponseError(message)
 
         return search_results
 
     def _parse_record(
         self,
         source_identifier: SecurityIdentifier,
-        search_results: list[MorningstarSearchResult],
+        search_results: Sequence[MorningstarSearchResult],
         raise_error: bool = False
     ) -> MorningstarRecord:
+        """Parse Morningstar search result and create a MorningstarRecord."""
 
-        if raise_error and not search_results:
-            msg = "No Morningstar search results available."
-            raise MorningstarResponseError(msg)
+        if not search_results:
+            message = f"No {DataSourceID.MORNINGSTAR} search results available."
+            if raise_error:
+                raise MorningstarResponseError(message)
 
         record = MorningstarRecord()
 
-        # Copy scalar fields from first search result.
+        counter_ticker = Counter(search_result.ticker for search_result in search_results)
+        if len(set(r.company_id for r in search_results)) != 1:
+            message = f"{DataSourceID.MORNINGSTAR} CompanyID is not unique for selected identifier."
+            raise MorningstarResponseError(message)
+
+        # Copy scalar fields from first search result. Consider differing tickers in Case of ISIN search
         first = search_results[0]
         record.name = first.name or ""
-        record.ticker = first.ticker
+        record.ticker = counter_ticker.most_common(1)[0][0]
         record.company_id = first.company_id
         record.universe = first.universe
 
@@ -324,28 +324,33 @@ class MorningstarClient:
 
             # copy other provider fields
             for field in fields(search_result):
-                if hasattr(record, field.name):
-                    target = getattr(record, field.name)
-                    if isinstance(target, list):
-                        # Preserve positional correspondence between all listing-specific attributes.
-                        value = getattr(search_result, field.name, None)
-                        target .append(value)
+                if field.name != "ticker":
+                    if hasattr(record, field.name):
+                        target = getattr(record, field.name)
+                        if isinstance(target, list):
+                            # Preserve positional correspondence between all listing-specific attributes.
+                            value = getattr(search_result, field.name, None)
+                            target.append(value)
+                        else:
+                            if getattr(search_result, field.name) != getattr(record, field.name):
+                                message = (
+                                    f"Inconsistency between Morningstar search results and modelling assumption: "
+                                    f"field '{field.name}' differs between listings."
+                                )
+                                raise MorningstarResponseError(message)
                     else:
-                        if getattr(search_result, field.name) != getattr(record, field.name):
-                            msg = (
-                                f"Inconsistency between Morningstar search results and modelling assumption: "
-                                f"field '{field.name}' differs between listings."
-                            )
-                            raise MorningstarResponseError(msg)
-
+                        ClientHelper.missing_record_attribute(
+                            DataSourceID.MORNINGSTAR,
+                            field.name,
+                            getattr(search_result, field.name, None),
+                        )
                 else:
-                    # provider attributes not yet in record definition -> potential logging endpoint
-                    pass
+                    record.ticker_exchange.append(search_result.ticker)
 
         # Create canonical security identifiers (including source identifier).
         identifiers: list[SecurityIdentifier] = [source_identifier]
         for attribute, identifier_type in self._MORNINGSTAR_IDENTIFIER_MAP.items():
-            value = getattr(record, attribute)
+            value = getattr(search_result, attribute)
             if value and identifier_type != source_identifier.type:
                 identifiers.append(
                     SecurityIdentifier(
@@ -376,24 +381,24 @@ class MorningstarClient:
         response_data = self._execute_request(method="POST", url=self._TOKEN_URL)
         self._access_token = response_data.get("token")
         if self._access_token is None:
-            msg = "Morningstar response does not contain an accessToken."
-            raise MorningstarResponseError(msg)
+            message = f"{DataSourceID.MORNINGSTAR} response does not contain an accessToken."
+            raise MorningstarResponseError(message)
 
     def _execute_profile_request(
         self,
-        share_class_id: str,
+        security_id: str,
     ) -> dict[str, Any]:
         """Request the Morningstar company profile."""
 
         params = {
-            "shareClassId": share_class_id,
+            "shareClassId": security_id,
             "access_token": self._get_access_token(),
         }
         response_data = self._execute_request(method="GET", url=self._PROFILE_URL, params=params)
 
         if not isinstance(response_data, dict):
-            msg = "Unexpected Morningstar company profile response."
-            raise MorningstarResponseError(msg)
+            message = f"Unexpected {DataSourceID.MORNINGSTAR} company profile response."
+            raise MorningstarResponseError(message)
 
         return response_data
 
@@ -406,9 +411,10 @@ class MorningstarClient:
         """Enrich a MorningstarRecord with company profile information."""
 
         sections = profile.get("sections")
-        if raise_error and not isinstance(sections, dict):
-            msg = "Morningstar profile does not contain 'sections'."
-            raise MorningstarResponseError(msg)
+        if not isinstance(sections, dict):
+            message = f"{DataSourceID.MORNINGSTAR} profile does not contain 'sections'."
+            if raise_error:
+                raise MorningstarResponseError(message)
 
         if isinstance(sections, dict):
 
@@ -433,8 +439,8 @@ class MorningstarClient:
                     )
 
         else:
-            msg = "Morningstar profile 'sections' is not a dictionary."
-            raise MorningstarResponseError(msg)
+            message = f"{DataSourceID.MORNINGSTAR} profile 'sections' is not a dictionary."
+            raise MorningstarResponseError(message)
 
         return record
 
@@ -446,9 +452,10 @@ class MorningstarClient:
         """Parse a Morningstar company profile."""
 
         sections = profile.get("sections")
-        if raise_error and not isinstance(sections, dict):
-            msg = "Morningstar profile does not contain 'sections'."
-            raise MorningstarResponseError(msg)
+        if not isinstance(sections, dict):
+            message = f"{DataSourceID.MORNINGSTAR} profile does not contain 'sections'."
+            if raise_error:
+                raise MorningstarResponseError(message)
 
         provider_attributes: dict[str, Any] = {}
 
@@ -468,23 +475,12 @@ class MorningstarClient:
                     )
 
         elif raise_error:
-            msg = "Morningstar profile 'sections' is not a dictionary."
-            raise MorningstarResponseError(msg)
+            message = f"{DataSourceID.MORNINGSTAR} profile 'sections' is not a dictionary."
+            raise MorningstarResponseError(message)
 
         return provider_attributes
 
 
 if __name__ == "__main__":
 
-    client = MorningstarClient()
-
-    identifier = SecurityIdentifier(
-        SecurityIdentifierType.ISIN,
-        "US0378331005",
-    )
-
-    with client:
-
-        records = client.read_provider_base_data([identifier])
-
-    print(records)
+    pass

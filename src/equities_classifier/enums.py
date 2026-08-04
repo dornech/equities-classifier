@@ -4,6 +4,14 @@
 from enum import IntEnum, StrEnum
 
 
+class DataSourceID(StrEnum):
+    """Supported data sources."""
+
+    MORNINGSTAR = "Morningstar"
+    MOTLEYFOOL = "MotleyFool"
+    OPENFIGI = "OpenFIGI"
+
+
 class SecurityIdentifierType(StrEnum):
     """Security identifier type
     possible types see f. e. https://www.openfigi.com/api/documentation#v3-id-type-values

@@ -4,6 +4,7 @@ from equities_classifier.enums import (
     ClassificationLevel,
 )
 from equities_classifier.models import (
+    ClassificationSystem,
     ClassificationNode,
     SecurityIdentifier,
     Security,
@@ -11,55 +12,65 @@ from equities_classifier.models import (
 )
 
 
-def test_security_is_hashable() -> None:
+def test_security_is_identifiable() -> None:
 
     securityidentifier = SecurityIdentifier(type=SecurityIdentifierType.ISIN, value="US0378331005")
     security = Security(
-        figi="test-FIGI",
-        company_name="Apple Inc.",
-        identifiers=tuple(securityidentifier,)
+        name="Apple Inc.",
+        ticker="AAPL",
+        identifiers=[securityidentifier,]
     )
 
-    assert hash(security)
+    assert security.identifier(SecurityIdentifierType.ISIN) is not None
+    assert security.has_identifier(SecurityIdentifierType.ISIN)
 
 
 def test_identifier_lookup() -> None:
     security = Security(
-        identifiers=(
+        identifiers=[
             SecurityIdentifier(
                 type=SecurityIdentifierType.ISIN,
                 value="US0378331005",
             ),
             SecurityIdentifier(
-                type=SecurityIdentifierType.FIGI,
+                type=SecurityIdentifierType.SHARE_CLASS_FIGI,
                 value="BBG000B9XRY4",
             ),
-        ),
+        ],
     )
 
+    assert security.identifier(SecurityIdentifierType.ISIN).value == "US0378331005"
     assert security.identifier_value(SecurityIdentifierType.ISIN) == "US0378331005"
-    assert security.identifier_value(SecurityIdentifierType.FIGI) == "BBG000B9XRY4"
-    assert security.identifier(SecurityIdentifierType.WKN) is None
+    assert security.identifier(SecurityIdentifierType.SHARE_CLASS_FIGI).value == "BBG000B9XRY4"
     assert not security.has_identifier(SecurityIdentifierType.WKN)
 
 
 def test_create_classification() -> None:
 
     security = Security(
-        figi="test-FIGI",
-        company_name="Apple Inc.",
-        identifiers=tuple(SecurityIdentifier(type=SecurityIdentifierType.ISIN, value="US0378331005"), ),
+        name="Apple Inc.",
+        ticker="AAPL",
+        identifiers=[SecurityIdentifier(type=SecurityIdentifierType.ISIN, value="US0378331005"), ],
     )
+
+    classification_system = ClassificationSystem(
+        id=ClassificationSystemID.GICS,
+        display_name="Morningstar GICS",
+        authorities=("Morningstar", ),
+        hierarchy=("sector", "industry group", "industry", "sub industry"),
+        supports_codes=True
+    )
+
     classification = SecurityClassification(
         security=security,
-        system=ClassificationSystemID.GICS,
+        system=classification_system,
         nodes=(
             ClassificationNode(
                 level=ClassificationLevel.LEVEL1,
-                name="Information Technology",
+                value="Information Technology",
                 code="45",
             ),
         ),
     )
 
-    assert classification.security.company_name == "Apple Inc."
+    assert classification.security.name == "Apple Inc."
