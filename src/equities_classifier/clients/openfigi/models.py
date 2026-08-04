@@ -1,20 +1,20 @@
 """Internal data models for the OpenFIGI REST API."""
 
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from equities_classifier.resolvers.base import SecurityIdentifierResolverRecord
+from equities_classifier.models import SecurityProviderRecord
 
 
 @dataclass(slots=True, kw_only=True)
-class OpenFIGIRecord(SecurityIdentifierResolverRecord):
+class OpenFIGIRecord(SecurityProviderRecord):
     """Internal representation of a single OpenFIGI mapping result."""
 
-    company_name: str | None = None
+    name: str | None = None
     ticker: str | None = None
 
-    figi: str | None = None
-    composite_figi: str | None = None
+    figi: list[str] = field(default_factory=list)
+    composite_figi: list[str] = field(default_factory=list)
     share_class_figi: str | None = None
 
     security_description: str | None = None
@@ -22,19 +22,7 @@ class OpenFIGIRecord(SecurityIdentifierResolverRecord):
     security_type2: str | None = None
     market_sector: str | None = None
 
-    exch_code: str | None = None
-    mic_code: str | None = None
+    exch_code: list[str] = field(default_factory=list)
+    mic_code: list[str] = field(default_factory=list)
     currency: str | None = None
     state_code: str | None = None
-
-    # potentially to be deleted if derivation from SecurityIdentifierResolverRecord works
-    # identifiers: list[SecurityIdentifier] = field(default_factory=list)
-    #
-    # def provider_attributes2(self) -> dict[str, Any]:
-    #     """Return all provider-specific attributes."""
-    #
-    #     return {
-    #         field.name: getattr(self, field.name)
-    #         for field in fields(self)
-    #         if field.name != "identifiers" and getattr(self, field.name) is not None
-    #     }

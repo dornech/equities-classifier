@@ -8,11 +8,10 @@ from collections.abc import Sequence
 
 import httpx
 
-from equities_classifier.models import (
-    SecurityIdentifier,
-    SecurityIdentifierType
-)
+from equities_classifier.enums import DataSourceID, SecurityIdentifierType
+from equities_classifier.models import SecurityIdentifier
 from equities_classifier.clients.openfigi.models import OpenFIGIRecord
+from equities_classifier.clients.clienthelper import ClientHelper
 from equities_classifier.clients.ratelimiter import (
     RateLimits,
     RateLimiter
@@ -24,6 +23,7 @@ from equities_classifier.exceptions import (
     ClientResponseError
 )
 
+
 class OpenFIGIResponseError(ClientResponseError):
     """OpenFIGI returned an error response."""
 
@@ -31,7 +31,7 @@ class OpenFIGIResponseError(ClientResponseError):
 class OpenFIGIClient:
     """Client for the OpenFIGI mapping REST API."""
 
-    BASE_URL = "https://api.openfigi.com/v3/mapping"
+    B_ASE_URL = "https://api.openfigi.com/v3/mapping"
 
     _IDENTIFIER_TYPE_MAP: dict[SecurityIdentifierType, str] = {
         SecurityIdentifierType.CINS: "ID_CINS",
@@ -67,7 +67,7 @@ class OpenFIGIClient:
     }
 
     _OPENFIGI_RECORDMAP: dict[str, str] = {
-        "name": "company_name",
+        "name": "name",
         "ticker": "ticker",
         "figi": "figi",
         "compositeFIGI": "composite_figi",
@@ -109,13 +109,12 @@ class OpenFIGIClient:
         """Close the HTTP client."""
         self._client.close()
 
-    def map(
+    def read_provider_base_data(
         self,
         identifiers: Sequence[SecurityIdentifier],
-        unique_share_class_figi_only: bool = True,
         raise_error: bool = True
     ) -> list[OpenFIGIRecord]:
-        """Resolve one or more identifiers via OpenFIGI."""
+        """Read base date for one or more identifiers from OpenFIGI."""
 
         records: list[OpenFIGIRecord] = []
 
@@ -128,10 +127,9 @@ class OpenFIGIClient:
                 response_data=self._execute_request(batch)
                 for source_identifier, item in zip(batch, response_data, strict=True):
                     records.extend(
-                        self._parse_record(
+                        self._parse_records(
                             item=item,
                             source_identifier=source_identifier,
-                            unique_share_class_figi_only=unique_share_class_figi_only,
                             raise_error=raise_error
                         )
                     )
@@ -181,7 +179,7 @@ class OpenFIGIClient:
         self._rate_limiter.wait()
 
         try:
-            response = self._client.post(self.BASE_URL, json=payload)
+            response = self._client.post(self._BASE_URL, json=payload)
         except httpx.ConnectError as exc:
             raise ClientConnectionError(str(exc)) from exc
         except httpx.TimeoutException as exc:
@@ -201,11 +199,10 @@ class OpenFIGIClient:
 
         return response_data
 
-    def _parse_record(
+    def _parse_records(
         self,
         item: dict[str, Any],
         source_identifier: SecurityIdentifier,
-        unique_share_class_figi_only: bool = True,
         raise_error: bool = False
     ) -> list[OpenFIGIRecord]:
         """Parse a single OpenFIGI mapping response."""
@@ -225,44 +222,67 @@ class OpenFIGIClient:
         if not data:
             return []
 
-        seen_share_class_figis: set[str] = set()
         records: list[OpenFIGIRecord] = []
 
         for record_data in data:
 
-            record = OpenFIGIRecord()
+            # find existing record with share_class_figi otherwise new record
+            record = next(
+                (record for record in records if record.share_class_figi == record_data.get("shareClassFIGI")),
+                OpenFIGIRecord()
+            )
+            newrecord =  record.share_class_figi is None
 
-            # Copy provider fields.
-            for json_name, value in record_data.items():
-                attribute = self._OPENFIGI_RECORDMAP.get(json_name)
-                if attribute is not None and hasattr(record, attribute):
-                    setattr(record, attribute, value)
+            if newrecord:
 
-            # Remove duplicate share classes if requested.
-            if unique_share_class_figi_only:
-                share_class_figi = record.share_class_figi
-                if share_class_figi is not None and share_class_figi in seen_share_class_figis:
-                    continue
-                if share_class_figi is not None:
-                    seen_share_class_figis.add(share_class_figi)
-
-            # Create canonical security identifiers (including source identifier).
-            identifiers: list[SecurityIdentifier] = [source_identifier]
-            for json_name, identifier_type in self._OPENFIGI_IDENTIFIER_MAP.items():
-                value = record_data.get(json_name)
-                if value and identifier_type != source_identifier.type:
-                    identifiers.append(
-                        SecurityIdentifier(
-                            type=identifier_type,
-                            value=value,
+                # Copy provider fields.
+                for json_name, value in record_data.items():
+                    attribute = self._OPENFIGI_RECORDMAP.get(json_name)
+                    if attribute is not None:
+                        if  hasattr(record, attribute):
+                            if isinstance(getattr(record, attribute), list):
+                                getattr(record, attribute).append(value)
+                            else:
+                                setattr(record, attribute, value)
+                        else:
+                            ClientHelper.missing_record_attribute(
+                                DataSourceID.OPENFIGI,
+                                attribute,
+                                value,
+                            )
+                    else:
+                        ClientHelper.unknown_provider_attribute(
+                            DataSourceID.OPENFIGI,
+                            json_name,
+                            value,
                         )
-                    )
-            record.identifiers = identifiers
 
-            records.append(record)
+                # Create canonical security identifiers (including source identifier).
+                identifiers: list[SecurityIdentifier] = [source_identifier]
+                for json_name, identifier_type in self._OPENFIGI_IDENTIFIER_MAP.items():
+                    value = record_data.get(json_name)
+                    if value and identifier_type != source_identifier.type:
+                        identifiers.append(
+                            SecurityIdentifier(
+                                type=identifier_type,
+                                value=value,
+                            )
+                        )
+                record.identifiers = identifiers
+
+                records.append(record)
+
+            else:
+
+                for json_name, value in record_data.items():
+                    attribute = self._OPENFIGI_RECORDMAP.get(json_name)
+                    if attribute is not None and hasattr(record, attribute):
+                        if isinstance(getattr(record, attribute), list):
+                            getattr(record, attribute).append(value)
 
         return records
 
 
 if __name__ == "__main__":
+
     pass

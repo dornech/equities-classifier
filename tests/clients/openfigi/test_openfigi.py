@@ -72,9 +72,9 @@ def test_parse_single_record() -> None:
 
     record = records[0]
 
-    assert record.company_name == "Apple Inc."
+    assert record.name == "Apple Inc."
     assert record.ticker == "AAPL"
-    assert record.figi == "BBG000B9XRY4"
+    assert record.figi == ["BBG000B9XRY4"]
     assert record.share_class_figi == "BBG001S5N8V8"
     assert record.security_type == "Common Stock"
 
@@ -109,8 +109,7 @@ def test_parse_multiple_records() -> None:
 
     records = client._parse_record(
         item,
-        source_identifier,
-        unique_share_class_figi_only=False,
+        source_identifier
     )
 
     assert len(records) == 2
@@ -187,11 +186,11 @@ def test_map_apple_isin():
     )
 
     with client:
-        records = client.map([identifier])
+        records = client.read_provider_base_data([identifier])
 
     assert len([record for record in records if record.share_class_figi is not None]) == 1
 
     record = records[0]
 
-    assert record.company_name.upper().startswith("APPLE")
+    assert record.name.upper().startswith("APPLE")
     assert record.ticker == "AAPL"

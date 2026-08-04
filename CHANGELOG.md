@@ -5,6 +5,31 @@
 - First pre-alpha
 - ...
 
+## [v0.4.0](https://github.com/dornech/equities-classifier/releases/tag/v0.4.0)  (2026-08-05) 
+
+### Features
+
+- Morningstar connector 3rd try with Selenium / undetected-chromedriver
+(['3f4ebe1'](https://github.com/dornech/equities-classifier/commit/3f4ebe17e4b7a79e1978916cf05c97a64f6d9556))
+- Morningstar connector 2nd try with anti-bot detection
+(['46f925e'](https://github.com/dornech/equities-classifier/commit/46f925edadff70e4684261dedccb1b999b5ee894))
+- Morningstar connector 2nd try
+(['8f5f34f'](https://github.com/dornech/equities-classifier/commit/8f5f34ff3df2439834173ebfead3ab8447ae49e9))
+- Morningstar connector 1st try
+(['c09173e'](https://github.com/dornech/equities-classifier/commit/c09173e3aff61ad1d8ca8623e7030d44ca9c9fbf))
+
+### Bug fixes
+
+- Morningstar connector (better call it client) improvements and testcases
+(['a78f02f'](https://github.com/dornech/equities-classifier/commit/a78f02fa1c9a64343488c2bb237337aff839088d))
+
+### Chores
+
+- Clean up data model, delete resolver/connector
+(['2539243'](https://github.com/dornech/equities-classifier/commit/25392438214484c44df077f1e4bda87d4fe0a906))
+- Archive latest changes resolver/connector before deleting
+(['74015ff'](https://github.com/dornech/equities-classifier/commit/74015ff6d44d5d80fd67b5b2d1b93a99d071da89))
+
 ## [v0.3.2](https://github.com/dornech/equities-classifier/releases/tag/v0.3.2)  (2026-08-01) 
 
 ### Bug fixes

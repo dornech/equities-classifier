@@ -19,13 +19,12 @@ requires-python = ">=3.11"
 # only license identifier from https://spdx.org/licenses/ are allowed
 license = { text = "GPL-3.0-only" }
 # keywords for easier look-up on PyPI
-keywords = ["equities", "sector", "classification", "GCIS", "MSCI", "Morningstar", "GCES"]
+keywords = ["equities", "openFIGI", "sector", "classification", "GCIS", "MSCI", "Morningstar", "GCES"]
 authors = [
     { name = "dornech", email = "dornech@gmx.de" },
 ]
 # options under https://pypi.org/classifiers/
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -36,7 +35,11 @@ classifiers = [
 # direct dependencies of this package, installed when users `pip install equities-classifier` later.
 dependencies = [
     "httpx",
-    "openpyxl"
+    # "playwright",
+    # "playwright_stealth",
+    # "undetected_playwright",
+    "utils-seleniumXP",
+    "openpyxl",
 ]
 
 dynamic = ["version"]
@@ -84,7 +87,7 @@ exclude = [
 [tool.commitizen]
 name = "cz_customize"
 version_scheme = "pep440"
-version = "0.3.2"
+version = "0.4.0"
 version_files = ["pyproject.toml:version"]
 tag_format = "v$version"
 # retry_after_failure = false
@@ -142,7 +145,7 @@ include = [
     "src/**/*.py",
     "src/**/*.pyi",
     "tests/**/*.py",
-    "tests/**/*.pyi"
+    "tests/**/*.pyi",
 ]
 
 [tool.ruff.lint]
