@@ -1,6 +1,8 @@
 """Classification Systems supported by equities_classifier."""
 
 
+from immutabledict import immutabledict
+
 from equities_classifier.enums import ClassificationSystemID
 from equities_classifier.models import ClassificationSystem
 
@@ -33,3 +35,18 @@ GECS = ClassificationSystem(
     ),
     supports_codes=False,
 )
+
+
+MAP_GECS_SUPERSECTOR_FROM_SECTOR: immutabledict[str, str] = immutabledict( {
+    "Basic Materials": "Cyclical",
+    "Consumer Cyclical": "Cyclical",
+    "Financial Services": "Cyclical",
+    "RealEstate": "Cyclical",
+    "Communication Services": "Sensitive",
+    "Energy": "Sensitive",
+    "Industrials": "Sensitive",
+    "Technology": "Sensitive",
+    "Healthcare": "Defensive",
+    "Consumer Defensive": "Defensive",
+    "Utilities": "Defensive",
+} )

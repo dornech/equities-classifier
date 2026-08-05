@@ -17,6 +17,7 @@ class SecurityIdentifierType(StrEnum):
     possible types see f. e. https://www.openfigi.com/api/documentation#v3-id-type-values
     """
 
+    CIK = "cik"
     CINS = "cins"
     CUSIP = "cusip"
     ISIN = "isin"

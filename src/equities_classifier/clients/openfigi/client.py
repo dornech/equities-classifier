@@ -1,10 +1,27 @@
 """HTTP client for the OpenFIGI REST API."""
 
 
+# ruff and mypy per file settings
+#
+# empty lines
+# ruff: noqua: E303
+# naming conventions
+# ruff: noqa: N806
+# boolean-type arguments
+# ruff: noqa: FBT001, FBT002
+# others
+# ruff: noqa: PLR1702, SIM102
+#
+# disable mypy errors
+# mypy: disable-error-code = "no-any-return, attr-defined, unused-ignore"
+
+# fmt: off
+
+
 from typing import Any
 
-from collections import defaultdict
 from collections.abc import Sequence
+from immutabledict import immutabledict
 
 import httpx
 
@@ -31,9 +48,9 @@ class OpenFIGIResponseError(ClientResponseError):
 class OpenFIGIClient:
     """Client for the OpenFIGI mapping REST API."""
 
-    B_ASE_URL = "https://api.openfigi.com/v3/mapping"
+    _BASE_URL = "https://api.openfigi.com/v3/mapping"
 
-    _IDENTIFIER_TYPE_MAP: dict[SecurityIdentifierType, str] = {
+    _IDENTIFIER_TYPE_MAP: immutabledict[SecurityIdentifierType, str] = immutabledict( {
         SecurityIdentifierType.CINS: "ID_CINS",
         SecurityIdentifierType.CUSIP: "ID_CUSIP",
         SecurityIdentifierType.SHARE_CLASS_FIGI: "ID_BB_GLOBAL_SHARE_CLASS_LEVEL",
@@ -41,7 +58,7 @@ class OpenFIGIClient:
         SecurityIdentifierType.SEDOL: "ID_SEDOL",
         SecurityIdentifierType.TICKER: "TICKER",
         SecurityIdentifierType.WKN: "WKN"
-    }
+    } )
 
     @classmethod
     def _to_openfigi_identifier_type(cls, identifier_type: SecurityIdentifierType) -> str:
@@ -85,8 +102,9 @@ class OpenFIGIClient:
     def __init__(self, api_key: str | None = None, timeout: float = 30.0) -> None:
         """init the HTTP client."""
 
-        headers: dict[str, str] = {}
-        headers["Content-Type"] = "application/json"
+        headers: dict[str, str] = {
+            "Content-Type": "application/json"
+        }
         self._api_key = api_key
         if api_key:
             headers["X-OPENFIGI-APIKEY"] = api_key
@@ -118,38 +136,20 @@ class OpenFIGIClient:
 
         records: list[OpenFIGIRecord] = []
 
-        request_plan = self._create_request_plan(identifiers)
-        for identifier_type, identifier_list in request_plan.items():
+        batches = self._create_batches(identifiers)
+        for batch in batches:
 
-            batches = self._create_batches(identifier_list)
-            for batch in batches:
-
-                response_data=self._execute_request(batch)
-                for source_identifier, item in zip(batch, response_data, strict=True):
-                    records.extend(
-                        self._parse_records(
-                            item=item,
-                            source_identifier=source_identifier,
-                            raise_error=raise_error
-                        )
+            response_data = self._execute_request(batch)
+            for source_identifier, item in zip(batch, response_data, strict=True):
+                records.extend(
+                    self._parse_records(
+                        item=item,
+                        source_identifier=source_identifier,
+                        raise_error=raise_error
                     )
+                )
 
         return records
-
-    def _create_request_plan(
-        self,
-        identifiers: Sequence[SecurityIdentifier],
-    ) -> dict[SecurityIdentifierType, list[SecurityIdentifier]]:
-        """Group identifiers by source identifier type."""
-
-        request_plan: defaultdict[
-            SecurityIdentifierType,
-            list[SecurityIdentifier],
-        ] = defaultdict(list)
-        for identifier in identifiers:
-            request_plan[identifier.type].append(identifier)
-
-        return dict(request_plan)
 
     def _create_batches(
         self,
@@ -231,7 +231,7 @@ class OpenFIGIClient:
                 (record for record in records if record.share_class_figi == record_data.get("shareClassFIGI")),
                 OpenFIGIRecord()
             )
-            newrecord =  record.share_class_figi is None
+            newrecord = record.share_class_figi is None
 
             if newrecord:
 
@@ -239,7 +239,7 @@ class OpenFIGIClient:
                 for json_name, value in record_data.items():
                     attribute = self._OPENFIGI_RECORDMAP.get(json_name)
                     if attribute is not None:
-                        if  hasattr(record, attribute):
+                        if hasattr(record, attribute):
                             if isinstance(getattr(record, attribute), list):
                                 getattr(record, attribute).append(value)
                             else:

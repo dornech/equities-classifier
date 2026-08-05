@@ -7,24 +7,6 @@ from equities_classifier.clients.openfigi.client import OpenFIGIClient, OpenFIGI
 from equities_classifier.models import SecurityIdentifier, SecurityIdentifierType
 
 
-def test_create_request_plan() -> None:
-    """Identifiers are grouped by identifier type."""
-
-    identifiers = [
-        SecurityIdentifier(SecurityIdentifierType.ISIN, "US0378331005"),
-        SecurityIdentifier(SecurityIdentifierType.CUSIP, "037833100"),
-        SecurityIdentifier(SecurityIdentifierType.ISIN, "US5949181045"),
-    ]
-
-    client = OpenFIGIClient()
-
-    plan = client._create_request_plan(identifiers)
-
-    assert len(plan) == 2
-    assert len(plan[SecurityIdentifierType.ISIN]) == 2
-    assert len(plan[SecurityIdentifierType.CUSIP]) == 1
-
-
 def test_create_batches() -> None:
     """Identifiers are split into batches."""
 
@@ -66,7 +48,7 @@ def test_parse_single_record() -> None:
 
     client = OpenFIGIClient()
 
-    records = client._parse_record(item, source_identifier, raise_error=True)
+    records = client._parse_records(item, source_identifier, raise_error=True)
 
     assert len(records) == 1
 
@@ -107,7 +89,7 @@ def test_parse_multiple_records() -> None:
 
     client = OpenFIGIClient()
 
-    records = client._parse_record(
+    records = client._parse_records(
         item,
         source_identifier
     )
@@ -140,7 +122,7 @@ def test_parse_unique_share_class_figi() -> None:
 
     client = OpenFIGIClient()
 
-    records = client._parse_record(item, source_identifier, raise_error=True)
+    records = client._parse_records(item, source_identifier, raise_error=True)
 
     assert len(records) == 1
 
@@ -158,7 +140,7 @@ def test_parse_error_response() -> None:
     )
 
     with pytest.raises(OpenFIGIResponseError):
-        client._parse_record(item, source_identifier, raise_error=True)
+        client._parse_records(item, source_identifier, raise_error=True)
 
 
 def test_missing_data_raises() -> None:
@@ -172,7 +154,7 @@ def test_missing_data_raises() -> None:
     )
 
     with pytest.raises(OpenFIGIResponseError):
-        client._parse_record({}, source_identifier, raise_error=True)
+        client._parse_records({}, source_identifier, raise_error=True)
 
 
 def test_map_apple_isin():

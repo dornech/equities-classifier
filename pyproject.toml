@@ -34,11 +34,12 @@ classifiers = [
 ]
 # direct dependencies of this package, installed when users `pip install equities-classifier` later.
 dependencies = [
+    "immutabledict",
     "httpx",
     # "playwright",
     # "playwright_stealth",
     # "undetected_playwright",
-    "utils-seleniumXP",
+    "utils-seleniumxp",
     "openpyxl",
 ]
 
