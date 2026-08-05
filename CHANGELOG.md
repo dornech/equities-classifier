@@ -5,6 +5,17 @@
 - First pre-alpha
 - ...
 
+## [v0.4.1](https://github.com/dornech/equities-classifier/releases/tag/v0.4.1)  (2026-08-05) 
+
+### Bug fixes
+
+- Cleanup and regression test openfigi
+(['c6abfdd'](https://github.com/dornech/equities-classifier/commit/c6abfdd8f49d395956ed436c7427a21858e1a236))
+- Tests and fixes for Morningstar client
+(['d00ade4'](https://github.com/dornech/equities-classifier/commit/d00ade4421b8740e9fb5a8835fd939e324a5b646))
+- Ruff errors in Morningstar client
+(['34f9e37'](https://github.com/dornech/equities-classifier/commit/34f9e37d38008add042c40378c1b3c9d4ab43e0b))
+
 ## [v0.4.0](https://github.com/dornech/equities-classifier/releases/tag/v0.4.0)  (2026-08-05) 
 
 ### Features
