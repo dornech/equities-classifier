@@ -1,10 +1,26 @@
 """Client for Morningstar."""
 
 
+# ruff and mypy per file settings
+#
+# empty lines
+# ruff: noqua: E303
+# boolean-type arguments
+# ruff: noqa: FBT001, FBT002
+# others
+# ruff: noqa: PLR1702
+#
+# disable mypy errors
+# mypy: disable-error-code = "no-any-return, attr-defined, unused-ignore"
+
+# fmt: off
+
+
 from typing import Any, Self
 
 from collections import Counter
 from collections.abc import Collection, Mapping, Sequence
+from immutabledict import immutabledict
 from dataclasses import fields
 
 import utils_seleniumxp
@@ -20,12 +36,7 @@ from equities_classifier.clients.morningstar.models import (
     MorningstarSearchResult
 )
 from equities_classifier.clients.clienthelper import ClientHelper
-from equities_classifier.exceptions import (
-    ClientAuthenticationError,
-    ClientConnectionError,
-    ClientRateLimitError,
-    ClientResponseError
-)
+from equities_classifier.exceptions import ClientResponseError
 
 
 class MorningstarResponseError(ClientResponseError):
@@ -50,12 +61,12 @@ class MorningstarClient:
         "ticker"
     )
 
-    _MORNINGSTAR_IDENTIFIER_MAP: dict[str, SecurityIdentifierType] = {
+    _MORNINGSTAR_IDENTIFIER_MAP: immutabledict[str, SecurityIdentifierType] = {
         "isin": SecurityIdentifierType.ISIN,
         "ticker": SecurityIdentifierType.TICKER
     }
 
-    _MORNINGSTAR_SEARCH_RESULT_MAP = {
+    _MORNINGSTAR_SEARCH_RESULT_MAP: immutabledict[tuple[str, ...], str] = {
         ("meta", "securityID"): "security_id",
         ("meta", "performanceID"): "performance_id",
         ("meta", "companyID"): "company_id",
@@ -80,7 +91,7 @@ class MorningstarClient:
         ("fields", "ticker", "value"): None,
     }
 
-    _MORNINGSTAR_PROFILE_FIELD_MAP: dict[str, str] = {
+    _MORNINGSTAR_PROFILE_FIELD_MAP: immutabledict[str, str] = {
         "businessDescription": "business_description",
         "sector": "sector",
         "industry": "industry",
@@ -101,7 +112,7 @@ class MorningstarClient:
             if key in exclude_leaves:
                 continue
 
-            current = path + (key,)
+            current = (*path, key)
             if isinstance(value, Mapping):
                 result.extend(MorningstarClient.leaf_paths(value, current, exclude_leaves))
             else:
@@ -137,9 +148,9 @@ class MorningstarClient:
                     stealthmode=False,
                     optimizedscraping=False,
                     URL="https://global.morningstar.com/en-eu",
-                    browser = "chrome",
-                    alt_cls_webdriverwrapper = uc.Chrome,
-                    alt_cls_options = uc.ChromeOptions,
+                    browser="chrome",
+                    alt_cls_webdriverwrapper=uc.Chrome,
+                    alt_cls_options=uc.ChromeOptions,
                 )
             self._client = seleniumwrapper
         else:
@@ -190,7 +201,7 @@ class MorningstarClient:
             ]
 
             if search_results is not None:
-                record = self._parse_record(source_identifier,  search_results,  raise_error)
+                record = self._parse_record(source_identifier, search_results, raise_error)
                 records.append(record)
 
         return records
@@ -204,8 +215,8 @@ class MorningstarClient:
 
         for record in records:
 
-            profile_data = self._execute_profile_request(security_id = record.company_id)
-            record = self._parse_profile_to_record(profile_data, record,raise_error)
+            profile_data = self._execute_profile_request(security_id=record.company_id)
+            record = self._parse_profile_to_record(profile_data, record, raise_error)
 
         return records
 
@@ -215,7 +226,7 @@ class MorningstarClient:
         url: str,
         *,
         params: dict[str, Any] | None = None,
-        json_param: Any  | None = None
+        json_param: Any | None = None
     ) -> dict[str, Any] | list[dict[str, Any]]:
         """Execute a Morningstar request."""
 
@@ -231,7 +242,7 @@ class MorningstarClient:
     def _execute_search_request(
         self,
         source_identifier: SecurityIdentifier,
-    ) ->list[dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Execute a Morningstar security search request."""
 
         query = (
@@ -264,7 +275,9 @@ class MorningstarClient:
 
         for item in response_data["results"]:
 
-            missing = self.leaf_paths(item,  exclude_leaves=["score", "sortAs"]) - self._MORNINGSTAR_SEARCH_RESULT_MAP.keys()
+            missing = (
+                self.leaf_paths(item,  exclude_leaves=["score", "sortAs"]) -
+                self._MORNINGSTAR_SEARCH_RESULT_MAP.keys())
             if len(missing) != 0:
                 message = f"{DataSourceID.MORNINGSTAR} fields {missing} not considered in search result mapping."
                 if raise_error:
@@ -309,7 +322,7 @@ class MorningstarClient:
         record = MorningstarRecord()
 
         counter_ticker = Counter(search_result.ticker for search_result in search_results)
-        if len(set(r.company_id for r in search_results)) != 1:
+        if len({r.company_id for r in search_results}) != 1:
             message = f"{DataSourceID.MORNINGSTAR} CompanyID is not unique for selected identifier."
             raise MorningstarResponseError(message)
 
@@ -331,13 +344,12 @@ class MorningstarClient:
                             # Preserve positional correspondence between all listing-specific attributes.
                             value = getattr(search_result, field.name, None)
                             target.append(value)
-                        else:
-                            if getattr(search_result, field.name) != getattr(record, field.name):
-                                message = (
-                                    f"Inconsistency between Morningstar search results and modelling assumption: "
-                                    f"field '{field.name}' differs between listings."
-                                )
-                                raise MorningstarResponseError(message)
+                        elif getattr(search_result, field.name) != getattr(record, field.name):
+                            message = (
+                                f"Inconsistency between Morningstar search results and modelling assumption: "
+                                f"field '{field.name}' differs between listings."
+                            )
+                            raise MorningstarResponseError(message)
                     else:
                         ClientHelper.missing_record_attribute(
                             DataSourceID.MORNINGSTAR,

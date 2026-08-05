@@ -3,7 +3,6 @@
 
 from typing import Any
 
-from abc import ABC
 from dataclasses import dataclass, fields, field
 
 from equities_classifier.enums import (
@@ -46,7 +45,7 @@ class SecurityIdentifier:
 
 
 @dataclass(slots=True, kw_only=True)
-class SecurityIdentifierIdentifiable(ABC):
+class SecurityIdentifierIdentifiable:
     """Base class for objects identified by security identifiers."""
 
     identifiers: list[SecurityIdentifier] = field(default_factory=list)
@@ -102,7 +101,6 @@ class Security(SecurityIdentifierIdentifiable):
     name: str | None = None
     ticker: str | None = None
     provider_attributes: dict[str, dict[str, Any]] = field(default_factory=dict)
-
 
 
 @dataclass(frozen=True, slots=True)
