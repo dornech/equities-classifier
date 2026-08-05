@@ -1,19 +1,13 @@
 """Integration tests for Morningstar request methods."""
 
 
-from equities_classifier.enums import SecurityIdentifierType
 from equities_classifier.models import SecurityIdentifier
 from equities_classifier.clients.morningstar.client import MorningstarClient
 
 
-def test_execute_search_request(client: MorningstarClient):
+def test_execute_search_request(client: MorningstarClient, apple_isin: SecurityIdentifier):
 
-    identifier = SecurityIdentifier(
-        type=SecurityIdentifierType.ISIN,
-        value="US0378331005",
-    )
-
-    response = client._execute_search_request(identifier)
+    response = client._execute_search_request(apple_isin)
 
     assert isinstance(response, dict)
     assert "count" in response
@@ -39,27 +33,22 @@ def test_get_access_token_cached(client: MorningstarClient):
     assert token1 == token2
 
 
-def test_execute_profile_request(client: MorningstarClient):
+def test_execute_profile_request(client: MorningstarClient, apple_isin: SecurityIdentifier):
 
-    identifier = SecurityIdentifier(
-        type=SecurityIdentifierType.ISIN,
-        value="US0378331005",
-    )
-
-    search_response = client._execute_search_request(identifier)
+    search_response = client._execute_search_request(apple_isin)
     search_results = client._parse_search_results(
-        identifier,
+        apple_isin,
         search_response,
     )
     record = client._parse_record(
-        source_identifier=identifier,
+        source_identifier=apple_isin,
         search_results=search_results,
     )
 
     profile = client._execute_profile_request(
-        security_id=record.security_id[0],
+        security_id=record.company_id,
     )
 
     assert isinstance(profile, dict)
     assert "sections" in profile
-    assert profile["companyID"] == record.company_id[0]
+    assert profile["performanceId"] == record.company_id

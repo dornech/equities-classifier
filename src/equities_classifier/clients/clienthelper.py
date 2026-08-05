@@ -16,6 +16,15 @@ class ClientHelper:
         pass
 
     @staticmethod
+    def unknown_provider_attributes(
+        provider: str,
+        attributes: list[str],
+        context: str | None = None
+    ) -> None:
+        """Called when the provider returns an unmapped JSON attribute."""
+        pass
+
+    @staticmethod
     def missing_record_attribute(
         provider: str,
         attribute: str,

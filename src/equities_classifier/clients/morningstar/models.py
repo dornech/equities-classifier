@@ -37,6 +37,7 @@ class MorningstarRecord(SecurityProviderRecord):
     name: str | None = None
     ticker: str | None = None
     company_id: str | None = None
+    business_description: str | None = None
 
     universe: str | None = None
 

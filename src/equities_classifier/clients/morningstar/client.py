@@ -51,7 +51,7 @@ class MorningstarClient:
     _TOKEN_URL = "https://global.morningstar.com/api/v1/en-eu/oauth/token/"
     _PROFILE_URL = "https://api-global.morningstar.com/sal-service/v1/stock/data/companyProfile"
 
-    _SEARCH_FIELDS = (
+    _SEARCH_FIELDS: tuple[str] = (
         "baseCurrency,"
         "exchange,"
         "exchangeCountry,"
@@ -61,12 +61,12 @@ class MorningstarClient:
         "ticker"
     )
 
-    _MORNINGSTAR_IDENTIFIER_MAP: immutabledict[str, SecurityIdentifierType] = {
+    _MORNINGSTAR_IDENTIFIER_MAP: immutabledict[str, SecurityIdentifierType] = immutabledict( {
         "isin": SecurityIdentifierType.ISIN,
         "ticker": SecurityIdentifierType.TICKER
-    }
+    } )
 
-    _MORNINGSTAR_SEARCH_RESULT_MAP: immutabledict[tuple[str, ...], str] = {
+    _MORNINGSTAR_SEARCH_RESULT_MAP: immutabledict[tuple[str, ...], str] = immutabledict( {
         ("meta", "securityID"): "security_id",
         ("meta", "performanceID"): "performance_id",
         ("meta", "companyID"): "company_id",
@@ -89,13 +89,31 @@ class MorningstarClient:
         ("fields", "name", "value"): "name",
         ("fields", "shortName", "value"): "short_name",
         ("fields", "ticker", "value"): None,
-    }
+    } )
 
-    _MORNINGSTAR_PROFILE_FIELD_MAP: immutabledict[str, str] = {
+    _MORNINGSTAR_PROFILE_SECTION_FIELD_MAP_COMPLETE: immutabledict[tuple[str, ...], str] = immutabledict( {
+        ("businessDescription", "value"): "business_description",
+        ("contact", "address1"): None,
+        ("contact", "address2"): None,
+        ("contact", "country"): None,
+        ("contact", "phone"): None,
+        ("contact", "fax"): None,
+        ("contact", "email"): None,
+        ("contact", "url"): None,
+        ("sector", "value"): "sector",
+        ("industry", "value"): "industry",
+        ("mostRecentEarning", "value"): None,
+        ("fiscalYearEnds", "value"): None,
+        ("totalEmployees", "value"): None,
+        ("totalEmployees", "date"): None,
+    } )
+
+    # only usable for dictionary entries with "Value" attribute
+    _MORNINGSTAR_PROFILE_SECTION_FIELD_MAP_USED: immutabledict[tuple[str, ...], str] = immutabledict( {
         "businessDescription": "business_description",
         "sector": "sector",
         "industry": "industry",
-    }
+    } )
 
     @staticmethod
     def leaf_paths(
@@ -137,7 +155,7 @@ class MorningstarClient:
     def __init__(
         self,
         timeout: float = 30.0,
-        seleniumwrapper: utils_seleniumxp.WebDriver = None,
+        seleniumwrapper: object | None = None,
         test_wo_browser: bool = False,
     ) -> None:
         """Initialize Morningstar client."""
@@ -152,7 +170,8 @@ class MorningstarClient:
                     alt_cls_webdriverwrapper=uc.Chrome,
                     alt_cls_options=uc.ChromeOptions,
                 )
-            self._client = seleniumwrapper
+            else:
+                self._client = seleniumwrapper
         else:
             self._client = None
 
@@ -232,10 +251,17 @@ class MorningstarClient:
 
         # self._rate_limiter.wait()
 
-        self._client.get(f"{url}?{urlencode(params)}")
+        self._client.get(f"{url}?{urlencode(params)}" if params else url)
         response = self._client.find_element(utils_seleniumxp.By.XPATH, "//pre").text
+        if response is None:
+            message = f"Response from {DataSourceID.MORNINGSTAR} was None."
+            raise MorningstarResponseError(message)
 
         response_data = json.loads(response)
+        message_morningstar = response_data.get("message")
+        if isinstance(message_morningstar, str):
+            message    = f"{DataSourceID.MORNINGSTAR} sent following message: '{message_morningstar}'."
+            raise MorningstarResponseError(message)
 
         return response_data
 
@@ -279,9 +305,11 @@ class MorningstarClient:
                 self.leaf_paths(item,  exclude_leaves=["score", "sortAs"]) -
                 self._MORNINGSTAR_SEARCH_RESULT_MAP.keys())
             if len(missing) != 0:
-                message = f"{DataSourceID.MORNINGSTAR} fields {missing} not considered in search result mapping."
-                if raise_error:
-                    raise MorningstarResponseError(message)
+                ClientHelper.unknown_provider_attributes(
+                    DataSourceID.MORNINGSTAR,
+                    missing,
+                    self._MORNINGSTAR_SEARCH_RESULT_MAP.__name__
+                )
 
             result = MorningstarSearchResult(source_identifier=source_identifier)
             for path, attribute in self._MORNINGSTAR_SEARCH_RESULT_MAP.items():
@@ -383,7 +411,7 @@ class MorningstarClient:
         """Return a Morningstar OAuth access token."""
 
         if self._access_token is None or self._access_token_expired():
-            self._access_token = self._execute_access_token_request()
+            self._execute_access_token_request()
 
         return self._access_token
 
@@ -407,7 +435,6 @@ class MorningstarClient:
             "access_token": self._get_access_token(),
         }
         response_data = self._execute_request(method="GET", url=self._PROFILE_URL, params=params)
-
         if not isinstance(response_data, dict):
             message = f"Unexpected {DataSourceID.MORNINGSTAR} company profile response."
             raise MorningstarResponseError(message)
@@ -430,10 +457,18 @@ class MorningstarClient:
 
         if isinstance(sections, dict):
 
+            missing = (
+                self.leaf_paths(sections,  exclude_leaves=["label"]) -
+                self._MORNINGSTAR_PROFILE_SECTION_FIELD_MAP_COMPLETE.keys())
+            if len(missing) != 0:
+                message = f"{DataSourceID.MORNINGSTAR} fields {missing} not considered in profile mapping."
+                if raise_error:
+                    raise MorningstarResponseError(message)
+
             for json_name, section in sections.items():
                 if not isinstance(section, dict):
                     continue
-                attribute = self._MORNINGSTAR_PROFILE_FIELD_MAP.get(json_name)
+                attribute = self._MORNINGSTAR_PROFILE_SECTION_FIELD_MAP_USED.get(json_name)
                 if attribute is not None:
                     if hasattr(record, attribute):
                         setattr(record, attribute, section.get("value"))
@@ -473,10 +508,18 @@ class MorningstarClient:
 
         if isinstance(sections, dict):
 
+            missing = (
+                self.leaf_paths(sections,  exclude_leaves=["label"]) -
+                self._MORNINGSTAR_PROFILE_SECTION_FIELD_MAP_COMPLETE.keys())
+            if len(missing) != 0:
+                message = f"{DataSourceID.MORNINGSTAR} fields {missing} not considered in profile mapping."
+                if raise_error:
+                    raise MorningstarResponseError(message)
+
             for json_name, section in sections.items():
                 if not isinstance(section, dict):
                     continue
-                attribute = self._MORNINGSTAR_PROFILE_FIELD_MAP.get(json_name)
+                attribute = self._MORNINGSTAR_PROFILE_SECTION_FIELD_MAP_USED.get(json_name)
                 if attribute is not None:
                     provider_attributes[attribute] = section.get("value")
                 else:
@@ -494,5 +537,30 @@ class MorningstarClient:
 
 
 if __name__ == "__main__":
+
+    client = MorningstarClient()
+
+    apple_isin = SecurityIdentifier(
+        type=SecurityIdentifierType.ISIN,
+        value="US0378331005",
+    )
+
+    search_response = client._execute_search_request(apple_isin)
+    search_results = client._parse_search_results(
+        apple_isin,
+        search_response,
+    )
+    record = client._parse_record(
+        source_identifier=apple_isin,
+        search_results=search_results,
+    )
+
+    profile = client._execute_profile_request(
+        security_id=record.company_id[0],
+    )
+
+    assert isinstance(profile, dict)
+    assert "sections" in profile
+    assert profile["performanceID"] == record.security_id[0]
 
     pass
