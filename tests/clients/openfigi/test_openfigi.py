@@ -13,10 +13,11 @@ from equities_classifier.clients.openfigi.client import OpenFIGIClient, OpenFIGI
 from equities_classifier.models import SecurityIdentifier, SecurityIdentifierType
 
 
-def test_create_batches() -> None:
+def test_create_batches(
+    client: OpenFIGIClient,
+) -> None:
     """Identifiers are split into batches."""
 
-    client = OpenFIGIClient()
     client._limits.max_batch_size = 10
 
     identifiers = [
@@ -32,7 +33,9 @@ def test_create_batches() -> None:
     assert len(batches[2]) == 5
 
 
-def test_parse_single_record() -> None:
+def test_parse_single_record(
+    client: OpenFIGIClient,
+) -> None:
     """Parse a single OpenFIGI response."""
 
     source_identifier = SecurityIdentifier(
@@ -52,8 +55,6 @@ def test_parse_single_record() -> None:
         ]
     }
 
-    client = OpenFIGIClient()
-
     records = client._parse_records(item, source_identifier, raise_error=True)
 
     assert len(records) == 1
@@ -70,7 +71,9 @@ def test_parse_single_record() -> None:
     assert record.identifiers[0] == source_identifier
 
 
-def test_parse_multiple_records() -> None:
+def test_parse_multiple_records(
+    client: OpenFIGIClient,
+) -> None:
     """Multiple exchange listings are returned."""
 
     source_identifier = SecurityIdentifier(
@@ -93,8 +96,6 @@ def test_parse_multiple_records() -> None:
         ]
     }
 
-    client = OpenFIGIClient()
-
     records = client._parse_records(
         item,
         source_identifier
@@ -103,7 +104,9 @@ def test_parse_multiple_records() -> None:
     assert len(records) == 2
 
 
-def test_parse_unique_share_class_figi() -> None:
+def test_parse_unique_share_class_figi(
+    client: OpenFIGIClient,
+) -> None:
     """Duplicate share classes are removed."""
 
     source_identifier = SecurityIdentifier(
@@ -126,17 +129,15 @@ def test_parse_unique_share_class_figi() -> None:
         ]
     }
 
-    client = OpenFIGIClient()
-
     records = client._parse_records(item, source_identifier, raise_error=True)
 
     assert len(records) == 1
 
 
-def test_parse_error_response() -> None:
+def test_parse_error_response(
+    client: OpenFIGIClient,
+) -> None:
     """Provider errors raise an exception."""
-
-    client = OpenFIGIClient()
 
     item = {"error": "Invalid identifier"}
 
@@ -149,10 +150,10 @@ def test_parse_error_response() -> None:
         client._parse_records(item, source_identifier, raise_error=True)
 
 
-def test_missing_data_raises() -> None:
+def test_missing_data_raises(
+    client: OpenFIGIClient,
+) -> None:
     """Missing data element raises an exception."""
-
-    client = OpenFIGIClient()
 
     source_identifier = SecurityIdentifier(
         SecurityIdentifierType.ISIN,
@@ -163,18 +164,17 @@ def test_missing_data_raises() -> None:
         client._parse_records({}, source_identifier, raise_error=True)
 
 
-def test_map_apple_isin():
+def test_map_apple_isin(
+    client: OpenFIGIClient,
+):
     """Read data from OpenFIGI."""
-
-    client = OpenFIGIClient()
 
     identifier = SecurityIdentifier(
         SecurityIdentifierType.ISIN,
         "US0378331005",
     )
 
-    with client:
-        records = client.read_provider_base_data([identifier])
+    records = client.read_provider_base_data([identifier])
 
     assert len([record for record in records if record.share_class_figi is not None]) == 1
 
@@ -184,18 +184,17 @@ def test_map_apple_isin():
     assert record.ticker == "AAPL"
 
 
-def test_map_apple_ticker():
+def test_map_apple_ticker(
+    client: OpenFIGIClient,
+):
     """Read data from OpenFIGI."""
-
-    client = OpenFIGIClient()
 
     identifier = SecurityIdentifier(
         SecurityIdentifierType.TICKER,
         "AAPL",
     )
 
-    with client:
-        records = client.read_provider_base_data([identifier])
+    records = client.read_provider_base_data([identifier])
 
     assert len([
         record for record in records

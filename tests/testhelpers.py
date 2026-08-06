@@ -1,6 +1,12 @@
 """Helpers for test."""
 
 
+# ruff and mypy per file settings
+#
+
+# fmt: off
+
+
 from pathlib import Path
 import json
 

@@ -14,7 +14,7 @@ class DataSourceID(StrEnum):
     """Supported data sources."""
 
     MORNINGSTAR = "Morningstar"
-    MOTLEY_FOOL = "MotleyFool"
+    MOTLEYFOOL = "MotleyFool"
     OPENFIGI = "OpenFIGI"
 
 

@@ -1,3 +1,12 @@
+"""Test global models."""
+
+
+# ruff and mypy per file settings
+#
+
+# fmt: off
+
+
 from equities_classifier.enums import (
     SecurityIdentifierType,
     ClassificationSystemID,
