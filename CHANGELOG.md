@@ -5,6 +5,20 @@
 - First pre-alpha
 - ...
 
+## [v0.5.0](https://github.com/dornech/equities-classifier/releases/tag/v0.5.0)  (2026-08-06) 
+
+### Features
+
+- MotleyFool client (for classification) including test cases
+(['06fa443'](https://github.com/dornech/equities-classifier/commit/06fa443fdb9d41365abbf348fdb401f5b6c7dd55))
+
+### Bug fixes
+
+- Improvement OpenFIGI ans Morningstar clients and test further ruff fixes
+(['e371d7f'](https://github.com/dornech/equities-classifier/commit/e371d7fe3a872bfe35a78d5ac2e3f0465b8476ef))
+- Various fixes to overcome GitHub lint issues and clean ups
+(['8df8fea'](https://github.com/dornech/equities-classifier/commit/8df8fead70db1b42ce9b63363748e43bb9d58314))
+
 ## [v0.4.1](https://github.com/dornech/equities-classifier/releases/tag/v0.4.1)  (2026-08-05) 
 
 ### Bug fixes
