@@ -1,6 +1,12 @@
 """rate limiter for HTTP / REST request of clients."""
 
 
+# ruff and mypy per file settings
+#
+
+# fmt: off
+
+
 from dataclasses import dataclass
 from time import monotonic, sleep
 

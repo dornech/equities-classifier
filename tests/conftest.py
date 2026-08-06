@@ -1,4 +1,10 @@
-"""conftest.py forall tests."""
+"""conftest.py for all tests."""
+
+
+# ruff and mypy per file settings
+#
+
+# fmt: off
 
 
 import pytest
@@ -13,6 +19,7 @@ def apple_isin() -> SecurityIdentifier:
         type=SecurityIdentifierType.ISIN,
         value="US0378331005",
     )
+
 
 @pytest.fixture(scope="session")
 def apple_ticker() -> SecurityIdentifier:

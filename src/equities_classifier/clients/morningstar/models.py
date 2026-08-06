@@ -1,6 +1,12 @@
 """Internal data models for Morningstar."""
 
 
+# ruff and mypy per file settings
+#
+
+# fmt: off
+
+
 from dataclasses import dataclass, field
 
 from equities_classifier.models import SecurityIdentifier, SecurityProviderRecord

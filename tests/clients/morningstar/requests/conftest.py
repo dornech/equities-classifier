@@ -1,5 +1,10 @@
 """conftest.py for Morningstar request tests."""
 
+# ruff and mypy per file settings
+#
+
+# fmt: off
+
 
 import pytest
 

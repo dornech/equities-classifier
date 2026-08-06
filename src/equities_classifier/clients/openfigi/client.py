@@ -50,7 +50,13 @@ class OpenFIGIClient:
 
     _BASE_URL = "https://api.openfigi.com/v3/mapping"
 
-    _IDENTIFIER_TYPE_MAP: immutabledict[SecurityIdentifierType, str] = immutabledict( {
+    _OPENFIGI_IDENTIFIER_TYPES: immutabledict[str, SecurityIdentifierType] = immutabledict({
+        "shareClassFIGI": SecurityIdentifierType.SHARE_CLASS_FIGI,
+        "isin": SecurityIdentifierType.ISIN,
+        "ticker": SecurityIdentifierType.TICKER,
+    })
+
+    _OPENFIGI_IDENTIFIER_TYPE_MAP: immutabledict[SecurityIdentifierType, str] = immutabledict({
         SecurityIdentifierType.CINS: "ID_CINS",
         SecurityIdentifierType.CUSIP: "ID_CUSIP",
         SecurityIdentifierType.SHARE_CLASS_FIGI: "ID_BB_GLOBAL_SHARE_CLASS_LEVEL",
@@ -58,32 +64,13 @@ class OpenFIGIClient:
         SecurityIdentifierType.SEDOL: "ID_SEDOL",
         SecurityIdentifierType.TICKER: "TICKER",
         SecurityIdentifierType.WKN: "WKN"
-    } )
+    })
 
     @classmethod
     def _to_openfigi_identifier_type(cls, identifier_type: SecurityIdentifierType) -> str:
-        return cls._IDENTIFIER_TYPE_MAP[identifier_type]
+        return cls._OPENFIGI_IDENTIFIER_TYPE_MAP[identifier_type]
 
-    _ANONYMOUS_LIMITS = RateLimits(
-        max_batch_size=10,
-        requests_per_minute=25
-    )
-
-    _AUTHENTICATED_LIMITS = RateLimits(
-        max_batch_size=100,
-        requests_per_minute=250
-    )
-
-    _OPENFIGI_IDENTIFIER_MAP: dict[str, SecurityIdentifierType] = {
-        "cusip": SecurityIdentifierType.CUSIP,
-        "cins": SecurityIdentifierType.CINS,
-        "isin": SecurityIdentifierType.ISIN,
-        "shareClassFIGI": SecurityIdentifierType.SHARE_CLASS_FIGI,
-        "sedol": SecurityIdentifierType.SEDOL,
-        "ticker": SecurityIdentifierType.TICKER
-    }
-
-    _OPENFIGI_RECORDMAP: dict[str, str] = {
+    _OPENFIGI_RECORDMAP: immutabledict[str, str] = immutabledict({
         "name": "name",
         "ticker": "ticker",
         "figi": "figi",
@@ -97,7 +84,17 @@ class OpenFIGIClient:
         "micCode": "mic_code",
         "currency": "currency",
         "stateCode": "state_code"
-    }
+    })
+
+    _ANONYMOUS_LIMITS = RateLimits(
+        max_batch_size=10,
+        requests_per_minute=25
+    )
+
+    _AUTHENTICATED_LIMITS = RateLimits(
+        max_batch_size=100,
+        requests_per_minute=250
+    )
 
     def __init__(self, api_key: str | None = None, timeout: float = 30.0) -> None:
         """init the HTTP client."""
@@ -127,16 +124,18 @@ class OpenFIGIClient:
         """Close the HTTP client."""
         self._client.close()
 
+    # public API
+
     def read_provider_base_data(
         self,
-        identifiers: Sequence[SecurityIdentifier],
+        source_identifiers: Sequence[SecurityIdentifier],
         raise_error: bool = True
     ) -> list[OpenFIGIRecord]:
         """Read base date for one or more identifiers from OpenFIGI."""
 
         records: list[OpenFIGIRecord] = []
 
-        batches = self._create_batches(identifiers)
+        batches = self._create_batches(source_identifiers)
         for batch in batches:
 
             response_data = self._execute_request(batch)
@@ -151,16 +150,28 @@ class OpenFIGIClient:
 
         return records
 
+    # internal routines
+
     def _create_batches(
         self,
         identifiers: Sequence[SecurityIdentifier]
     ) -> list[list[SecurityIdentifier]]:
         """Split identifiers into batches."""
 
+
+        temp_identifiers = [
+            identifier for identifier in identifiers if identifier.type not in self._OPENFIGI_IDENTIFIER_TYPE_MAP.keys()
+        ]
+        for identifier in temp_identifiers:
+            ClientHelper.invalid_security_type(DataSourceID.OPENFIGI, identifier.type, identifier.value)
+
+        temp_identifiers = [
+            identifier for identifier in identifiers if identifier.type in self._OPENFIGI_IDENTIFIER_TYPE_MAP.keys()
+        ]
         batch_size = self._limits.max_batch_size
         return [
-            list(identifiers[i: i + batch_size])
-            for i in range(0, len(identifiers), batch_size)
+            list(temp_identifiers[i: i + batch_size])
+            for i in range(0, len(temp_identifiers), batch_size)
         ]
 
     def _execute_request(
@@ -239,6 +250,7 @@ class OpenFIGIClient:
                 for json_name, value in record_data.items():
                     attribute = self._OPENFIGI_RECORDMAP.get(json_name)
                     if attribute is not None:
+                        # Preserve positional correspondence between all listing-specific attributes.
                         if hasattr(record, attribute):
                             if isinstance(getattr(record, attribute), list):
                                 getattr(record, attribute).append(value)
@@ -259,7 +271,7 @@ class OpenFIGIClient:
 
                 # Create canonical security identifiers (including source identifier).
                 identifiers: list[SecurityIdentifier] = [source_identifier]
-                for json_name, identifier_type in self._OPENFIGI_IDENTIFIER_MAP.items():
+                for json_name, identifier_type in self._OPENFIGI_IDENTIFIER_TYPES.items():
                     value = record_data.get(json_name)
                     if value and identifier_type != source_identifier.type:
                         identifiers.append(
@@ -279,6 +291,8 @@ class OpenFIGIClient:
                     if attribute is not None and hasattr(record, attribute):
                         if isinstance(getattr(record, attribute), list):
                             getattr(record, attribute).append(value)
+                        else:
+                            setattr(record, attribute, value)
 
         return records
 

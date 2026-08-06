@@ -1,5 +1,12 @@
 """Integration tests for the Morningstar client."""
 
+
+# ruff and mypy per file settings
+#
+
+# fmt: off
+
+
 import pytest
 
 from equities_classifier.enums import SecurityIdentifierType

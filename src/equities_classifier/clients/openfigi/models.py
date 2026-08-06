@@ -1,6 +1,12 @@
 """Internal data models for the OpenFIGI REST API."""
 
 
+# ruff and mypy per file settings
+#
+
+# fmt: off
+
+
 from dataclasses import dataclass, field
 
 from equities_classifier.models import SecurityProviderRecord

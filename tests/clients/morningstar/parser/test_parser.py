@@ -1,4 +1,10 @@
-"""Unit tests for Morningstar client parser methods."""
+"""Tests for Morningstar client parser methods."""
+
+
+# ruff and mypy per file settings
+#
+
+# fmt: off
 
 
 import pytest
@@ -12,6 +18,7 @@ from tests.testhelpers import load_json
 
 
 DATA_DIR = Path(__file__).parent.parent / "data"
+
 
 @pytest.fixture
 def identifier(apple_isin) -> SecurityIdentifier:
@@ -77,7 +84,7 @@ def test_parse_profile_to_record(client: MorningstarClient, identifier: Security
 
     assert "sections" in profile
 
-    record = client._parse_profile_to_record(profile,record)
+    record = client._parse_profile_to_record(profile, record)
 
     assert record.sector == "Technology"
     assert record.industry == "Consumer Electronics"

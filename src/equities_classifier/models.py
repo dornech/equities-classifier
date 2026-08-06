@@ -1,6 +1,12 @@
 """Business domain model for equities_classifier."""
 
 
+# ruff and mypy per file settings
+#
+
+# fmt: off
+
+
 from typing import Any
 
 from dataclasses import dataclass, fields, field

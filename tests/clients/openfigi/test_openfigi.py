@@ -1,6 +1,12 @@
 """Test openfigi client."""
 
 
+# ruff and mypy per file settings
+#
+
+# fmt: off
+
+
 import pytest
 
 from equities_classifier.clients.openfigi.client import OpenFIGIClient, OpenFIGIResponseError

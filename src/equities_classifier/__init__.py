@@ -1,4 +1,6 @@
 """Equity Classifier."""
+
+
 from equities_classifier.enums import (
     SecurityIdentifierType,
     ClassificationSystemID,

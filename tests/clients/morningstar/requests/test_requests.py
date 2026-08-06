@@ -1,4 +1,10 @@
-"""Integration tests for Morningstar request methods."""
+"""Tests for Morningstar request methods."""
+
+
+# ruff and mypy per file settings
+#
+
+# fmt: off
 
 
 from equities_classifier.models import SecurityIdentifier

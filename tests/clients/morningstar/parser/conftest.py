@@ -1,6 +1,12 @@
 """conftest.py for Morningstar parser tests."""
 
 
+# ruff and mypy per file settings
+#
+
+# fmt: off
+
+
 import json
 from pathlib import Path
 

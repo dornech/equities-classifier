@@ -1,6 +1,12 @@
 """conftest.py for Morningstar integration tests."""
 
 
+# ruff and mypy per file settings
+#
+
+# fmt: off
+
+
 import pytest
 
 from equities_classifier.clients.morningstar import MorningstarClient

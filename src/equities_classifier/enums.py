@@ -1,6 +1,12 @@
 """Enumerations used by business domain model of equities_classifier."""
 
 
+# ruff and mypy per file settings
+#
+
+# fmt: off
+
+
 from enum import IntEnum, StrEnum
 
 
@@ -8,7 +14,7 @@ class DataSourceID(StrEnum):
     """Supported data sources."""
 
     MORNINGSTAR = "Morningstar"
-    MOTLEYFOOL = "MotleyFool"
+    MOTLEY_FOOL = "MotleyFool"
     OPENFIGI = "OpenFIGI"
 
 
@@ -21,7 +27,7 @@ class SecurityIdentifierType(StrEnum):
     CINS = "cins"
     CUSIP = "cusip"
     ISIN = "isin"
-    SHARE_CLASS_FIGI = "SHARE_CLASS_FIGI"
+    SHARE_CLASS_FIGI = "share_class_figi"
     SEDOL = "sedol"
     TICKER = "ticker"
     WKN = "wkn"

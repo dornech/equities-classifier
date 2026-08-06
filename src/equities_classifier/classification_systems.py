@@ -1,6 +1,12 @@
 """Classification Systems supported by equities_classifier."""
 
 
+# ruff and mypy per file settings
+#
+
+# fmt: off
+
+
 from immutabledict import immutabledict
 
 from equities_classifier.enums import ClassificationSystemID
@@ -37,7 +43,7 @@ GECS = ClassificationSystem(
 )
 
 
-MAP_GECS_SUPERSECTOR_FROM_SECTOR: immutabledict[str, str] = immutabledict( {
+MAP_GECS_SUPERSECTOR_FROM_SECTOR: immutabledict[str, str] = immutabledict({
     "Basic Materials": "Cyclical",
     "Consumer Cyclical": "Cyclical",
     "Financial Services": "Cyclical",
@@ -49,4 +55,4 @@ MAP_GECS_SUPERSECTOR_FROM_SECTOR: immutabledict[str, str] = immutabledict( {
     "Healthcare": "Defensive",
     "Consumer Defensive": "Defensive",
     "Utilities": "Defensive",
-} )
+})

@@ -8,7 +8,7 @@
 # boolean-type arguments
 # ruff: noqa: FBT001, FBT002
 # others
-# ruff: noqa: PLR1702
+# ruff: noqa: PLR1702, PLR6301
 #
 # disable mypy errors
 # mypy: disable-error-code = "no-any-return, attr-defined, unused-ignore"
@@ -61,12 +61,12 @@ class MorningstarClient:
         "ticker"
     )
 
-    _MORNINGSTAR_IDENTIFIER_MAP: immutabledict[str, SecurityIdentifierType] = immutabledict( {
+    _MORNINGSTAR_IDENTIFIER_TYPES: immutabledict[str, SecurityIdentifierType] = immutabledict({
         "isin": SecurityIdentifierType.ISIN,
         "ticker": SecurityIdentifierType.TICKER
-    } )
+    })
 
-    _MORNINGSTAR_SEARCH_RESULT_MAP: immutabledict[tuple[str, ...], str] = immutabledict( {
+    _MORNINGSTAR_SEARCH_RESULT_MAP: immutabledict[tuple[str, ...], str] = immutabledict({
         ("meta", "securityID"): "security_id",
         ("meta", "performanceID"): "performance_id",
         ("meta", "companyID"): "company_id",
@@ -89,9 +89,9 @@ class MorningstarClient:
         ("fields", "name", "value"): "name",
         ("fields", "shortName", "value"): "short_name",
         ("fields", "ticker", "value"): None,
-    } )
+    })
 
-    _MORNINGSTAR_PROFILE_SECTION_FIELD_MAP_COMPLETE: immutabledict[tuple[str, ...], str] = immutabledict( {
+    _MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_COMPLETE: immutabledict[tuple[str, ...], str] = immutabledict({
         ("businessDescription", "value"): "business_description",
         ("contact", "address1"): None,
         ("contact", "address2"): None,
@@ -106,14 +106,14 @@ class MorningstarClient:
         ("fiscalYearEnds", "value"): None,
         ("totalEmployees", "value"): None,
         ("totalEmployees", "date"): None,
-    } )
+    })
 
     # only usable for dictionary entries with "Value" attribute
-    _MORNINGSTAR_PROFILE_SECTION_FIELD_MAP_USED: immutabledict[tuple[str, ...], str] = immutabledict( {
+    _MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_USED: immutabledict[tuple[str, ...], str] = immutabledict({
         "businessDescription": "business_description",
         "sector": "sector",
         "industry": "industry",
-    } )
+    })
 
     @staticmethod
     def leaf_paths(
@@ -190,16 +190,26 @@ class MorningstarClient:
         """Release browser resources."""
         self._client.close()
 
+    # public API
+
     def read_provider_base_data(
         self,
-        identifiers: Sequence[SecurityIdentifier],
+        source_identifiers: Sequence[SecurityIdentifier],
         raise_error: bool = True
     ) -> list[MorningstarRecord]:
         """Read base date for one or more identifiers from Morningstar."""
 
         records: list[MorningstarRecord] = []
 
-        for source_identifier in identifiers:
+        for source_identifier in source_identifiers:
+
+            if source_identifier.type not in self._MORNINGSTAR_IDENTIFIER_TYPES.values():
+                ClientHelper.invalid_security_type(
+                    DataSourceID.MORNINGSTAR,
+                    source_identifier.type,
+                    source_identifier.value
+                )
+                continue
 
             response_data = self._execute_search_request(source_identifier)
             search_results = self._parse_search_results(
@@ -239,6 +249,8 @@ class MorningstarClient:
 
         return records
 
+    # internal routines
+
     def _execute_request(
         self,
         method: str,
@@ -260,7 +272,7 @@ class MorningstarClient:
         response_data = json.loads(response)
         message_morningstar = response_data.get("message")
         if isinstance(message_morningstar, str):
-            message    = f"{DataSourceID.MORNINGSTAR} sent following message: '{message_morningstar}'."
+            message = f"{DataSourceID.MORNINGSTAR} sent following message: '{message_morningstar}'."
             raise MorningstarResponseError(message)
 
         return response_data
@@ -302,7 +314,7 @@ class MorningstarClient:
         for item in response_data["results"]:
 
             missing = (
-                self.leaf_paths(item,  exclude_leaves=["score", "sortAs"]) -
+                self.leaf_paths(item, exclude_leaves=["score", "sortAs"]) -
                 self._MORNINGSTAR_SEARCH_RESULT_MAP.keys())
             if len(missing) != 0:
                 ClientHelper.unknown_provider_attributes(
@@ -389,7 +401,7 @@ class MorningstarClient:
 
         # Create canonical security identifiers (including source identifier).
         identifiers: list[SecurityIdentifier] = [source_identifier]
-        for attribute, identifier_type in self._MORNINGSTAR_IDENTIFIER_MAP.items():
+        for attribute, identifier_type in self._MORNINGSTAR_IDENTIFIER_TYPES.items():
             value = getattr(search_result, attribute)
             if value and identifier_type != source_identifier.type:
                 identifiers.append(
@@ -458,8 +470,8 @@ class MorningstarClient:
         if isinstance(sections, dict):
 
             missing = (
-                self.leaf_paths(sections,  exclude_leaves=["label"]) -
-                self._MORNINGSTAR_PROFILE_SECTION_FIELD_MAP_COMPLETE.keys())
+                self.leaf_paths(sections, exclude_leaves=["label"]) -
+                self._MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_COMPLETE.keys())
             if len(missing) != 0:
                 message = f"{DataSourceID.MORNINGSTAR} fields {missing} not considered in profile mapping."
                 if raise_error:
@@ -468,7 +480,7 @@ class MorningstarClient:
             for json_name, section in sections.items():
                 if not isinstance(section, dict):
                     continue
-                attribute = self._MORNINGSTAR_PROFILE_SECTION_FIELD_MAP_USED.get(json_name)
+                attribute = self._MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_USED.get(json_name)
                 if attribute is not None:
                     if hasattr(record, attribute):
                         setattr(record, attribute, section.get("value"))
@@ -509,8 +521,8 @@ class MorningstarClient:
         if isinstance(sections, dict):
 
             missing = (
-                self.leaf_paths(sections,  exclude_leaves=["label"]) -
-                self._MORNINGSTAR_PROFILE_SECTION_FIELD_MAP_COMPLETE.keys())
+                self.leaf_paths(sections, exclude_leaves=["label"]) -
+                self._MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_COMPLETE.keys())
             if len(missing) != 0:
                 message = f"{DataSourceID.MORNINGSTAR} fields {missing} not considered in profile mapping."
                 if raise_error:
@@ -519,7 +531,7 @@ class MorningstarClient:
             for json_name, section in sections.items():
                 if not isinstance(section, dict):
                     continue
-                attribute = self._MORNINGSTAR_PROFILE_SECTION_FIELD_MAP_USED.get(json_name)
+                attribute = self._MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_USED.get(json_name)
                 if attribute is not None:
                     provider_attributes[attribute] = section.get("value")
                 else:
@@ -537,30 +549,5 @@ class MorningstarClient:
 
 
 if __name__ == "__main__":
-
-    client = MorningstarClient()
-
-    apple_isin = SecurityIdentifier(
-        type=SecurityIdentifierType.ISIN,
-        value="US0378331005",
-    )
-
-    search_response = client._execute_search_request(apple_isin)
-    search_results = client._parse_search_results(
-        apple_isin,
-        search_response,
-    )
-    record = client._parse_record(
-        source_identifier=apple_isin,
-        search_results=search_results,
-    )
-
-    profile = client._execute_profile_request(
-        security_id=record.company_id[0],
-    )
-
-    assert isinstance(profile, dict)
-    assert "sections" in profile
-    assert profile["performanceID"] == record.security_id[0]
 
     pass

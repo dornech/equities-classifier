@@ -1,6 +1,15 @@
 """Common exceptions used by equities-classifier."""
 
 
+# ruff and mypy per file settings
+#
+# empty lines
+# ruff: noqua: E302
+# ruff and mypy per file settings
+
+# fmt: off
+
+
 class EquitiesClassifierError(Exception):
     """Base class for all library exceptions."""
 
@@ -10,8 +19,10 @@ class EquitiesClassifierError(Exception):
 class ResolverError(EquitiesClassifierError):
     """Base class for identifier resolver errors."""
 
+
 class IdentifierNotFoundError(ResolverError):
     """No matching security could be resolved."""
+
 
 class AmbiguousIdentifierError(ResolverError):
     """The identifier resolves to multiple securities."""
@@ -22,14 +33,18 @@ class AmbiguousIdentifierError(ResolverError):
 class ClientError(EquitiesClassifierError):
     """Base class for all client errors."""
 
+
 class ClientAuthenticationError(ClientError):
     """Authentication with the provider failed."""
+
 
 class ClientConnectionError(ClientError):
     """The remote service could not be reached."""
 
+
 class ClientResponseError(ClientError):
     """The remote service returned an invalid response."""
+
 
 class ClientRateLimitError(ClientError):
     """The provider rate limit has been exceeded."""
@@ -37,9 +52,9 @@ class ClientRateLimitError(ClientError):
 
 # Connector related exceptions
 
-
 class ConnectorError(EquitiesClassifierError):
     """Base class for classification connector errors."""
+
 
 class ClassificationNotAvailableError(ConnectorError):
     """The requested classification is not available."""
