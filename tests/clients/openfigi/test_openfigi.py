@@ -66,7 +66,7 @@ def test_parse_single_record() -> None:
     assert record.share_class_figi == "BBG001S5N8V8"
     assert record.security_type == "Common Stock"
 
-    assert len(record.identifiers) == 3
+    assert len(record.identifiers) == 2
     assert record.identifiers[0] == source_identifier
 
 
@@ -177,6 +177,32 @@ def test_map_apple_isin():
         records = client.read_provider_base_data([identifier])
 
     assert len([record for record in records if record.share_class_figi is not None]) == 1
+
+    record = records[0]
+
+    assert record.name.upper().startswith("APPLE")
+    assert record.ticker == "AAPL"
+
+
+def test_map_apple_ticker():
+    """Read data from OpenFIGI."""
+
+    client = OpenFIGIClient()
+
+    identifier = SecurityIdentifier(
+        SecurityIdentifierType.TICKER,
+        "AAPL",
+    )
+
+    with client:
+        records = client.read_provider_base_data([identifier])
+
+    assert len([
+        record for record in records
+        if (record.share_class_figi is not None
+            and record.security_type == "Common Stock"
+            and record.security_type2 != "Depositary Receipt")
+    ]) == 1
 
     record = records[0]
 

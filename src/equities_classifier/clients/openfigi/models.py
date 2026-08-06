@@ -23,7 +23,7 @@ class OpenFIGIRecord(SecurityProviderRecord):
     composite_figi: list[str] = field(default_factory=list)
     share_class_figi: str | None = None
 
-    security_description: str | None = None
+    security_description: list[str] = field(default_factory=list)
     security_type: str | None = None
     security_type2: str | None = None
     market_sector: str | None = None

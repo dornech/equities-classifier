@@ -51,7 +51,7 @@ class OpenFIGIClient:
     _BASE_URL = "https://api.openfigi.com/v3/mapping"
 
     _OPENFIGI_IDENTIFIER_TYPES: immutabledict[str, SecurityIdentifierType] = immutabledict({
-        "shareClassFIGI": SecurityIdentifierType.SHARE_CLASS_FIGI,
+        "share_class_figi": SecurityIdentifierType.SHARE_CLASS_FIGI,
         "isin": SecurityIdentifierType.ISIN,
         "ticker": SecurityIdentifierType.TICKER,
     })
@@ -158,15 +158,14 @@ class OpenFIGIClient:
     ) -> list[list[SecurityIdentifier]]:
         """Split identifiers into batches."""
 
-
         temp_identifiers = [
-            identifier for identifier in identifiers if identifier.type not in self._OPENFIGI_IDENTIFIER_TYPE_MAP.keys()
+            identifier for identifier in identifiers if identifier.type not in self._OPENFIGI_IDENTIFIER_TYPE_MAP
         ]
         for identifier in temp_identifiers:
             ClientHelper.invalid_security_type(DataSourceID.OPENFIGI, identifier.type, identifier.value)
 
         temp_identifiers = [
-            identifier for identifier in identifiers if identifier.type in self._OPENFIGI_IDENTIFIER_TYPE_MAP.keys()
+            identifier for identifier in identifiers if identifier.type in self._OPENFIGI_IDENTIFIER_TYPE_MAP
         ]
         batch_size = self._limits.max_batch_size
         return [
@@ -271,8 +270,8 @@ class OpenFIGIClient:
 
                 # Create canonical security identifiers (including source identifier).
                 identifiers: list[SecurityIdentifier] = [source_identifier]
-                for json_name, identifier_type in self._OPENFIGI_IDENTIFIER_TYPES.items():
-                    value = record_data.get(json_name)
+                for identifier_fieldname, identifier_type in self._OPENFIGI_IDENTIFIER_TYPES.items():
+                    value = record_data.get(identifier_fieldname)
                     if value and identifier_type != source_identifier.type:
                         identifiers.append(
                             SecurityIdentifier(
@@ -286,13 +285,12 @@ class OpenFIGIClient:
 
             else:
 
+                # only add new values for existing list fields for entry with same shareclassFIGI
                 for json_name, value in record_data.items():
                     attribute = self._OPENFIGI_RECORDMAP.get(json_name)
                     if attribute is not None and hasattr(record, attribute):
                         if isinstance(getattr(record, attribute), list):
                             getattr(record, attribute).append(value)
-                        else:
-                            setattr(record, attribute, value)
 
         return records
 

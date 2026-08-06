@@ -48,7 +48,7 @@ class ClientHelper:
     def unknown_provider_attributes(
         provider: DataSourceID,
         attributes: set[tuple[str, ...]],
-        context: str| None = None
+        context: str | None = None
     ) -> None:
         """Called when the provider returns an unmapped JSON attribute."""
         pass

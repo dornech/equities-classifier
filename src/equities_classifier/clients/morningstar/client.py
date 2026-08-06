@@ -320,7 +320,7 @@ class MorningstarClient:
                 ClientHelper.unknown_provider_attributes(
                     DataSourceID.MORNINGSTAR,
                     missing,
-                    self._MORNINGSTAR_SEARCH_RESULT_MAP.__name__
+                    "_MORNINGSTAR_SEARCH_RESULT_MAP"
                 )
 
             result = MorningstarSearchResult(source_identifier=source_identifier)
@@ -401,8 +401,8 @@ class MorningstarClient:
 
         # Create canonical security identifiers (including source identifier).
         identifiers: list[SecurityIdentifier] = [source_identifier]
-        for attribute, identifier_type in self._MORNINGSTAR_IDENTIFIER_TYPES.items():
-            value = getattr(search_result, attribute)
+        for identifierfield_name, identifier_type in self._MORNINGSTAR_IDENTIFIER_TYPES.items():
+            value = getattr(search_result, identifierfield_name)
             if value and identifier_type != source_identifier.type:
                 identifiers.append(
                     SecurityIdentifier(
@@ -473,9 +473,11 @@ class MorningstarClient:
                 self.leaf_paths(sections, exclude_leaves=["label"]) -
                 self._MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_COMPLETE.keys())
             if len(missing) != 0:
-                message = f"{DataSourceID.MORNINGSTAR} fields {missing} not considered in profile mapping."
-                if raise_error:
-                    raise MorningstarResponseError(message)
+                ClientHelper.unknown_provider_attributes(
+                    DataSourceID.MORNINGSTAR,
+                    missing,
+                    "_MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_COMPLETE"
+                )
 
             for json_name, section in sections.items():
                 if not isinstance(section, dict):
