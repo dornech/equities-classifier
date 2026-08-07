@@ -7,8 +7,10 @@
 # fmt: off
 
 
+from typing import ClassVar
 from dataclasses import dataclass
 
+from equities_classifier.enums  import  DataSourceID
 from equities_classifier.models import SecurityProviderRecord
 
 
@@ -26,8 +28,8 @@ class MotleyFoolSearchResult:
 class MotleyFoolRecord(SecurityProviderRecord):
     """Internal representation of a single Motley-Fool mapping result."""
 
-    name: str | None = None
-    ticker: str | None = None
+    datasource: ClassVar[DataSourceID] = DataSourceID.MOTLEYFOOL
+
     exchange: str | None = None
     home_country_code: str | None = None
 

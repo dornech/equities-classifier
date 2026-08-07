@@ -266,14 +266,20 @@ class MorningstarClient:
         self._client.get(f"{url}?{urlencode(params)}" if params else url)
         response = self._client.find_element(utils_seleniumxp.By.XPATH, "//pre").text
         if response is None:
-            message = f"Response from {DataSourceID.MORNINGSTAR} was None."
-            raise MorningstarResponseError(message)
+            ClientHelper.other_error_with_message(
+                DataSourceID.MORNINGSTAR,
+                f"Response from {DataSourceID.MORNINGSTAR} was None.",
+                MorningstarResponseError,
+            )
 
         response_data = json.loads(response)
         message_morningstar = response_data.get("message")
         if isinstance(message_morningstar, str):
-            message = f"{DataSourceID.MORNINGSTAR} sent following message: '{message_morningstar}'."
-            raise MorningstarResponseError(message)
+            ClientHelper.other_error_with_message(
+                DataSourceID.MORNINGSTAR,
+                f"{DataSourceID.MORNINGSTAR} sent following message: '{message_morningstar}'.",
+                MorningstarResponseError,
+            )
 
         return response_data
 
@@ -290,7 +296,9 @@ class MorningstarClient:
         )
         params = {
             "fields": self._SEARCH_FIELDS,
-            "query": query
+            "query": query,
+            "limit": 100,
+            # "asPageResponse": "false",
         }
 
         return self._execute_request(method="GET", url=self._SEARCH_URL, params=params)
@@ -303,15 +311,36 @@ class MorningstarClient:
     ) -> list[MorningstarSearchResult]:
         """Parse Morningstar search response."""
 
-        count = response_data["count"] - len(response_data) + 1
-        if count == 0:
-            message = f"{DataSourceID.MORNINGSTAR} returned no search data."
-            if raise_error:
-                raise MorningstarResponseError(message)
+        # clean response date, delete embracing dictionary if necessary
+        if "page" in response_data:
+            response_data = response_data["page"]
+
+        if not "results" in response_data:
+            ClientHelper.other_error_with_message(
+                DataSourceID.MORNINGSTAR,
+                f"{DataSourceID.MORNINGSTAR} search query result does not contain 'results'.",
+                MorningstarResponseError if raise_error else None,
+            )
+            return[]
+        results = response_data["results"]
+        if not isinstance(results, dict):
+            ClientHelper.other_error_with_message(
+                DataSourceID.MORNINGSTAR,
+                 f"{DataSourceID.MORNINGSTAR} profile 'results' is not a dictionary.",
+                 MorningstarResponseError if raise_error else None,
+            )
+        if len(results) == 0:
+            ClientHelper.other_error_with_message(
+                DataSourceID.MORNINGSTAR,
+                f"{DataSourceID.MORNINGSTAR} returned no search data.",
+                MorningstarResponseError if raise_error else None,
+            )
+        if not results:
+            return []
 
         search_results: list[MorningstarSearchResult] = []
 
-        for item in response_data["results"]:
+        for item in results:
 
             missing = (
                 self.leaf_paths(item, exclude_leaves=["score", "sortAs"]) -
@@ -339,10 +368,15 @@ class MorningstarClient:
 
             search_results.append(result)
 
-        if count != len(search_results):
-            message = f"{DataSourceID.MORNINGSTAR} returned inconsistent data or error in evaluation."
-            if raise_error:
-                raise MorningstarResponseError(message)
+            count = response_data["count"] - len(response_data) + 1
+            if count != len(search_results):
+                ClientHelper.search_result_counter_issue(
+                    DataSourceID.MORNINGSTAR,
+                    source_identifier.type,
+                    source_identifier.value,
+                    count_provider=count,
+                    count_found= len(response_data) + 1,
+                )
 
         return search_results
 
@@ -355,18 +389,24 @@ class MorningstarClient:
         """Parse Morningstar search result and create a MorningstarRecord."""
 
         if not search_results:
-            message = f"No {DataSourceID.MORNINGSTAR} search results available."
-            if raise_error:
-                raise MorningstarResponseError(message)
+            ClientHelper.other_error_with_message(
+                DataSourceID.MORNINGSTAR,
+                f"No {DataSourceID.MORNINGSTAR} search results available.",
+                MorningstarResponseError if raise_error else None,
+            )
+            return[]
 
         record = MorningstarRecord()
 
         counter_ticker = Counter(search_result.ticker for search_result in search_results)
         if len({r.company_id for r in search_results}) != 1:
-            message = f"{DataSourceID.MORNINGSTAR} CompanyID is not unique for selected identifier."
-            raise MorningstarResponseError(message)
+            ClientHelper.other_error_with_message(
+                DataSourceID.MORNINGSTAR,
+                f"{DataSourceID.MORNINGSTAR} CompanyID is not unique for selected identifier.",
+                MorningstarResponseError if raise_error else None,
+            )
 
-        # Copy scalar fields from first search result. Consider differing tickers in Case of ISIN search
+        # Copy scalar fields from first search result. Consider differing tickers in case of ISIN search
         first = search_results[0]
         record.name = first.name or ""
         record.ticker = counter_ticker.most_common(1)[0][0]
@@ -433,8 +473,11 @@ class MorningstarClient:
         response_data = self._execute_request(method="POST", url=self._TOKEN_URL)
         self._access_token = response_data.get("token")
         if self._access_token is None:
-            message = f"{DataSourceID.MORNINGSTAR} response does not contain an accessToken."
-            raise MorningstarResponseError(message)
+            ClientHelper.other_error_with_message(
+                DataSourceID.MORNINGSTAR,
+                f"{DataSourceID.MORNINGSTAR} response does not contain an accessToken.",
+                MorningstarResponseError
+            )
 
     def _execute_profile_request(
         self,
@@ -448,8 +491,11 @@ class MorningstarClient:
         }
         response_data = self._execute_request(method="GET", url=self._PROFILE_URL, params=params)
         if not isinstance(response_data, dict):
-            message = f"Unexpected {DataSourceID.MORNINGSTAR} company profile response."
-            raise MorningstarResponseError(message)
+            ClientHelper.other_error_with_message(
+                DataSourceID.MORNINGSTAR,
+                f"Unexpected {DataSourceID.MORNINGSTAR} company profile response.",
+                MorningstarResponseError
+            )
 
         return response_data
 
@@ -461,47 +507,51 @@ class MorningstarClient:
     ) -> MorningstarRecord:
         """Enrich a MorningstarRecord with company profile information."""
 
+        if not "sections" in profile:
+            ClientHelper.other_error_with_message(
+                DataSourceID.MORNINGSTAR,
+                f"{DataSourceID.MORNINGSTAR} profile does not contain 'sections'.",
+                MorningstarResponseError if raise_error else None,
+            )
+            return record
         sections = profile.get("sections")
         if not isinstance(sections, dict):
-            message = f"{DataSourceID.MORNINGSTAR} profile does not contain 'sections'."
-            if raise_error:
-                raise MorningstarResponseError(message)
+            ClientHelper.other_error_with_message(
+                DataSourceID.MORNINGSTAR,
+                f"{DataSourceID.MORNINGSTAR} profile 'sections' is not a dictionary.",
+                MorningstarResponseError,
+            )
+            return record
 
-        if isinstance(sections, dict):
+        missing = (
+            self.leaf_paths(sections, exclude_leaves=["label"]) -
+            self._MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_COMPLETE.keys())
+        if len(missing) != 0:
+            ClientHelper.unknown_provider_attributes(
+                DataSourceID.MORNINGSTAR,
+                missing,
+                "_MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_COMPLETE",
+            )
 
-            missing = (
-                self.leaf_paths(sections, exclude_leaves=["label"]) -
-                self._MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_COMPLETE.keys())
-            if len(missing) != 0:
-                ClientHelper.unknown_provider_attributes(
-                    DataSourceID.MORNINGSTAR,
-                    missing,
-                    "_MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_COMPLETE"
-                )
-
-            for json_name, section in sections.items():
-                if not isinstance(section, dict):
-                    continue
-                attribute = self._MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_USED.get(json_name)
-                if attribute is not None:
-                    if hasattr(record, attribute):
-                        setattr(record, attribute, section.get("value"))
-                    else:
-                        ClientHelper.missing_record_attribute(
-                            DataSourceID.MORNINGSTAR,
-                            attribute,
-                            section.get("value"),
-                        )
+        for json_name, section in sections.items():
+            if not isinstance(section, dict):
+                continue
+            attribute = self._MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_USED.get(json_name)
+            if attribute is not None:
+                if hasattr(record, attribute):
+                    setattr(record, attribute, section.get("value"))
                 else:
-                    ClientHelper.unknown_provider_attribute(
+                    ClientHelper.missing_record_attribute(
                         DataSourceID.MORNINGSTAR,
-                        json_name,
+                        attribute,
                         section.get("value"),
                     )
-
-        else:
-            message = f"{DataSourceID.MORNINGSTAR} profile 'sections' is not a dictionary."
-            raise MorningstarResponseError(message)
+            else:
+                ClientHelper.unknown_provider_attribute(
+                    DataSourceID.MORNINGSTAR,
+                    json_name,
+                    section.get("value"),
+                )
 
         return record
 
@@ -512,40 +562,44 @@ class MorningstarClient:
     ) -> dict[str, Any]:
         """Parse a Morningstar company profile."""
 
+        if not "sections" in profile:
+            ClientHelper.other_error_with_message(
+                DataSourceID.MORNINGSTAR,
+                f"{DataSourceID.MORNINGSTAR} profile does not contain 'sections'.",
+                MorningstarResponseError if raise_error else None,
+            )
+            return {}
         sections = profile.get("sections")
         if not isinstance(sections, dict):
-            message = f"{DataSourceID.MORNINGSTAR} profile does not contain 'sections'."
-            if raise_error:
-                raise MorningstarResponseError(message)
+            ClientHelper.other_error_with_message(
+                DataSourceID.MORNINGSTAR,
+                f"{DataSourceID.MORNINGSTAR} profile 'sections' is not a dictionary.",
+                MorningstarResponseError if raise_error else None,
+            )
+            return {}
 
         provider_attributes: dict[str, Any] = {}
 
-        if isinstance(sections, dict):
+        missing = (
+            self.leaf_paths(sections, exclude_leaves=["label"]) -
+            self._MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_COMPLETE.keys())
+        if len(missing) != 0:
+            message = f"{DataSourceID.MORNINGSTAR} fields {missing} not considered in profile mapping."
+            if raise_error:
+                raise MorningstarResponseError(message)
 
-            missing = (
-                self.leaf_paths(sections, exclude_leaves=["label"]) -
-                self._MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_COMPLETE.keys())
-            if len(missing) != 0:
-                message = f"{DataSourceID.MORNINGSTAR} fields {missing} not considered in profile mapping."
-                if raise_error:
-                    raise MorningstarResponseError(message)
-
-            for json_name, section in sections.items():
-                if not isinstance(section, dict):
-                    continue
-                attribute = self._MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_USED.get(json_name)
-                if attribute is not None:
-                    provider_attributes[attribute] = section.get("value")
-                else:
-                    ClientHelper.unknown_provider_attribute(
-                        provider=DataSourceID.MORNINGSTAR,
-                        attribute=json_name,
-                        value=section,
-                    )
-
-        elif raise_error:
-            message = f"{DataSourceID.MORNINGSTAR} profile 'sections' is not a dictionary."
-            raise MorningstarResponseError(message)
+        for json_name, section in sections.items():
+            if not isinstance(section, dict):
+                continue
+            attribute = self._MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_USED.get(json_name)
+            if attribute is not None:
+                provider_attributes[attribute] = section.get("value")
+            else:
+                ClientHelper.unknown_provider_attribute(
+                    provider=DataSourceID.MORNINGSTAR,
+                    attribute=json_name,
+                    value=section,
+                )
 
         return provider_attributes
 

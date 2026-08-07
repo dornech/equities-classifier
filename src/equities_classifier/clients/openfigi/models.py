@@ -7,8 +7,10 @@
 # fmt: off
 
 
+from typing import ClassVar
 from dataclasses import dataclass, field
 
+from equities_classifier.enums  import  DataSourceID
 from equities_classifier.models import SecurityProviderRecord
 
 
@@ -16,8 +18,7 @@ from equities_classifier.models import SecurityProviderRecord
 class OpenFIGIRecord(SecurityProviderRecord):
     """Internal representation of a single OpenFIGI mapping result."""
 
-    name: str | None = None
-    ticker: str | None = None
+    datasource: ClassVar[DataSourceID] = DataSourceID.OPENFIGI
 
     figi: list[str] = field(default_factory=list)
     composite_figi: list[str] = field(default_factory=list)

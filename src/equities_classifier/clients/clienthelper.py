@@ -13,7 +13,7 @@ from equities_classifier.enums import (
     DataSourceID,
     SecurityIdentifierType
 )
-
+from equities_classifier.exceptions import ClientResponseError
 
 class ClientHelper:
 
@@ -24,6 +24,17 @@ class ClientHelper:
         security_identifier: str,
     ) -> None:
         """Called when the provider is called with invalid security type."""
+        pass
+
+    @staticmethod
+    def search_result_counter_issue(
+        provider: DataSourceID,
+        security_type: SecurityIdentifierType,
+        security_identifier: str,
+        count_provider: int,
+        count_found: int,
+    ) -> None:
+        """Called when the provider delivers inconsistent number od data."""
         pass
 
     @staticmethod
@@ -50,7 +61,7 @@ class ClientHelper:
         attributes: set[tuple[str, ...]],
         context: str | None = None
     ) -> None:
-        """Called when the provider returns an unmapped JSON attribute."""
+        """Called when the provider returns unmapped JSON attributes."""
         pass
 
     @staticmethod
@@ -61,3 +72,14 @@ class ClientHelper:
     ) -> None:
         """Called when the mapping points to a record attribute that does not exist."""
         pass
+
+    @staticmethod
+    def other_error_with_message(
+        provider: DataSourceID,
+        message: str,
+        raise_object: ClientResponseError | None = None
+    ) -> None:
+        """Called when the provider is called with invalid security type."""
+
+        if raise_object :
+            raise raise_object(message)

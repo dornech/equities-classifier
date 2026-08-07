@@ -35,17 +35,6 @@ def test_parse_search_results_ok(client: MorningstarClient, identifier: Security
     assert results[0].company_id == "0C00000ADA"
 
 
-def test_parse_searchresults_error_count(client: MorningstarClient, identifier: SecurityIdentifier):
-
-    search_result_error_count = load_json(DATA_DIR, "search_result_apple_error_count.json")
-    with pytest.raises(MorningstarResponseError):
-        client._parse_search_results(
-            identifier,
-            search_result_error_count,
-            raise_error=True
-        )
-
-
 def test_parse_record_companyid_not_unique(client: MorningstarClient, identifier: SecurityIdentifier):
 
     search_result_error_companyid = load_json(DATA_DIR, "search_result_apple_error_companyid.json")

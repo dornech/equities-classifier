@@ -13,8 +13,9 @@ from immutabledict import immutabledict
 
 import json
 import re
-
+from urllib.parse import urljoin
 import httpx
+
 from lxml import html
 
 from equities_classifier.clients.clienthelper import ClientHelper
@@ -66,6 +67,43 @@ class MotleyFoolClient:
             follow_redirects=True,
         )
 
+        # determine action code for next.js
+        # self._next_action = _get_next"7f7d5f149d49636ec2e379afcb059e7e5cc4f99c0e"
+        self._next_action = self._get_next_action()
+
+    def _get_next_action(self) -> str |None:
+
+        _NEXT_ACTION_RE = re.compile(r'\("([0-9a-f]+)",\s*x\.callServer,\s*void 0,\s*x\.findSourceMapURL,\s*"searchInstruments"\)')
+
+        self._next_action = None
+        next_action = None
+
+        response = self._client.get("https://www.fool.com/")
+        response.raise_for_status()
+
+        document = html.fromstring(response.content)
+
+        for src in document.xpath("//script[@src]/@src"):
+            if ".js" not in src:
+                continue
+
+            script_url = urljoin("https://www.fool.com/", src)
+            script = self._client.get(script_url)
+            script.raise_for_status()
+
+            if "searchInstruments" not in script.text:
+                continue
+
+            match = _NEXT_ACTION_RE.search(script.text)
+            if match:
+                return str(match.group(1))
+
+        ClientHelper.other_error_with_message(
+            DataSourceID.MOTLEYFOOL,
+            f"Next-Action for searchInstruments not found at {DataSourceID.MOTLEYFOOL}.",
+            MotleyFoolResponseError,
+        )
+
     def __enter__(self) -> Self:
         return self
 
@@ -86,6 +124,7 @@ class MotleyFoolClient:
         records: list[MotleyFoolRecord] = []
 
         for source_identifier in source_identifiers:
+
             if source_identifier.type != SecurityIdentifierType.TICKER:
                 ClientHelper.invalid_security_type(
                     DataSourceID.MOTLEYFOOL,
@@ -148,7 +187,7 @@ class MotleyFoolClient:
         headers = {
             "accept": "text/x-component",
             "content-type": "text/plain;charset=UTF-8",
-            "next-action": "7fa9126dcf8a02fa0d00bed92a924cea6b697c3486",
+            "next-action": self._next_action,
             "next-router-state-tree": "%5B%22%22%2C%7B%22children%22%3A%5B%22(site)%22%2C%7B%22children%22%3A%5B%22(chrome)%22%2C%7B%22children%22%3A%5B%22__PAGE__%22%2C%7B%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%2Ctrue%5D%7D%2Cnull%2Cnull%5D",
         }
 
@@ -168,9 +207,11 @@ class MotleyFoolClient:
 
         match = re.search(r"1:(\[.*\])", response, re.DOTALL)
         if match is None:
-            if raise_error:
-                message = "Search response does not contain search results."
-                raise MotleyFoolResponseError(message)
+            ClientHelper.other_error_with_message(
+                DataSourceID.MOTLEYFOOL,
+                f"{DataSourceID.MOTLEYFOOL} response does not contain any search results.",
+                MotleyFoolResponseError if raise_error else None,
+            )
             return []
 
         data = json.loads(match.group(1))
@@ -209,9 +250,12 @@ class MotleyFoolClient:
             )
         ]
         if not matches:
-            if raise_error:
-                message = f"No valid Motley Fool search result for {source_identifier.value}."
-                raise MotleyFoolResponseError(message)
+            ClientHelper.other_error_with_message(
+                DataSourceID.MOTLEYFOOL,
+                f"{DataSourceID.MOTLEYFOOL} does not provide a valid search result for {source_identifier.value}.",
+                MotleyFoolResponseError if raise_error else None,
+            )
+            return None
         if len(matches) > 1:
             ClientHelper.search_result_not_unique(
                 DataSourceID.MOTLEYFOOL,
@@ -248,6 +292,14 @@ class MotleyFoolClient:
             node = nodes[0]
             return " ".join(node.itertext()).strip()
 
+        if search_result is None:
+            ClientHelper.other_error_with_message(
+                DataSourceID.MOTLEYFOOL,
+                f"No {DataSourceID.MOTLEYFOOL} search result available.",
+                MotleyFoolResponseError if raise_error else None,
+            )
+            return []
+
         tree = html.fromstring(html_text)
         record = MotleyFoolRecord()
 
@@ -274,14 +326,5 @@ class MotleyFoolClient:
 
 
 if __name__ == "__main__":
-
-    identifier=SecurityIdentifier(
-        type=SecurityIdentifierType.TICKER,
-        value="AAPL",
-    )
-
-    client=MotleyFoolClient()
-
-    record = client.read_provider_profile_data([identifier])
 
     pass

@@ -12,6 +12,7 @@ from typing import Any
 from dataclasses import dataclass, fields, field
 
 from equities_classifier.enums import (
+    DataSourceID,
     ClassificationSystemID,
     ClassificationLevel,
     SecurityIdentifierType
@@ -90,6 +91,9 @@ class SecurityIdentifierIdentifiable:
 class SecurityProviderRecord(SecurityIdentifierIdentifiable):
     """Base class for SecurityProviderRecord classes ensuring common fields are contained."""
 
+    name: str | None = None
+    ticker: str | None = None
+
     def provider_attributes(self) -> dict[str, Any]:
         """Return all provider-specific attributes."""
 
@@ -106,7 +110,16 @@ class Security(SecurityIdentifierIdentifiable):
 
     name: str | None = None
     ticker: str | None = None
+
     provider_attributes: dict[str, dict[str, Any]] = field(default_factory=dict)
+
+    def provider_attribute(
+        self,
+        provider: DataSourceID,
+        attribute: str,
+    ) -> Any | None:
+        """Return a provider-specific attribute."""
+        return self.provider_attributes.get(provider.value, {}).get(attribute)
 
 
 @dataclass(frozen=True, slots=True)

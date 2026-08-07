@@ -204,8 +204,11 @@ class OpenFIGIClient:
 
         response_data = response.json()
         if len(response_data) != len(batch):
-            msg = "Elements in batch and response must match."
-            raise ClientResponseError(msg)
+            ClientHelper.other_error_with_message(
+                DataSourceID.OPENFIGI,
+                "Elements in batch and response must match.",
+                OpenFIGIResponseError
+            )
 
         return response_data
 
@@ -217,18 +220,33 @@ class OpenFIGIClient:
     ) -> list[OpenFIGIRecord]:
         """Parse a single OpenFIGI mapping response."""
 
-        if raise_error and "error" in item:
+        if "error" in item:
             openFIGI_msg = item["error"]
-            message = f"OpenFIGI returned an error: {openFIGI_msg}"
-            raise OpenFIGIResponseError(message)
+            ClientHelper.other_error_with_message(
+                DataSourceID.OPENFIGI,
+                f"OpenFIGI returned an error: {openFIGI_msg}",
+                OpenFIGIResponseError if raise_error else None,
+            )
 
+        if not "data" in item:
+            ClientHelper.other_error_with_message(
+                DataSourceID.OPENFIGI,
+                f"{DataSourceID.OPENFIGI} response does not contain 'data'.",
+                OpenFIGIResponseError if raise_error else None,
+            )
         data = item.get("data")
-        if raise_error and data is None:
-            message = "OpenFIGI response does not contain a 'data' element."
-            raise OpenFIGIResponseError(message)
-        if raise_error and len(data) == 0:
-            message = "OpenFIGI returned no mapping result."
-            raise OpenFIGIResponseError(message)
+        if not isinstance(data, dict):
+            ClientHelper.other_error_with_message(
+                DataSourceID.OPENFIGI,
+                 f"{DataSourceID.OPENFIGI} response 'results' is not a dictionary.",
+                 OpenFIGIResponseError if raise_error else None,
+            )
+        if len(data) == 0:
+            ClientHelper.other_error_with_message(
+                DataSourceID.OPENFIGI,
+                f"{DataSourceID.OPENFIGI} returned no mapping result data.",
+                OpenFIGIResponseError if raise_error else None,
+            )
         if not data:
             return []
 

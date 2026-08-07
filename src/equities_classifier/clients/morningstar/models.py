@@ -7,8 +7,10 @@
 # fmt: off
 
 
+from typing import ClassVar
 from dataclasses import dataclass, field
 
+from equities_classifier.enums  import  DataSourceID
 from equities_classifier.models import SecurityIdentifier, SecurityProviderRecord
 
 
@@ -40,8 +42,8 @@ class MorningstarSearchResult:
 class MorningstarRecord(SecurityProviderRecord):
     """Internal representation of a Morningstar search result and classification record."""
 
-    name: str | None = None
-    ticker: str | None = None
+    datasource: ClassVar[DataSourceID] = DataSourceID.MORNINGSTAR
+
     company_id: str | None = None
     business_description: str | None = None
 
