@@ -21,6 +21,7 @@ class RateLimits:
     @property
     def min_request_interval(self) -> float:
         """Minimum interval between two requests in seconds."""
+
         return 60.0 / self.requests_per_minute
 
 
@@ -28,6 +29,8 @@ class RateLimiter:
     """Simple request rate limiter."""
 
     def __init__(self, requests_per_minute: int) -> None:
+        """Initialize RateLimiter."""
+
         self._min_interval = 60.0 / requests_per_minute
         self._last_request: float | None = None
 

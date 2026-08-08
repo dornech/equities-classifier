@@ -63,6 +63,8 @@ class SecurityIdentifierIdentifiable:
         self,
         identifier_type: SecurityIdentifierType,
     ) -> SecurityIdentifier | None:
+        """Find identifier of a specific type."""
+
         return next(
             (
                 identifier
@@ -76,6 +78,7 @@ class SecurityIdentifierIdentifiable:
         self,
         identifier_type: SecurityIdentifierType,
     ) -> str | None:
+        """Return value of an identifier of a specific type."""
 
         identifier = self.identifier(identifier_type)
         return identifier.value if identifier is not None else None
@@ -84,6 +87,8 @@ class SecurityIdentifierIdentifiable:
         self,
         identifier_type: SecurityIdentifierType,
     ) -> bool:
+        """Check if an identifier of a specific type is registered."""
+
         return self.identifier(identifier_type) is not None
 
 

@@ -189,7 +189,7 @@ class MorningstarClient:
         source_identifiers: Sequence[SecurityIdentifier],
         raise_error: bool = True
     ) -> list[MorningstarRecord]:
-        """Read base date for one or more identifiers from Morningstar."""
+        """Read base data for one or more identifiers from Morningstar."""
 
         records: list[MorningstarRecord] = []
 

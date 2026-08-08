@@ -41,7 +41,7 @@ from equities_classifier.exceptions import (
 
 
 class MotleyFoolResponseError(ClientResponseError):
-    """Motley Fool returned an invalid response."""
+    """Motley-Fool returned an invalid response."""
 
 
 class MotleyFoolClient:
@@ -65,6 +65,7 @@ class MotleyFoolClient:
         self,
         timeout: float = 30.0,
     ) -> None:
+        """Initialize Motley-Fool client."""
 
         self._client = httpx.Client(
             base_url=self._BASE_URL,
@@ -115,6 +116,7 @@ class MotleyFoolClient:
         self.close()
 
     def close(self) -> None:
+        """Release client resources."""
         self._client.close()
 
     # public API
@@ -124,6 +126,7 @@ class MotleyFoolClient:
         source_identifiers: Sequence[SecurityIdentifier],
         raise_error: bool = True,
     ) -> list[MotleyFoolRecord] | list[Never]:
+        """Read profile data for one or more identifiers from Motley-Fool."""
 
         records: list[MotleyFoolRecord] = []
 
