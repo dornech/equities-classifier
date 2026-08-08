@@ -44,21 +44,6 @@ def test_read_provider_base_data(client: MorningstarClient, apple_isin: Security
 def test_read_provider_profile_data(client: MorningstarClient, apple_isin: SecurityIdentifier) -> None:
 
     records = client.read_provider_base_data([apple_isin])
-
-    records = client.read_provider_profile_data(records)
-
-    record = records[0]
-
-    assert record.sector == "Technology"
-    assert record.industry == "Consumer Electronics"
-    assert record.business_description is not None
-    assert len(record.business_description) > 100
-
-
-def test_read_provider_base_and_profile_data(client: MorningstarClient, apple_isin: SecurityIdentifier) -> None:
-    """Complete Morningstar workflow."""
-
-    records = client.read_provider_base_data([apple_isin])
     records = client.read_provider_profile_data(records)
 
     record = records[0]
@@ -66,5 +51,7 @@ def test_read_provider_base_and_profile_data(client: MorningstarClient, apple_is
     assert record.name == "Apple Inc"
     assert record.sector == "Technology"
     assert record.industry == "Consumer Electronics"
+    assert record.business_description is not None
+    assert len(record.business_description) > 100
 
     assert len(record.identifiers) >= 2

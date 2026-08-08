@@ -10,7 +10,7 @@
 from typing import ClassVar
 from dataclasses import dataclass, field
 
-from equities_classifier.enums  import  DataSourceID
+from equities_classifier.enums import DataSourceID
 from equities_classifier.models import SecurityProviderRecord
 
 

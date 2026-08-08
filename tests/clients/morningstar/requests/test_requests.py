@@ -3,6 +3,8 @@
 
 # ruff and mypy per file settings
 #
+# disable mypy errors
+# mypy: disable-error-code = "arg-type, union-attr"
 
 # fmt: off
 

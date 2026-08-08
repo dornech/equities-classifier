@@ -3,11 +3,13 @@
 
 # ruff and mypy per file settings
 #
+# disable mypy errors
+# mypy: disable-error-code = "no-any-return, attr-defined, unused-ignore"
 
 # fmt: off
 
 
-from typing import Any
+from typing import Any, ClassVar
 
 from dataclasses import dataclass, fields, field
 
@@ -75,10 +77,8 @@ class SecurityIdentifierIdentifiable:
         identifier_type: SecurityIdentifierType,
     ) -> str | None:
 
-        if self.has_identifier(identifier_type):
-            return self.identifier(identifier_type).value
-        else:
-            return None
+        identifier = self.identifier(identifier_type)
+        return identifier.value if identifier is not None else None
 
     def has_identifier(
         self,
@@ -90,6 +90,8 @@ class SecurityIdentifierIdentifiable:
 @dataclass(slots=True)
 class SecurityProviderRecord(SecurityIdentifierIdentifiable):
     """Base class for SecurityProviderRecord classes ensuring common fields are contained."""
+
+    datasource: ClassVar[DataSourceID]
 
     name: str | None = None
     ticker: str | None = None
@@ -119,7 +121,7 @@ class Security(SecurityIdentifierIdentifiable):
         attribute: str,
     ) -> Any | None:
         """Return a provider-specific attribute."""
-        return self.provider_attributes.get(provider.value, {}).get(attribute)
+        return self.provider_attributes.get(provider, {}).get(attribute)
 
 
 @dataclass(frozen=True, slots=True)
@@ -127,6 +129,6 @@ class SecurityClassification:
     """Classification of one company."""
 
     security: Security
-    # company: str
+
     system: ClassificationSystem
     nodes: tuple[ClassificationNode, ...]

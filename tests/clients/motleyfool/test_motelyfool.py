@@ -1,9 +1,10 @@
 """Tests for Motley-Fool client."""
 
 
-
 # ruff and mypy per file settings
 #
+# disable mypy errors
+# mypy: disable-error-code = "arg-type, union-attr"
 
 # fmt: off
 
@@ -28,7 +29,6 @@ def test_parse_search_results_ok(
     identifier: SecurityIdentifier,
     load_text,
 ) -> None:
-
 
     response = load_text("search_response_aapl.txt")
     results = client._parse_search_results(identifier, response,)

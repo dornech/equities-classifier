@@ -3,6 +3,8 @@
 
 # ruff and mypy per file settings
 #
+# disable mypy errors
+# mypy: disable-error-code = "operator"
 
 # fmt: off
 
@@ -14,6 +16,7 @@ from equities_classifier.enums import (
     SecurityIdentifierType
 )
 from equities_classifier.exceptions import ClientResponseError
+
 
 class ClientHelper:
 

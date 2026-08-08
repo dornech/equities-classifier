@@ -4,7 +4,7 @@
 # ruff and mypy per file settings
 #
 # empty lines
-# ruff: noqua: E303
+# ruff: noqa: E303
 # naming conventions
 # ruff: noqa: N806
 # boolean-type arguments
@@ -13,7 +13,7 @@
 # ruff: noqa: PLR1702, SIM102
 #
 # disable mypy errors
-# mypy: disable-error-code = "no-any-return, attr-defined, unused-ignore"
+# mypy: disable-error-code = "arg-type, no-any-return"
 
 # fmt: off
 
@@ -228,17 +228,17 @@ class OpenFIGIClient:
                 OpenFIGIResponseError if raise_error else None,
             )
 
-        if not "data" in item:
+        if "data" not in item:
             ClientHelper.other_error_with_message(
                 DataSourceID.OPENFIGI,
                 f"{DataSourceID.OPENFIGI} response does not contain 'data'.",
                 OpenFIGIResponseError if raise_error else None,
             )
         data = item.get("data")
-        if not isinstance(data, dict):
+        if not isinstance(data, list):
             ClientHelper.other_error_with_message(
                 DataSourceID.OPENFIGI,
-                 f"{DataSourceID.OPENFIGI} response 'results' is not a dictionary.",
+                 f"{DataSourceID.OPENFIGI} response 'results' is not a list (of dictionaries).",
                  OpenFIGIResponseError if raise_error else None,
             )
         if len(data) == 0:

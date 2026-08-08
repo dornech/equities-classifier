@@ -4,19 +4,19 @@
 # ruff and mypy per file settings
 #
 # empty lines
-# ruff: noqua: E303
+# ruff: noqa: E303
 # boolean-type arguments
 # ruff: noqa: FBT001, FBT002
 # others
 # ruff: noqa: PLR1702, PLR6301
 #
 # disable mypy errors
-# mypy: disable-error-code = "no-any-return, attr-defined, unused-ignore"
+# mypy: disable-error-code = "arg-type, no-any-return"
 
 # fmt: off
 
 
-from typing import Any, Self
+from typing import Any, Never, Self
 
 from collections import Counter
 from collections.abc import Collection, Mapping, Sequence
@@ -51,22 +51,14 @@ class MorningstarClient:
     _TOKEN_URL = "https://global.morningstar.com/api/v1/en-eu/oauth/token/"
     _PROFILE_URL = "https://api-global.morningstar.com/sal-service/v1/stock/data/companyProfile"
 
-    _SEARCH_FIELDS: tuple[str] = (
-        "baseCurrency,"
-        "exchange,"
-        "exchangeCountry,"
-        "isin,"
-        "name,"
-        "shortName,"
-        "ticker"
-    )
+    _SEARCH_FIELDS: str = "baseCurrency,exchange,exchangeCountry,isin,name,shortName,ticker"
 
     _MORNINGSTAR_IDENTIFIER_TYPES: immutabledict[str, SecurityIdentifierType] = immutabledict({
         "isin": SecurityIdentifierType.ISIN,
         "ticker": SecurityIdentifierType.TICKER
     })
 
-    _MORNINGSTAR_SEARCH_RESULT_MAP: immutabledict[tuple[str, ...], str] = immutabledict({
+    _MORNINGSTAR_SEARCH_RESULT_MAP: immutabledict[tuple[str, ...], str | None] = immutabledict({
         ("meta", "securityID"): "security_id",
         ("meta", "performanceID"): "performance_id",
         ("meta", "companyID"): "company_id",
@@ -91,7 +83,7 @@ class MorningstarClient:
         ("fields", "ticker", "value"): None,
     })
 
-    _MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_COMPLETE: immutabledict[tuple[str, ...], str] = immutabledict({
+    _MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_COMPLETE: immutabledict[tuple[str, ...], str | None] = immutabledict({
         ("businessDescription", "value"): "business_description",
         ("contact", "address1"): None,
         ("contact", "address2"): None,
@@ -109,7 +101,7 @@ class MorningstarClient:
     })
 
     # only usable for dictionary entries with "Value" attribute
-    _MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_USED: immutabledict[tuple[str, ...], str] = immutabledict({
+    _MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_USED: immutabledict[str, str] = immutabledict({
         "businessDescription": "business_description",
         "sector": "sector",
         "industry": "industry",
@@ -231,7 +223,8 @@ class MorningstarClient:
 
             if search_results is not None:
                 record = self._parse_record(source_identifier, search_results, raise_error)
-                records.append(record)
+                if record:
+                    records.append(record)
 
         return records
 
@@ -258,7 +251,7 @@ class MorningstarClient:
         *,
         params: dict[str, Any] | None = None,
         json_param: Any | None = None
-    ) -> dict[str, Any] | list[dict[str, Any]]:
+    ) -> Any:
         """Execute a Morningstar request."""
 
         # self._rate_limiter.wait()
@@ -286,7 +279,7 @@ class MorningstarClient:
     def _execute_search_request(
         self,
         source_identifier: SecurityIdentifier,
-    ) -> list[dict[str, Any]]:
+    ) -> dict[str, Any]:
         """Execute a Morningstar security search request."""
 
         query = (
@@ -306,27 +299,27 @@ class MorningstarClient:
     def _parse_search_results(
         self,
         source_identifier: SecurityIdentifier,
-        response_data: list[dict[str, Any]],
+        response_data: dict[str, Any],
         raise_error: bool = True
-    ) -> list[MorningstarSearchResult]:
+    ) -> list[MorningstarSearchResult] | list[Never]:
         """Parse Morningstar search response."""
 
-        # clean response date, delete embracing dictionary if necessary
+        # clean response data, delete embracing dictionary if necessary
         if "page" in response_data:
             response_data = response_data["page"]
 
-        if not "results" in response_data:
+        if "results" not in response_data:
             ClientHelper.other_error_with_message(
                 DataSourceID.MORNINGSTAR,
                 f"{DataSourceID.MORNINGSTAR} search query result does not contain 'results'.",
                 MorningstarResponseError if raise_error else None,
             )
-            return[]
+            return []
         results = response_data["results"]
-        if not isinstance(results, dict):
+        if not isinstance(results, list):
             ClientHelper.other_error_with_message(
                 DataSourceID.MORNINGSTAR,
-                 f"{DataSourceID.MORNINGSTAR} profile 'results' is not a dictionary.",
+                 f"{DataSourceID.MORNINGSTAR} profile 'results' is not list (of dictionaries).",
                  MorningstarResponseError if raise_error else None,
             )
         if len(results) == 0:
@@ -375,7 +368,7 @@ class MorningstarClient:
                     source_identifier.type,
                     source_identifier.value,
                     count_provider=count,
-                    count_found= len(response_data) + 1,
+                    count_found=len(response_data) + 1,
                 )
 
         return search_results
@@ -385,7 +378,7 @@ class MorningstarClient:
         source_identifier: SecurityIdentifier,
         search_results: Sequence[MorningstarSearchResult],
         raise_error: bool = False
-    ) -> MorningstarRecord:
+    ) -> MorningstarRecord | None:
         """Parse Morningstar search result and create a MorningstarRecord."""
 
         if not search_results:
@@ -394,7 +387,7 @@ class MorningstarClient:
                 f"No {DataSourceID.MORNINGSTAR} search results available.",
                 MorningstarResponseError if raise_error else None,
             )
-            return[]
+            return None
 
         record = MorningstarRecord()
 
@@ -459,7 +452,7 @@ class MorningstarClient:
 
         return True
 
-    def _get_access_token(self) -> str:
+    def _get_access_token(self) -> str | None:
         """Return a Morningstar OAuth access token."""
 
         if self._access_token is None or self._access_token_expired():
@@ -507,7 +500,7 @@ class MorningstarClient:
     ) -> MorningstarRecord:
         """Enrich a MorningstarRecord with company profile information."""
 
-        if not "sections" in profile:
+        if "sections" not in profile:
             ClientHelper.other_error_with_message(
                 DataSourceID.MORNINGSTAR,
                 f"{DataSourceID.MORNINGSTAR} profile does not contain 'sections'.",
@@ -562,7 +555,7 @@ class MorningstarClient:
     ) -> dict[str, Any]:
         """Parse a Morningstar company profile."""
 
-        if not "sections" in profile:
+        if "sections" not in profile:
             ClientHelper.other_error_with_message(
                 DataSourceID.MORNINGSTAR,
                 f"{DataSourceID.MORNINGSTAR} profile does not contain 'sections'.",

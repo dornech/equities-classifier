@@ -3,11 +3,17 @@
 
 # ruff and mypy per file settings
 #
+# boolean-type arguments
+# ruff: noqa: FBT001, FBT002
+# others
+# ruff: noqa: E501
+# disable mypy errors
+# mypy: disable-error-code = "arg-type, index, operator, type-var, union-attr"
 
 # fmt: off
 
 
-from typing import Any, Self
+from typing import Any, Never, Self
 from collections.abc import Sequence
 from immutabledict import immutabledict
 
@@ -55,7 +61,6 @@ class MotleyFoolClient:
         "industry": "//section/descendant::div/p[.='Industry']/following-sibling::p",
     })
 
-
     def __init__(
         self,
         timeout: float = 30.0,
@@ -71,12 +76,11 @@ class MotleyFoolClient:
         # self._next_action = _get_next"7f7d5f149d49636ec2e379afcb059e7e5cc4f99c0e"
         self._next_action = self._get_next_action()
 
-    def _get_next_action(self) -> str |None:
+    def _get_next_action(self) -> str | None:
 
-        _NEXT_ACTION_RE = re.compile(r'\("([0-9a-f]+)",\s*x\.callServer,\s*void 0,\s*x\.findSourceMapURL,\s*"searchInstruments"\)')
+        next_action_regex = re.compile(r'\("([0-9a-f]+)",\s*x\.callServer,\s*void 0,\s*x\.findSourceMapURL,\s*"searchInstruments"\)')
 
         self._next_action = None
-        next_action = None
 
         response = self._client.get("https://www.fool.com/")
         response.raise_for_status()
@@ -94,7 +98,7 @@ class MotleyFoolClient:
             if "searchInstruments" not in script.text:
                 continue
 
-            match = _NEXT_ACTION_RE.search(script.text)
+            match = next_action_regex.search(script.text)
             if match:
                 return str(match.group(1))
 
@@ -119,7 +123,7 @@ class MotleyFoolClient:
         self,
         source_identifiers: Sequence[SecurityIdentifier],
         raise_error: bool = True,
-    ) -> list[MotleyFoolRecord]:
+    ) -> list[MotleyFoolRecord] | list[Never]:
 
         records: list[MotleyFoolRecord] = []
 
@@ -144,14 +148,15 @@ class MotleyFoolClient:
                 search_results,
                 raise_error,
             )
-            html = self._execute_company_request(search_result)
-            record = self._parse_record(
-                search_result,
-                html,
-                raise_error,
-            )
-
-            records.append(record)
+            if search_result:
+                html = self._execute_company_request(search_result)
+                record = self._parse_record(
+                    search_result,
+                    html,
+                    raise_error,
+                )
+                if record:
+                    records.append(record)
 
         return records
 
@@ -203,7 +208,7 @@ class MotleyFoolClient:
         source_identifier: SecurityIdentifier,
         response: str,
         raise_error: bool = True,
-    ) -> list[MotleyFoolSearchResult]:
+    ) -> list[MotleyFoolSearchResult] | list[Never]:
 
         match = re.search(r"1:(\[.*\])", response, re.DOTALL)
         if match is None:
@@ -233,12 +238,12 @@ class MotleyFoolClient:
 
         return results
 
+    @staticmethod
     def _select_search_result(
-        self,
         source_identifier: SecurityIdentifier,
         results: list[MotleyFoolSearchResult],
         raise_error: bool = True,
-    ) -> MotleyFoolSearchResult:
+    ) -> MotleyFoolSearchResult | None:
 
         matches = [
             result
@@ -275,7 +280,6 @@ class MotleyFoolClient:
             url=f"/quote/{result.exchange}/{result.ticker}",
         )
 
-
     def _parse_record(
         self,
         search_result: MotleyFoolSearchResult,
@@ -298,7 +302,7 @@ class MotleyFoolClient:
                 f"No {DataSourceID.MOTLEYFOOL} search result available.",
                 MotleyFoolResponseError if raise_error else None,
             )
-            return []
+            return None
 
         tree = html.fromstring(html_text)
         record = MotleyFoolRecord()
