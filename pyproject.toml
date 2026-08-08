@@ -36,10 +36,9 @@ classifiers = [
 dependencies = [
     "immutabledict",
     "httpx",
-    # "playwright",
-    # "playwright_stealth",
-    # "undetected_playwright",
+    "undetected-chromedriver",
     "utils-seleniumxp",
+    "rapidfuzz",
     "openpyxl",
 ]
 
