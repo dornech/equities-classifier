@@ -5,6 +5,24 @@
 - First pre-alpha
 - ...
 
+## [v0.5.1](https://github.com/dornech/equities-classifier/releases/tag/v0.5.1)  (2026-08-09) 
+
+### Features
+
+- MotleyFool client with dynamic determination "Next-Action" code, alignment error handling of of clients
+(['ec708c8'](https://github.com/dornech/equities-classifier/commit/ec708c8f504aa487b57d9d200ea066d7182ffcac))
+
+### Bug fixes
+
+- Updated pyproject.toml regarding dependencies
+(['a15743f'](https://github.com/dornech/equities-classifier/commit/a15743f704e52d1f27bf45946d6529d70e0ec099))
+- Missing docstrings
+(['4e51f30'](https://github.com/dornech/equities-classifier/commit/4e51f30311e74c3697f3964b4d27e187b01dabf5))
+- Small corrections for alignment error handling, mypy-fixes, other smaller fixes and clean-ups
+(['96a1cfe'](https://github.com/dornech/equities-classifier/commit/96a1cfe02d0879be96b1543c76a5192d9616b6db))
+- Optimize GitHub actions resource usage, avoid especially very expensive macOS-actions
+(['0910fee'](https://github.com/dornech/equities-classifier/commit/0910fee0ed47b5cc6c377ee250ae79b8a7ba0204))
+
 ## [v0.5.0](https://github.com/dornech/equities-classifier/releases/tag/v0.5.0)  (2026-08-06) 
 
 ### Features
