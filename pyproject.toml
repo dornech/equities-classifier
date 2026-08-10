@@ -36,8 +36,12 @@ classifiers = [
 dependencies = [
     "immutabledict",
     "httpx",
-    "undetected-chromedriver",
-    "utils-seleniumxp",
+    # "undetected-chromedriver",
+    # "utils-seleniumxp",
+    "undetected @ git+https://github.com/dornech/undetected.git",
+    "selenium",
+    "waitless",
+    "lxml",
     "rapidfuzz",
     "openpyxl",
 ]

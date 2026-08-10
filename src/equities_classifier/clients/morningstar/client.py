@@ -23,8 +23,11 @@ from collections.abc import Collection, Mapping, Sequence
 from immutabledict import immutabledict
 from dataclasses import fields
 
-import utils_seleniumxp
-import undetected_chromedriver as uc
+from selenium.webdriver.common.by import By
+# import utils_seleniumxp
+# import undetected_chromedriver as uc
+import undetected as uc
+from waitless import stabilize
 from urllib.parse import urlencode
 import json
 import datetime
@@ -154,14 +157,15 @@ class MorningstarClient:
 
         if not test_wo_browser:
             if seleniumwrapper is None:
-                self._client = utils_seleniumxp.init_webdriver(
-                    stealthmode=False,
-                    optimizedscraping=False,
-                    URL="https://global.morningstar.com/en-eu",
-                    browser="chrome",
-                    alt_cls_webdriverwrapper=uc.Chrome,
-                    alt_cls_options=uc.ChromeOptions,
-                )
+                # self._client = utils_seleniumxp.init_webdriver(
+                #     stealthmode=False,
+                #     optimizedscraping=False,
+                #     URL="https://global.morningstar.com/en-eu",
+                #     browser="chrome",
+                #     alt_cls_webdriverwrapper=uc.Chrome,
+                #     alt_cls_options=uc.ChromeOptions,
+                # )
+                self._client = stabilize(uc.Chrome())
             else:
                 self._client = seleniumwrapper
         else:
@@ -257,7 +261,7 @@ class MorningstarClient:
         # self._rate_limiter.wait()
 
         self._client.get(f"{url}?{urlencode(params)}" if params else url)
-        response = self._client.find_element(utils_seleniumxp.By.XPATH, "//pre").text
+        response = self._client.find_element(By.XPATH, "//pre").text
         if response is None:
             ClientHelper.other_error_with_message(
                 DataSourceID.MORNINGSTAR,
@@ -294,7 +298,9 @@ class MorningstarClient:
             # "asPageResponse": "false",
         }
 
-        return self._execute_request(method="GET", url=self._SEARCH_URL, params=params)
+        response = self._execute_request(method="GET", url=self._SEARCH_URL, params=params)
+
+        return response
 
     def _parse_search_results(
         self,
@@ -598,5 +604,18 @@ class MorningstarClient:
 
 
 if __name__ == "__main__":
+
+    apple_isin = SecurityIdentifier(
+            type=SecurityIdentifierType.ISIN,
+            value="US0378331005",
+        )
+
+    client = MorningstarClient()
+
+    records = client.read_provider_base_data([apple_isin])
+    records = client.read_provider_profile_data(records)
+
+    record = records[0]
+
 
     pass
