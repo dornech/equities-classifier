@@ -9,8 +9,17 @@
 # fmt: off
 
 
+import pytest
+
 from equities_classifier.models import SecurityIdentifier
 from equities_classifier.clients.morningstar.client import MorningstarClient
+
+
+pytestmark = [
+    pytest.mark.local,
+    pytest.mark.usefixtures("client"),
+    pytest.mark.usefixtures("apple_isin"),
+]
 
 
 def test_execute_search_request(client: MorningstarClient, apple_isin: SecurityIdentifier):

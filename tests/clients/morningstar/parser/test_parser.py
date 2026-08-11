@@ -22,39 +22,44 @@ from tests.testhelpers import load_json
 DATA_DIR = Path(__file__).parent.parent / "data"
 
 
+pytestmark = [
+    pytest.mark.usefixtures("client_dummy"),
+]
+
+
 @pytest.fixture
 def identifier(apple_isin) -> SecurityIdentifier:
     return apple_isin
 
 
-def test_parse_search_results_ok(client: MorningstarClient, identifier: SecurityIdentifier):
+def test_parse_search_results_ok(client_dummy: MorningstarClient, identifier: SecurityIdentifier):
 
     search_result = load_json(DATA_DIR, "search_result_apple.json")
-    results = client._parse_search_results(identifier, search_result,)
+    results = client_dummy._parse_search_results(identifier, search_result,)
 
     assert len(results) == 20
     assert all(r.isin == "US0378331005" for r in results)
     assert results[0].company_id == "0C00000ADA"
 
 
-def test_parse_record_companyid_not_unique(client: MorningstarClient, identifier: SecurityIdentifier):
+def test_parse_record_companyid_not_unique(client_dummy: MorningstarClient, identifier: SecurityIdentifier):
 
     search_result_error_companyid = load_json(DATA_DIR, "search_result_apple_error_companyid.json")
-    results = client._parse_search_results(identifier, search_result_error_companyid,)
+    results = client_dummy._parse_search_results(identifier, search_result_error_companyid,)
 
     with pytest.raises(MorningstarResponseError):
-        client._parse_record(
+        client_dummy._parse_record(
             identifier,
             results,
             raise_error=True
         )
 
 
-def test_parse_record_ok(client: MorningstarClient, identifier: SecurityIdentifier):
+def test_parse_record_ok(client_dummy: MorningstarClient, identifier: SecurityIdentifier):
 
     search_result = load_json(DATA_DIR, "search_result_apple.json")
-    results = client._parse_search_results(identifier, search_result)
-    record = client._parse_record(identifier, results)
+    results = client_dummy._parse_search_results(identifier, search_result)
+    record = client_dummy._parse_record(identifier, results)
 
     assert record.name == "Apple Inc"
     assert record.ticker == "AAPL"
@@ -65,26 +70,26 @@ def test_parse_record_ok(client: MorningstarClient, identifier: SecurityIdentifi
     assert len(record.exchange) == 20
 
 
-def test_parse_profile_to_record(client: MorningstarClient, identifier: SecurityIdentifier):
+def test_parse_profile_to_record(client_dummy: MorningstarClient, identifier: SecurityIdentifier):
 
     search_result = load_json(DATA_DIR, "search_result_apple.json")
-    search_results = client._parse_search_results(identifier, search_result,)
-    record = client._parse_record(identifier, search_results)
+    search_results = client_dummy._parse_search_results(identifier, search_result,)
+    record = client_dummy._parse_record(identifier, search_results)
 
     profile = load_json(DATA_DIR, "profile_apple.json")
 
     assert "sections" in profile
 
-    record = client._parse_profile_to_record(profile, record)
+    record = client_dummy._parse_profile_to_record(profile, record)
 
     assert record.sector == "Technology"
     assert record.industry == "Consumer Electronics"
 
 
-def test_parse_profile_to_dict(client: MorningstarClient):
+def test_parse_profile_to_dict(client_dummy: MorningstarClient):
 
     profile = load_json(DATA_DIR, "profile_apple.json")
-    attributes = client._parse_profile_to_dict(profile)
+    attributes = client_dummy._parse_profile_to_dict(profile)
 
     assert attributes["sector"] == "Technology"
     assert attributes["industry"] == "Consumer Electronics"

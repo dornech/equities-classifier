@@ -43,7 +43,7 @@ dependencies = [
     "waitless",
     "lxml",
     "rapidfuzz",
-    "openpyxl",
+    # "openpyxl",
 ]
 
 dynamic = ["version"]
@@ -151,6 +151,7 @@ include = [
     "tests/**/*.py",
     "tests/**/*.pyi",
 ]
+output-prefer-rule-codes=true
 
 [tool.ruff.lint]
 preview = true # preview features & checks, use with caution
@@ -245,6 +246,13 @@ warn_unused_ignores = true
 warn_return_any = true
 warn_unused_configs = true
 
+[tool.deptry]
+known_first_party = ["equities_classifier"]
+exclude = ["docs", "tests"]
+ignore_notebooks = true
+github_output = true
+github_warning_errors = ["DEP003"]
+
 [tool.cruft]
 skip = ["README.md", "CHANGELOG.MD", "src/", "tests/", "docs/", "notebooks/"]
 
@@ -253,6 +261,9 @@ minversion = "6.0"
 addopts = "-ra -q --doctest-glob='*.md'"
 testpaths = [
     "tests",
+]
+markers = [
+    "local: tests that are not suitable for CI",
 ]
 
 [tool.coverage.run]
@@ -300,20 +311,23 @@ dependencies = [
 ]
 # installer = "pip"
 
-# Hatch default test environment for "hatch test" (also used in GitAction)
+# Hatch default test environment for "hatch test" (also used in GitHub Action)
 [tool.hatch.envs.hatch-test]
 dependencies = [
     "pip",
     "coverage-enable-subprocess==1.0",
-    "coverage[toml]~=7.4",
-    "pytest~=8.1",
-    "pytest-mock~=3.12",
-    "pytest-randomly~=3.15",
-    "pytest-rerunfailures~=14.0",
-    "pytest-xdist[psutil]~=3.5",
+    "coverage[toml]>=7.4",
+    "pytest>=8.1",
+    "pytest-mock>=3.12",
+    "pytest-randomly>=3.15",
+    "pytest-rerunfailures>=14.0",
+    "pytest-xdist[psutil]>=3.5",
 ]
+[tool.hatch.envs.hatch-test.scripts]
+test_not_local_only = "run pytest -m 'not local'"
+test_local_only = "run pytest -m 'local'"
 
-# Test environment with test-only dependencies (do not mix up with default hatch-test environment "hatch-test" !)
+# Hatch local testing environment with test-only dependencies (do not mix up with default hatch-test environment "hatch-test" !)
 [tool.hatch.envs.test]
 dependencies = [
     # required test dependencies
@@ -325,19 +339,15 @@ dependencies = [
     "pytest-vcr",
     "pytest-sugar",
     # additional test & development dependencies
-    # ToDo: Modify according to your needs!
-    "hypothesis",
-    "jupyterlab",
-    "ipython",
-    "seaborn",
-    "pandas",
 ]
 [tool.hatch.envs.test.scripts]
 cov = "pytest --cov-report=term-missing --cov-config=pyproject.toml --cov=src/equities_classifier --cov=tests {args}"
 no-cov = "cov --no-cov {args}"
 debug = "cov --no-cov -s --pdb --pdbcls=IPython.core.debugger:Pdb {args}"
+test_not_local_only = "run pytest -m 'not local'"
+test_local_only = "run pytest -m 'local'"
 
-# Hatch testing environment matrix for various Python versions replacing the functionality of tox
+# Hatch local testing environment matrix for various Python versions replacing the functionality of tox
 [[tool.hatch.envs.test.matrix]]
 template = ["test"]
 python = ["3.11", "3.12", "3.13", "3.14"]
@@ -346,18 +356,18 @@ python = ["3.11", "3.12", "3.13", "3.14"]
 [tool.hatch.envs.hatch-static-analysis]
 dependencies = [
     "pip",
-    "mypy==1.16.0",
-    "ruff==0.11.12",
+    "mypy==2.3.0",
+    "ruff==0.16.2",
 ]
 
-# Hatch Linting environment for GitAction
+# Hatch Linting environment for GitHub Action
 [tool.hatch.envs.lint]
 template = "lint"  # don't inherit from default!
 dependencies = [
     "pip",
-    "mypy==1.16.0",
-    "ruff==0.11.12",
-    "docsig==0.71.0",
+    "mypy==2.3.0",
+    "ruff==0.16.2",
+    "docsig==0.94.0",
 ]
 [tool.hatch.envs.lint.scripts]
 typing = [
@@ -383,8 +393,8 @@ all = [
 # Hatch environment for building documentation
 [tool.hatch.envs.docs]
 dependencies = [
-    "pre-commit",   # needed otherwise error
-    "pre_commit",   # needed otherwise error
+    "pre-commit",  # needed otherwise error
+    "pre_commit",  # needed otherwise error
     "properdocs",
     "mkdocs-materialx[imaging]",
     # Plugins

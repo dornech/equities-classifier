@@ -19,7 +19,7 @@ DATA_DIR = Path(__file__).parent / "data"
 
 
 @pytest.fixture(scope="module")
-def client():
+def client_dummy():
 
     return MorningstarClient(test_wo_browser=True)
 

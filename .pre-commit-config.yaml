@@ -21,33 +21,46 @@ repos:
       - id: check-toml
       - id: check-xml
       - id: check-yaml
-        args: [ '--unsafe' ]  # needed for !! tags in mkdocs.yml  / properdocs.yml
+        args: [ "--unsafe" ]  # needed for !! tags in mkdocs.yml / properdocs.yml
       - id: end-of-file-fixer
         exclude: CHANGELOG.md
       - id: mixed-line-ending
-        args: [ '--fix=auto' ]  # replace 'auto' with 'lf' to enforce Linux/Mac line endings or 'crlf' for Windows
+        args: [ "--fix=auto" ]  # replace 'auto' with 'lf' to enforce Linux/Mac line endings or 'crlf' for Windows
       - id: detect-private-key
 
   # ruff (replaces black, flake8, autoflake, isort and more)
   # - repo: https://github.com/charliermarsh/ruff-pre-commit
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.11.12'  # make sure this is always consistent with hatch configs
+    rev: v0.16.2  # make sure this is always consistent with hatch configs
     hooks:
       - id: ruff-check
+        args: [ "--config", "pyproject.toml", "--config", "output-format='grouped'"]
       - id: ruff-format
         args: [ "--check", "--config", "pyproject.toml" ]
 
   # mypy
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v1.16.0'  # make sure this is always consistent with hatch configs
+    rev: v2.3.0  # make sure this is always consistent with hatch configs
     hooks:
       - id: mypy
         args: [ "--install-types", "--non-interactive", "--config-file=pyproject.toml" ]
-        additional_dependencies: [ types-tabulate, types-cachetools ]
+        additional_dependencies: [ types-tabulate, types-cachetools, types-pyyaml ]
+
+  # deptry dependency checker
+  # repo: https://github.com/osprey-oss/deptry
+  - repo: https://github.com/francescorubbo/deptry-pre-commit
+    rev: v0.25.1
+    hooks:
+      - id: deptry
+        entry: deptry
+        language: python
+        args: [ "." ]
+        always_run: true
+        pass_filenames: false
 
   # commitizen - linter for git commit messages
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: 'v4.9.1'
+    rev: v4.17.0
     hooks:
       - id: commitizen
         stages: [commit-msg]
