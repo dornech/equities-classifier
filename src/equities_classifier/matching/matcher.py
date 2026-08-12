@@ -16,7 +16,7 @@ from enum import Enum
 from dataclasses import dataclass
 
 from equities_classifier.enums import SecurityIdentifierType
-from equities_classifier.models import SecurityProviderRecord
+from equities_classifier.models import SecurityProviderRecord, Security
 
 from .name import name_similarity
 
@@ -39,6 +39,9 @@ class MatchResult:
     name_similarity: float | None = None
 
 
+SecurityMatchSource = SecurityProviderRecord | Security
+
+
 class SecurityMatcher:
     """Match provider records representing the same security."""
 
@@ -49,7 +52,7 @@ class SecurityMatcher:
 
     def match(
         self,
-        left: SecurityProviderRecord,
+        left: SecurityMatchSource,
         right: SecurityProviderRecord,
     ) -> MatchResult:
         """Match SecurityProviderRecords according to matching hierarchy."""

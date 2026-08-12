@@ -39,38 +39,52 @@ class SecurityMerger:
 
         self._matcher = matcher or SecurityMatcher()
 
-    def merge(
+    def create_securities(
         self,
-        left: Sequence[SecurityProviderRecord],
+        provider_records: Sequence[SecurityProviderRecord],
+    ) -> list[Security]:
+        """Create Security objects from provider records."""
+
+        return [
+            self._create_security(provider_record)
+            for provider_record in provider_records
+        ]
+
+    def merge_enrich(
+        self,
+        left: Sequence[Security],
         right: Sequence[SecurityProviderRecord],
         *,
         join_type: JoinType = JoinType.LEFT,
     ) -> list[Security]:
-        """Merge SecurityProviderRecords depending on matching result."""
+        """Merge provider records into existing Security objects."""
 
         result: list[Security] = []
 
-        for left_record in left:
-
+        for security in left:
             matches = [
-                record
-                for record in right
-                if self._matcher.match(left_record, record)
+                provider_record
+                for provider_record in right
+                if self._matcher.match(security, provider_record,)
             ]
 
             if not matches:
                 if join_type is JoinType.LEFT:
-                    result.append(self._create_security(left_record))
+                    result.append(security)
                 continue
 
             if len(matches) > 1:
                 MatchingHelper.other_error_with_message(
                     f"Multiple matching provider records for "
-                    f"{left_record.name!r} / {left_record.ticker!r}."
+                    f"{security.name!r} / {security.ticker!r}."
                 )
 
-            result.append(self._create_from_merge_providerrecords(left_record, matches[0],)
-            )
+            provider_record = matches[0]
+
+            self._merge_identifiers(security, provider_record,)
+            self._merge_provider_attributes(security, provider_record,)
+
+            result.append(security)
 
         return result
 
@@ -80,26 +94,9 @@ class SecurityMerger:
     ) -> Security:
         """Create a Security from a SecurityProviderRecord."""
 
-        security = Security(
-            name=provider_record.name,
-            ticker=provider_record.ticker,
-        )
-        security.identifiers.extend(provider_record.identifiers)
+        security = Security(name=provider_record.name, ticker=provider_record.ticker,)
+        security.identifiers = provider_record.identifiers
         security.provider_attributes[provider_record.datasource] = provider_record.provider_attributes()
-
-        return security
-
-    def _create_from_merge_providerrecords(
-        self,
-        left: SecurityProviderRecord ,
-        right: SecurityProviderRecord,
-    ) -> Security:
-        """Create a Security from a SecurityProviderRecord and merge 2nd SecurityProviderRecord."""
-
-        security = self._create_security(left)
-
-        self._merge_identifiers(security, right)
-        self._merge_provider_attributes(security, right)
 
         return security
 

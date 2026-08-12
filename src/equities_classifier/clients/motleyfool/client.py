@@ -13,7 +13,7 @@
 # fmt: off
 
 
-from typing import Any, Never, Self
+from typing import Any, Self
 from collections.abc import Sequence
 from immutabledict import immutabledict
 
@@ -125,7 +125,7 @@ class MotleyFoolClient:
         self,
         source_identifiers: Sequence[SecurityIdentifier],
         raise_error: bool = True,
-    ) -> list[MotleyFoolRecord] | list[Never]:
+    ) -> list[MotleyFoolRecord]:
         """Read profile data for one or more identifiers from Motley-Fool."""
 
         records: list[MotleyFoolRecord] = []
@@ -211,7 +211,7 @@ class MotleyFoolClient:
         source_identifier: SecurityIdentifier,
         response: str,
         raise_error: bool = True,
-    ) -> list[MotleyFoolSearchResult] | list[Never]:
+    ) -> list[MotleyFoolSearchResult]:
 
         match = re.search(r"1:(\[.*\])", response, re.DOTALL)
         if match is None:
@@ -288,7 +288,7 @@ class MotleyFoolClient:
         search_result: MotleyFoolSearchResult,
         html_text: str,
         raise_error: bool = True,
-    ) -> MotleyFoolRecord:
+    ) -> MotleyFoolRecord | None:
         """Parse Motley-Fool company profile page."""
 
         def text(xpath: str) -> str | None:

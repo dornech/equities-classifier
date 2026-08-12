@@ -16,7 +16,7 @@
 # fmt: off
 
 
-from typing import Any, Never, Self
+from typing import Any, Self
 
 from collections import Counter
 from collections.abc import Collection, Mapping, Sequence
@@ -307,7 +307,7 @@ class MorningstarClient:
         source_identifier: SecurityIdentifier,
         response_data: dict[str, Any],
         raise_error: bool = True
-    ) -> list[MorningstarSearchResult] | list[Never]:
+    ) -> list[MorningstarSearchResult]:
         """Parse Morningstar search response."""
 
         # clean response data, delete embracing dictionary if necessary
