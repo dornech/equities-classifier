@@ -80,9 +80,9 @@ class ClientHelper:
     def other_error_with_message(
         provider: DataSourceID,
         message: str,
-        raise_object: ClientResponseError | None = None
+        raise_object: type[ClientResponseError] | None = None
     ) -> None:
         """Called when the provider is called with invalid security type."""
 
-        if raise_object :
+        if raise_object:
             raise raise_object(message)
