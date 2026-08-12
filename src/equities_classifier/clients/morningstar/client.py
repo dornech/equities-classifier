@@ -8,7 +8,7 @@
 # boolean-type arguments
 # ruff: noqa: FBT001, FBT002
 # others
-# ruff: noqa: PLR1702, PLR6301
+# ruff: noqa: PLR1702, PLR6301, RUF050, RUF105
 #
 # disable mypy errors
 # mypy: disable-error-code = "arg-type, no-any-return"
@@ -604,18 +604,5 @@ class MorningstarClient:
 
 
 if __name__ == "__main__":
-
-    apple_isin = SecurityIdentifier(
-            type=SecurityIdentifierType.ISIN,
-            value="US0378331005",
-        )
-
-    client = MorningstarClient()
-
-    records = client.read_provider_base_data([apple_isin])
-    records = client.read_provider_profile_data(records)
-
-    record = records[0]
-
 
     pass

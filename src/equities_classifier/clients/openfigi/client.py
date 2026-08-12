@@ -10,7 +10,7 @@
 # boolean-type arguments
 # ruff: noqa: FBT001, FBT002
 # others
-# ruff: noqa: PLR1702, SIM102
+# ruff: noqa: PLR1702, RUF050, RUF105, SIM102
 #
 # disable mypy errors
 # mypy: disable-error-code = "arg-type, no-any-return"

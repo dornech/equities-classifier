@@ -6,7 +6,7 @@
 # boolean-type arguments
 # ruff: noqa: FBT001, FBT002
 # others
-# ruff: noqa: E501
+# ruff: noqa: E501, RUF050, RUF105
 # disable mypy errors
 # mypy: disable-error-code = "arg-type, index, operator, type-var, union-attr"
 
@@ -172,7 +172,7 @@ class MotleyFoolClient:
         *,
         headers: dict[str, str] | None = None,
         json_param: Any | None = None,
-    ) -> str:
+    ) -> Any:
 
         try:
             response = self._client.request(
@@ -190,7 +190,7 @@ class MotleyFoolClient:
     def _execute_search_request(
         self,
         identifier: SecurityIdentifier,
-    ) -> str:
+    ) -> Any:
 
         headers = {
             "accept": "text/x-component",
@@ -276,7 +276,7 @@ class MotleyFoolClient:
     def _execute_company_request(
         self,
         result: MotleyFoolSearchResult,
-    ) -> str:
+    ) -> Any:
 
         return self._execute_request(
             method="GET",

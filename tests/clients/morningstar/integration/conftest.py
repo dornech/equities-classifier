@@ -3,6 +3,9 @@
 
 # ruff and mypy per file settings
 #
+# others
+# ruff: noqa: RUF070, RUF105
+
 
 # fmt: off
 

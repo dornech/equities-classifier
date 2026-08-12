@@ -5,6 +5,8 @@
 #
 # empty lines
 # ruff: noqa: E302
+# others
+# ruff: noqa: RUF105
 
 
 # fmt: off
