@@ -5,6 +5,20 @@
 - First pre-alpha
 - ...
 
+## [v0.6.0](https://github.com/dornech/equities-classifier/releases/tag/v0.6.0)  (2026-08-12) 
+
+### Features
+
+- Matching and merging for SecurityProviderRecords incl. test cases
+(['fde59a1'](https://github.com/dornech/equities-classifier/commit/fde59a130900c04566a22a1ddaa5f1d66b46db2b))
+- Template improvements - reorganize/group tests, dependency check in pre-commit
+(['199fbbe'](https://github.com/dornech/equities-classifier/commit/199fbbee44acdf968e0f0470aff3fc10346d4a16))
+
+### Bug fixes
+
+- Switch from undetected-chromedriver to undetected, add missing dependency lxml
+(['6eb361d'](https://github.com/dornech/equities-classifier/commit/6eb361d8ab08e930e6d2936ad318f82634796dbd))
+
 ## [v0.5.1](https://github.com/dornech/equities-classifier/releases/tag/v0.5.1)  (2026-08-09) 
 
 ### Features
