@@ -18,7 +18,7 @@
 # fmt: off
 
 
-from typing import Any
+from typing import Any, Self
 
 from collections.abc import Sequence
 from immutabledict import immutabledict
@@ -114,7 +114,7 @@ class OpenFIGIClient:
             timeout=timeout,
         )
 
-    def __enter__(self) -> "OpenFIGIClient":
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(self, *_: object) -> None:

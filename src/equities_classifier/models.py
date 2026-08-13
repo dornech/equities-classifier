@@ -21,6 +21,9 @@ from equities_classifier.enums import (
 )
 
 
+# classes regarding security classification
+
+
 @dataclass(frozen=True, slots=True)
 class ClassificationSystem:
     """Definition of a classification system."""
@@ -40,6 +43,17 @@ class ClassificationNode:
     # name str
     value: str
     code: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class SecurityClassification:
+    """Classification of a security."""
+
+    system: ClassificationSystem
+    nodes: tuple[ClassificationNode, ...]
+
+
+# classes regarding securities themselves
 
 
 @dataclass(frozen=True, slots=True)
@@ -120,6 +134,8 @@ class Security(SecurityIdentifierIdentifiable):
 
     provider_attributes: dict[str, dict[str, Any]] = field(default_factory=dict)
 
+    classifications: list[SecurityClassification] = field(default_factory=list,)
+
     def provider_attribute(
         self,
         provider: DataSourceID,
@@ -127,13 +143,3 @@ class Security(SecurityIdentifierIdentifiable):
     ) -> Any | None:
         """Return a provider-specific attribute."""
         return self.provider_attributes.get(provider, {}).get(attribute)
-
-
-@dataclass(frozen=True, slots=True)
-class SecurityClassification:
-    """Classification of one company."""
-
-    security: Security
-
-    system: ClassificationSystem
-    nodes: tuple[ClassificationNode, ...]

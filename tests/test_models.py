@@ -66,23 +66,32 @@ def test_create_classification() -> None:
     )
 
     classification_system = ClassificationSystem(
-        id=ClassificationSystemID.GICS,
-        display_name="Morningstar GICS",
-        authorities=("Morningstar", ),
-        hierarchy=("sector", "industry group", "industry", "sub industry"),
-        supports_codes=True
-    )
-
-    classification = SecurityClassification(
-        security=security,
-        system=classification_system,
-        nodes=(
-            ClassificationNode(
-                level=ClassificationLevel.LEVEL1,
-                value="Information Technology",
-                code="45",
-            ),
+        id=ClassificationSystemID.GECS,
+        display_name="Global Equity Classification Structure",
+        authorities=("Morningstar",),
+        hierarchy=(
+            "Super Sector",
+            "Sector",
+            "Industry",
         ),
+        supports_codes=False,
     )
 
-    assert classification.security.name == "Apple Inc."
+    security.classifications = [
+        SecurityClassification(
+            system=classification_system,
+            nodes=(
+                ClassificationNode(
+                    level=ClassificationLevel.LEVEL2,
+                    value="Technology"
+                ),
+                ClassificationNode(
+                    level=ClassificationLevel.LEVEL3,
+                    value="Consumer Electronics"
+                )
+
+            )
+        )
+    ]
+
+    assert security.classifications[0].system.id == ClassificationSystemID.GECS

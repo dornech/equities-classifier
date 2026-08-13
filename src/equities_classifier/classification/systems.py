@@ -7,10 +7,17 @@
 # fmt: off
 
 
+from collections.abc import Mapping
 from immutabledict import immutabledict
 
-from equities_classifier.enums import ClassificationSystemID
-from equities_classifier.models import ClassificationSystem
+from equities_classifier.enums import (
+    ClassificationSystemID,
+    ClassificationLevel,
+)
+from equities_classifier.models import (
+    ClassificationSystem,
+    ClassificationNode,
+)
 
 
 GICS = ClassificationSystem(
@@ -56,3 +63,26 @@ MAP_GECS_SUPERSECTOR_FROM_SECTOR: immutabledict[str, str] = immutabledict({
     "Consumer Defensive": "Defensive",
     "Utilities": "Defensive",
 })
+
+
+def resolve_gecs_supersector(
+    nodes: Mapping[ClassificationLevel, ClassificationNode],
+) -> Mapping[ClassificationLevel, ClassificationNode]:
+    """Resolve missing GECS super sector."""
+
+    result = dict(nodes)
+
+    sector = result.get(ClassificationLevel.LEVEL2)
+    if sector is None:
+        return result
+
+    super_sector = MAP_GECS_SUPERSECTOR_FROM_SECTOR.get(sector.value,)
+    if super_sector is None:
+        return result
+
+    result.setdefault(
+        ClassificationLevel.LEVEL1,
+        ClassificationNode(level=ClassificationLevel.LEVEL1, value=super_sector,),
+    )
+
+    return result

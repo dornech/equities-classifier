@@ -19,7 +19,7 @@ requires-python = ">=3.11"
 # only license identifier from https://spdx.org/licenses/ are allowed
 license = { text = "GPL-3.0-only" }
 # keywords for easier look-up on PyPI
-keywords = ["equities", "openFIGI", "sector", "classification", "GCIS", "MSCI", "Morningstar", "GCES"]
+keywords = ["equities", "openFIGI", "sector", "classification", "GICS", "MSCI", "Morningstar", "GECS"]
 authors = [
     { name = "dornech", email = "dornech@gmx.de" },
 ]

@@ -49,6 +49,12 @@ class MotleyFoolClient:
 
     _BASE_URL = "https://www.fool.com"
 
+    _USER_AGENT = (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/151.0.0.0 Safari/537.36"
+    )
+
     _MOTLEYFOOL_SEARCH_RESULT_MAP: immutabledict[str, str] = immutabledict({
         "Symbol": "ticker",
         "Name": "name",
@@ -79,11 +85,11 @@ class MotleyFoolClient:
 
     def _get_next_action(self) -> str | None:
 
-        next_action_regex = re.compile(r'\("([0-9a-f]+)",\s*x\.callServer,\s*void 0,\s*x\.findSourceMapURL,\s*"searchInstruments"\)')
+        next_action_regex = re.compile(r'\("([0-9a-f]+)",.*\.callServer,\s*void 0,.*\.findSourceMapURL,.*"searchInstruments"\)')
 
         self._next_action = None
 
-        response = self._client.get("https://www.fool.com/")
+        response = self._client.get("https://www.fool.com/", headers={"User-Agent": self._USER_AGENT})
         response.raise_for_status()
 
         document = html.fromstring(response.content)
@@ -93,7 +99,7 @@ class MotleyFoolClient:
                 continue
 
             script_url = urljoin("https://www.fool.com/", src)
-            script = self._client.get(script_url)
+            script = self._client.get(script_url, headers={"User-Agent": self._USER_AGENT})
             script.raise_for_status()
 
             if "searchInstruments" not in script.text:
@@ -175,12 +181,15 @@ class MotleyFoolClient:
     ) -> Any:
 
         try:
-            response = self._client.request(
+            request = self._client.build_request(
                 method,
                 url,
                 headers=headers,
                 json=json_param,
             )
+            request.headers["User-Agent"] = self._USER_AGENT
+            request.headers.pop("Accept-Encoding", None)
+            response = self._client.send(request)
             response.raise_for_status()
         except httpx.HTTPError as exc:
             raise ClientConnectionError(str(exc)) from exc

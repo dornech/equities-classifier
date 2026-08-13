@@ -25,6 +25,7 @@ from equities_classifier.matching.merger import (
     SecurityMerger,
     JoinType,
 )
+from equities_classifier.classification.generator import ClassificationGenerator
 
 
 class SecurityProcessFlow:
@@ -43,6 +44,7 @@ class SecurityProcessFlow:
         self._use_motleyfool = motleyfool
 
         self._merger = SecurityMerger()
+        self._classificationgenerator = ClassificationGenerator()
 
     @staticmethod
     def _read_morningstar(
@@ -67,32 +69,34 @@ class SecurityProcessFlow:
     ) -> list[MotleyFoolRecord]:
 
         with MotleyFoolClient() as client:
-            return client.read_provider_profile_data(source_identifiers,)
+            return client.read_provider_profile_data(source_identifiers)
 
     def process(
         self,
         source_identifiers: Sequence[SecurityIdentifier],
     ) -> list[Security]:
 
-        morningstar_records = self._read_morningstar(
-            source_identifiers,
-        )
+        morningstar_records = self._read_morningstar(source_identifiers,)
 
         securities = self._merger.create_securities(morningstar_records)
 
-        if self._use_openfigi:
-            openfigi_records = self._read_openfigi(source_identifiers,)
-            securities = self._merger.merge_enrich(
-                securities,
-                openfigi_records,
-                join_type=JoinType.LEFT,
-            )
+        for security in securities:
 
-        if self._use_motleyfool:
-            motleyfool_records = self._read_motleyfool(source_identifiers,)
-            securities = self._merger.merge_enrich(
-                securities,
-                motleyfool_records,
-            )
+            if self._use_openfigi:
+                openfigi_records = self._read_openfigi(source_identifiers,)
+                security = self._merger.merge_enrich_single(
+                    security,
+                    openfigi_records,
+                    join_type=JoinType.LEFT,
+                )
+
+            if self._use_motleyfool:
+                motleyfool_records = self._read_motleyfool(source_identifiers,)
+                security = self._merger.merge_enrich_single(
+                    security,
+                    motleyfool_records,
+                )
+
+            self._classificationgenerator.generate(security, )
 
         return securities

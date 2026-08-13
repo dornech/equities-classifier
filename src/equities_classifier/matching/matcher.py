@@ -12,6 +12,8 @@
 # fmt: off
 
 
+from typing import TypeAlias
+
 from enum import Enum
 from dataclasses import dataclass
 
@@ -39,7 +41,7 @@ class MatchResult:
     name_similarity: float | None = None
 
 
-SecurityMatchSource = SecurityProviderRecord | Security
+SecurityMatchSource: TypeAlias = SecurityProviderRecord | Security
 
 
 class SecurityMatcher:

@@ -50,7 +50,35 @@ class SecurityMerger:
             for provider_record in provider_records
         ]
 
-    def merge_enrich(
+    def merge_enrich_single(
+        self,
+        security: Security,
+        right: Sequence[SecurityProviderRecord],
+        *,
+        join_type: JoinType = JoinType.LEFT,
+    ) -> Security:
+        """Merge provider records into existing Security record."""
+
+        matches = [
+            provider_record
+            for provider_record in right
+            if self._matcher.match(security, provider_record,)
+        ]
+
+        if len(matches) > 1:
+            MatchingHelper.other_error_with_message(
+                f"Multiple matching provider records for "
+                f"{security.name!r} / {security.ticker!r}."
+            )
+
+        provider_record = matches[0]
+
+        self._merge_identifiers(security, provider_record,)
+        self._merge_provider_attributes(security, provider_record,)
+
+        return security
+
+    def merge_enrich_multiple(
         self,
         left: Sequence[Security],
         right: Sequence[SecurityProviderRecord],
@@ -59,34 +87,10 @@ class SecurityMerger:
     ) -> list[Security]:
         """Merge provider records into existing Security objects."""
 
-        result: list[Security] = []
-
         for security in left:
-            matches = [
-                provider_record
-                for provider_record in right
-                if self._matcher.match(security, provider_record,)
-            ]
+            security = self.merge_enrich_single(security, right)
 
-            if not matches:
-                if join_type is JoinType.LEFT:
-                    result.append(security)
-                continue
-
-            if len(matches) > 1:
-                MatchingHelper.other_error_with_message(
-                    f"Multiple matching provider records for "
-                    f"{security.name!r} / {security.ticker!r}."
-                )
-
-            provider_record = matches[0]
-
-            self._merge_identifiers(security, provider_record,)
-            self._merge_provider_attributes(security, provider_record,)
-
-            result.append(security)
-
-        return result
+        return list(left)
 
     @staticmethod
     def _create_security(
