@@ -66,6 +66,7 @@ class ClassificationGenerator:
         self,
         sources: tuple[ClassificationSource, ...] = (),
     ) -> None:
+        """Initialize classification generator class."""
 
         if len(sources) == 0:
             self._sources: tuple[ClassificationSource, ...] = (

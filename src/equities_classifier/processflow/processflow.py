@@ -38,6 +38,7 @@ class SecurityProcessFlow:
         openfigi: bool = False,
         motleyfool: bool = False,
     ) -> None:
+        """Initialize process flow class."""
 
         self._use_morningstar = morningstar
         self._use_openfigi = openfigi
@@ -75,6 +76,7 @@ class SecurityProcessFlow:
         self,
         source_identifiers: Sequence[SecurityIdentifier],
     ) -> list[Security]:
+        """Proccess flow core routine."""
 
         morningstar_records = self._read_morningstar(source_identifiers,)
 

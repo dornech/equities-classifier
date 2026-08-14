@@ -22,9 +22,7 @@ _DATA = Path(__file__).parent / "data"
 @pytest.fixture(scope="session")
 def client():
 
-    client = MotleyFoolClient()
-    yield client
-    client.close()
+    yield MotleyFoolClient()
 
 
 @pytest.fixture
