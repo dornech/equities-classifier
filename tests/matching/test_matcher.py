@@ -4,12 +4,13 @@
 # ruff and mypy per file settings
 #
 # disable mypy errors
-# mypy: disable-error-code = "no-any-return"
+# mypy: disable-error-code = "call-arg"
 
 # fmt: off
 
 
 from typing import ClassVar
+from collections.abc import Callable
 from dataclasses import dataclass
 
 import pytest
@@ -19,14 +20,11 @@ from equities_classifier.enums import (
     SecurityIdentifierType,
 )
 from equities_classifier.models import SecurityIdentifier, SecurityProviderRecord
-from equities_classifier.matching.matcher import (
-    MatchType,
-    SecurityMatcher,
-)
+from equities_classifier.matching.matcher import (MatchType, SecurityMatcher,)
 
 
 @dataclass(slots=True, kw_only=True)
-class TestProviderRecord(SecurityProviderRecord):
+class ProviderRecordForTest(SecurityProviderRecord):
     """Provider record for matcher tests."""
 
     datasource: ClassVar[DataSourceID] = DataSourceID.MORNINGSTAR
@@ -35,33 +33,46 @@ class TestProviderRecord(SecurityProviderRecord):
     ticker: str | None = None
 
 
-def provider_record(
-    *,
-    name: str,
-    ticker: str | None = None,
-    isin: str | None = None,
-) -> SecurityProviderRecord:
+@pytest.fixture
+def provider_record() -> Callable[
+    [str, str | None, str | None],
+    SecurityProviderRecord,
+]:
     """Create a provider record for matcher tests."""
 
-    record = TestProviderRecord(
-        name=name,
-        ticker=ticker,
-    )
+    """Create a provider record for matcher tests."""
+    def factory(
+        name: str,
+        ticker: str | None = None,
+        isin: str | None = None,
+    ) -> SecurityProviderRecord:
 
-    if ticker is not None:
-        record.identifiers.append(
-            SecurityIdentifier(type=SecurityIdentifierType.TICKER, value=ticker,)
+        record = ProviderRecordForTest(
+            name=name,
+            ticker=ticker,
         )
-    if isin is not None:
-        record.identifiers.append(
-            SecurityIdentifier(type=SecurityIdentifierType.ISIN, value=isin,
+
+        if ticker is not None:
+            record.identifiers.append(
+                SecurityIdentifier(type=SecurityIdentifierType.TICKER, value=ticker,)
             )
-        )
+        if isin is not None:
+            record.identifiers.append(
+                SecurityIdentifier(type=SecurityIdentifierType.ISIN, value=isin,
+                )
+            )
 
-    return record
+        return record
+
+    return factory
 
 
-def test_match_ticker_and_isin() -> None:
+def test_match_ticker_and_isin(
+    provider_record: Callable[
+        [str, str | None, str | None],
+        SecurityProviderRecord,
+    ],
+) -> None:
     """Equal ticker and ISIN must produce a match."""
 
     left = provider_record(
@@ -82,7 +93,12 @@ def test_match_ticker_and_isin() -> None:
     assert result.warning is None
 
 
-def test_match_isin_and_similar_name_with_different_ticker() -> None:
+def test_match_isin_and_similar_name_with_different_ticker(
+    provider_record: Callable[
+        [str, str | None, str | None],
+        SecurityProviderRecord,
+    ],
+) -> None:
     """Equal ISIN and similar name may match despite different tickers."""
 
     left = provider_record(
@@ -104,7 +120,12 @@ def test_match_isin_and_similar_name_with_different_ticker() -> None:
     assert result.name_similarity is not None
 
 
-def test_match_ticker_and_similar_name_without_isin() -> None:
+def test_match_ticker_and_similar_name_without_isin(
+    provider_record: Callable[
+        [str, str | None, str | None],
+        SecurityProviderRecord,
+    ],
+) -> None:
     """Equal ticker and similar name must produce a match."""
 
     left = provider_record(
@@ -123,7 +144,12 @@ def test_match_ticker_and_similar_name_without_isin() -> None:
     assert result.warning is None
 
 
-def test_no_match_different_ticker_and_isin() -> None:
+def test_no_match_different_ticker_and_isin(
+    provider_record: Callable[
+        [str, str | None, str | None],
+        SecurityProviderRecord,
+    ],
+) -> None:
     """Different ticker and ISIN must not match."""
 
     left = provider_record(
@@ -143,7 +169,12 @@ def test_no_match_different_ticker_and_isin() -> None:
     assert result.match_type is None
 
 
-def test_no_match_same_isin_with_different_name() -> None:
+def test_no_match_same_isin_with_different_name(
+    provider_record: Callable[
+        [str, str | None, str | None],
+        SecurityProviderRecord,
+    ],
+) -> None:
     """Equal ISIN alone must not be sufficient when names differ."""
 
     left = provider_record(
@@ -162,7 +193,12 @@ def test_no_match_same_isin_with_different_name() -> None:
     assert not result.matched
 
 
-def test_no_match_same_ticker_with_different_name() -> None:
+def test_no_match_same_ticker_with_different_name(
+    provider_record: Callable[
+        [str, str | None, str | None],
+        SecurityProviderRecord,
+    ],
+) -> None:
     """Equal ticker alone must not be sufficient when names differ."""
 
     left = provider_record(
@@ -188,6 +224,10 @@ def test_no_match_same_ticker_with_different_name() -> None:
     ],
 )
 def test_missing_identifiers_do_not_match_without_name_rule(
+    provider_record: Callable[
+        [str, str | None, str | None],
+        SecurityProviderRecord,
+    ],
     left_ticker: str | None,
     left_isin: str | None,
     right_ticker: str | None,

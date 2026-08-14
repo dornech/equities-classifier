@@ -23,11 +23,9 @@ from collections.abc import Collection, Mapping, Sequence
 from immutabledict import immutabledict
 from dataclasses import fields
 
-from selenium.webdriver.common.by import By
-# import utils_seleniumxp
-# import undetected_chromedriver as uc
 import undetected as uc
 from waitless import stabilize
+from selenium.webdriver.common.by import By
 from urllib.parse import urlencode
 import json
 import datetime

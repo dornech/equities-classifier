@@ -15,12 +15,17 @@
 
 from typing import Any, Self
 from collections.abc import Sequence
+from enum import StrEnum
 from immutabledict import immutabledict
 
 import json
 import re
 from urllib.parse import urljoin
 import httpx
+from equities_classifier.clients.httpx_logger import log_request, log_response
+import undetected as uc
+from waitless import stabilize
+from selenium.webdriver.common.by import By
 
 from lxml import html
 
@@ -44,8 +49,15 @@ class MotleyFoolResponseError(ClientResponseError):
     """Motley-Fool returned an invalid response."""
 
 
+class MotleyFoolMode(StrEnum):
+    """Supported client modes."""
+
+    HTTPX = "httpx"
+    SELENIUM = "SELENIUM"
+
+
 class MotleyFoolClient:
-    """Motley-Fool HTTP client."""
+    """Motley-Fool HTTP client with httpx or Selenium mode as currenlty used fallback."""
 
     _BASE_URL = "https://www.fool.com"
 
@@ -70,22 +82,42 @@ class MotleyFoolClient:
     def __init__(
         self,
         timeout: float = 30.0,
+        mode: MotleyFoolMode = MotleyFoolMode.HTTPX,
+        requestlog: bool = False
     ) -> None:
         """Initialize Motley-Fool client."""
 
-        self._client = httpx.Client(
-            base_url=self._BASE_URL,
-            timeout=timeout,
-            follow_redirects=True,
-        )
+        self._client: httpx.Client | uc.Chrome
 
-        # determine action code for next.js
-        # self._next_action = _get_next"7f7d5f149d49636ec2e379afcb059e7e5cc4f99c0e"
-        self._next_action = self._get_next_action()
+        self._mode = mode
+        if self._mode == MotleyFoolMode.HTTPX:
+
+            self._client = httpx.Client(
+                base_url=self._BASE_URL,
+                timeout=timeout,
+                follow_redirects=True,
+                event_hooks={"request": [log_request], "response": [log_response], } if requestlog else None
+            )
+
+            # determine action code for next.js
+            self._next_action = self._get_next_action()
+
+        elif self._mode == MotleyFoolMode.SELENIUM:
+
+            self._client = stabilize(uc.Chrome())
+            self._client.get(self._BASE_URL)
+            self._client.find_element(By.XPATH, "//button[@id='onetrust-accept-btn-handler']").click()
+
+        else:
+
+            msg = f"MotleyFoolClient mode '{self._mode}' not valid.)"
+            raise MotleyFoolResponseError(msg)
 
     def _get_next_action(self) -> str | None:
 
-        next_action_regex = re.compile(r'\("([0-9a-f]+)",.*\.callServer,\s*void 0,.*\.findSourceMapURL,.*"searchInstruments"\)')
+        next_action_regex = re.compile(
+            r'\("([0-9a-f]+)",[\s\S]{1,2}\.callServer,\s*?void 0,[\s\S]{1,2}\.findSourceMapURL,.[\s\S]{0,1}searchInstruments"\)'
+        )
 
         self._next_action = None
 
@@ -146,19 +178,33 @@ class MotleyFoolClient:
                 )
                 continue
 
-            response_data = self._execute_search_request(source_identifier)
-            search_results = self._parse_search_results(
-                source_identifier,
-                response_data,
-                raise_error,
-            )
+            if self._mode == MotleyFoolMode.HTTPX:
+                # determine search result and fill search_result via requests
+                response_data = self._execute_search_request(source_identifier)
+                search_results = self._parse_search_results(
+                    source_identifier,
+                    response_data,
+                    raise_error,
+                )
+            else:
+                # determine search result and fill search_result via selenium / HTML analysis
+                search_results = self._get_search_results(
+                    source_identifier,
+                    raise_error,
+                )
+
             search_result = self._select_search_result(
                 source_identifier,
                 search_results,
                 raise_error,
             )
             if search_result:
-                html = self._execute_company_request(search_result)
+
+                if self._mode == MotleyFoolMode.HTTPX:
+                    html = self._execute_company_request(search_result)
+                else:
+                    html = self._get_company_profile_html(search_result)
+
                 record = self._parse_record(
                     search_result,
                     html,
@@ -188,7 +234,6 @@ class MotleyFoolClient:
                 json=json_param,
             )
             request.headers["User-Agent"] = self._USER_AGENT
-            request.headers.pop("Accept-Encoding", None)
             response = self._client.send(request)
             response.raise_for_status()
         except httpx.HTTPError as exc:
@@ -208,12 +253,14 @@ class MotleyFoolClient:
             "next-router-state-tree": "%5B%22%22%2C%7B%22children%22%3A%5B%22(site)%22%2C%7B%22children%22%3A%5B%22(chrome)%22%2C%7B%22children%22%3A%5B%22__PAGE__%22%2C%7B%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%2Ctrue%5D%7D%2Cnull%2Cnull%5D",
         }
 
-        return self._execute_request(
+        response = self._execute_request(
             method="POST",
-            url="/",
+            url=self._BASE_URL,
             headers=headers,
             json_param=[identifier.value],
         )
+
+        return response
 
     def _parse_search_results(
         self,
@@ -246,6 +293,35 @@ class MotleyFoolClient:
                         attribute,
                         value,
                     )
+            results.append(result)
+
+        return results
+
+    def _get_search_results(
+        self,
+        source_identifier: SecurityIdentifier,
+        raise_error: bool = True,
+    ) -> list[MotleyFoolSearchResult]:
+
+        self._client.find_element(
+            By.XPATH, "//div[./label[@id='company-search-label']]/descendant::input"
+        ).send_keys(source_identifier.value)
+        htmlitems = self._client.find_elements(
+            By.XPATH, "//div[@data-radix-popper-content-wrapper]/descendant::div[@cmdk-group-items]/div[@cmdk-item]"
+        )
+        if len(htmlitems) == 0:
+            ClientHelper.other_error_with_message(
+                DataSourceID.MOTLEYFOOL,
+                f"{DataSourceID.MOTLEYFOOL} response does not contain any search results.",
+                MotleyFoolResponseError if raise_error else None,
+            )
+            return []
+
+        results: list[MotleyFoolSearchResult] = []
+
+        for htmlitem in htmlitems:
+            result = MotleyFoolSearchResult()
+            result.ticker, result.exchange, result.name = htmlitem.get_attribute("outerText").split("\n")
             results.append(result)
 
         return results
@@ -291,6 +367,14 @@ class MotleyFoolClient:
             method="GET",
             url=f"/quote/{result.exchange}/{result.ticker}",
         )
+
+    def _get_company_profile_html(
+        self,
+        result: MotleyFoolSearchResult,
+    ) -> Any:
+
+        self._client.get(f"{self._BASE_URL}/quote/{result.exchange}/{result.ticker}")
+        return self._client.page_source
 
     def _parse_record(
         self,
