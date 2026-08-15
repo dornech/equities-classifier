@@ -263,6 +263,7 @@ testpaths = [
     "tests",
 ]
 markers = [
+    "integration: Tests requiring internet access",
     "local: tests that are not suitable for CI",
 ]
 
@@ -323,9 +324,6 @@ dependencies = [
     "pytest-rerunfailures>=14.0",
     "pytest-xdist[psutil]>=3.5",
 ]
-[tool.hatch.envs.hatch-test.scripts]
-test_not_local_only = "run pytest -m 'not local'"
-test_local_only = "run pytest -m 'local'"
 
 # Hatch local testing environment with test-only dependencies (do not mix up with default hatch-test environment "hatch-test" !)
 [tool.hatch.envs.test]
