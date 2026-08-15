@@ -5,6 +5,35 @@
 - First pre-alpha
 - ...
 
+## [v0.7.0](https://github.com/dornech/equities-classifier/releases/tag/v0.7.0)  (2026-08-15) 
+
+### Features
+
+- Template improvements - reorganize/group tests, dependency check in pre-commit
+(['5177f72'](https://github.com/dornech/equities-classifier/commit/5177f72c568867142d6309fc77972ee8ef3e7c71))
+- Classification logic and integration into process flow core logic
+(['5ccefb0'](https://github.com/dornech/equities-classifier/commit/5ccefb0f2204e6543cab6eb10e094f83334ca79b))
+- Process flow core logic
+(['150987c'](https://github.com/dornech/equities-classifier/commit/150987c932b3c2d9ce8dd3dc1e4382c21f215934))
+
+### Bug fixes
+
+- Docsig error in GitHub Action
+(['4cb4222'](https://github.com/dornech/equities-classifier/commit/4cb422245bc23045a237008f948ad551b4677181))
+- Partial redesign MotleyFoolClient to add Selenium mode, reorganize tests
+(['5f1c42b'](https://github.com/dornech/equities-classifier/commit/5f1c42b3a7a9cc46a11e8d3c2d1a2fad82e5781c))
+- Treat RUF, mypy and docsig errors occurring on GitHub
+(['5a84a9d'](https://github.com/dornech/equities-classifier/commit/5a84a9d29bf8258722bcb9d72510db7fe9245f49))
+- Treat RUF and mypy errors
+(['1626007'](https://github.com/dornech/equities-classifier/commit/1626007cd78d726feb8a55ade4380eebd220a894))
+
+### Build system
+
+- **deps**: Bump release-drafter/release-drafter from 7 to 7.6.0
+ (['af881c3'](https://github.com/dornech/equities-classifier/commit/af881c324f5ef08a7945af8dbf2bd44d167ece76))
+- **deps**: Bump sigstore/gh-action-sigstore-python from 3.4.0 to 3.5.0
+ (['b1a7108'](https://github.com/dornech/equities-classifier/commit/b1a71083cab762c755eb799e608f415320617dfc))
+
 ## [v0.6.0](https://github.com/dornech/equities-classifier/releases/tag/v0.6.0)  (2026-08-12) 
 
 ### Features
