@@ -14,6 +14,7 @@ from equities_classifier.exceptions import MatchingError
 
 
 class MatchingHelper:
+    """Helper methods for matching."""
 
     @staticmethod
     def other_error_with_message(

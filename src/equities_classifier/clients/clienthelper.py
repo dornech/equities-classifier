@@ -19,6 +19,7 @@ from equities_classifier.exceptions import ClientResponseError
 
 
 class ClientHelper:
+    """Helper methods for client processing."""
 
     @staticmethod
     def invalid_security_type(

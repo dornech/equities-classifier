@@ -24,6 +24,7 @@ from equities_classifier.classification.systems import (
     GECS,
     resolve_gecs_supersector,
     GICS,
+    resolve_gics_motleyfool,
 )
 
 
@@ -54,8 +55,9 @@ _SOURCE_GICS_MOTLEYFOOL = ClassificationSource(
     system=GICS,
     level_attributes={
         ClassificationLevel.LEVEL1: "sector",
-        ClassificationLevel.LEVEL2: "industry",
+        ClassificationLevel.LEVEL3: "industry",
     },
+    resolver=resolve_gics_motleyfool,
 )
 
 
@@ -103,7 +105,7 @@ class ClassificationGenerator:
         if not provider_attributes:
             return None
 
-        nodes: list[ClassificationNode] = []
+        nodes: dict[ClassificationLevel, ClassificationNode] = {}
 
         for level, attribute in sorted(
             source.level_attributes.items(),
@@ -116,9 +118,16 @@ class ClassificationGenerator:
             value = str(value).strip()
             if not value:
                 continue
-            nodes.append(ClassificationNode(level=level, value=value,))
+            nodes[level] = ClassificationNode(
+                value=value,
+            )
 
-        if not nodes:
-            return None
+        if source.resolver is not None:
+            nodes = source.resolver(nodes)
 
-        return SecurityClassification(system=source.system, nodes=tuple(nodes),)
+        return SecurityClassification(
+            system=source.system,
+            nodes={
+                level: nodes[level] for level in sorted(nodes)
+            },
+        )

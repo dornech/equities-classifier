@@ -34,8 +34,10 @@ classifiers = [
 ]
 # direct dependencies of this package, installed when users `pip install equities-classifier` later.
 dependencies = [
-    "immutabledict",
+    # "gics",
+    "gics @ git+https://github.com/dornech/py-gics.git",
     "httpx",
+    "immutabledict",
     # "undetected-chromedriver",
     # "utils-seleniumxp",
     "undetected @ git+https://github.com/dornech/undetected.git",

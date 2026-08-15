@@ -80,17 +80,10 @@ def test_create_classification() -> None:
     security.classifications = [
         SecurityClassification(
             system=classification_system,
-            nodes=(
-                ClassificationNode(
-                    level=ClassificationLevel.LEVEL2,
-                    value="Technology"
-                ),
-                ClassificationNode(
-                    level=ClassificationLevel.LEVEL3,
-                    value="Consumer Electronics"
-                )
-
-            )
+            nodes={
+                ClassificationLevel.LEVEL2: ClassificationNode(value="Technology"),
+                ClassificationLevel.LEVEL3: ClassificationNode(value="Consumer Electronics")
+            }
         )
     ]
 

@@ -46,7 +46,6 @@ def test_generate_gecs() -> None:
     )
 
     generator = ClassificationGenerator((source,))
-
     classifications = generator.generate(security)
 
     assert len(classifications) == 1
@@ -56,11 +55,38 @@ def test_generate_gecs() -> None:
     assert classification.system is GECS
     assert len(classification.nodes) == 2
 
-    assert classification.nodes[0].level is ClassificationLevel.LEVEL2
-    assert classification.nodes[0].value == "Technology"
+    assert classification.nodes[ClassificationLevel.LEVEL2].value == "Technology"
 
-    assert classification.nodes[1].level is ClassificationLevel.LEVEL3
-    assert classification.nodes[1].value == "Semiconductors"
+    assert classification.nodes[ClassificationLevel.LEVEL3].value == "Semiconductors"
+
+
+def test_generate_gecs_ad_suppersector() -> None:
+    """Generate GECS classification from Morningstar attributes."""
+
+    security = Security(
+        name="Apple Inc.",
+        ticker="AAPL",
+        provider_attributes={
+            DataSourceID.MORNINGSTAR: {
+                "sector": "Technology",
+                "industry": "Semiconductors",
+            },
+        },
+    )
+
+    generator = ClassificationGenerator()
+    classifications = generator.generate(security)
+
+    assert len(classifications) == 1
+
+    classification = classifications[0]
+
+    assert classification.system is GECS
+    assert len(classification.nodes) == 3
+
+    assert classification.nodes[ClassificationLevel.LEVEL2].value == "Technology"
+
+    assert classification.nodes[ClassificationLevel.LEVEL3].value == "Semiconductors"
 
 
 def test_generate_without_provider_data() -> None:
@@ -113,7 +139,6 @@ def test_generate_with_missing_level() -> None:
 
     assert len(classifications) == 1
     assert len(classifications[0].nodes) == 1
-    assert classifications[0].nodes[0].level is ClassificationLevel.LEVEL2
 
 
 def test_generate_multiple_classifications() -> None:
@@ -148,7 +173,7 @@ def test_generate_multiple_classifications() -> None:
             system=GICS,
             level_attributes={
                 ClassificationLevel.LEVEL1: "sector",
-                ClassificationLevel.LEVEL2: "industry",
+                ClassificationLevel.LEVEL3: "industry",
             },
         ),
     )

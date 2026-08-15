@@ -39,8 +39,6 @@ class ClassificationSystem:
 class ClassificationNode:
     """Single hierarchy node."""
 
-    level: ClassificationLevel
-    # name str
     value: str
     code: str | None = None
 
@@ -50,7 +48,7 @@ class SecurityClassification:
     """Classification of a security."""
 
     system: ClassificationSystem
-    nodes: tuple[ClassificationNode, ...]
+    nodes:  dict[ClassificationLevel, ClassificationNode]
 
 
 # classes regarding securities themselves

@@ -36,8 +36,8 @@ class SecurityIdentifierType(StrEnum):
 class ClassificationSystemID(StrEnum):
     """Supported classification systems."""
 
-    GICS = "gics"
-    GECS = "gecs"
+    GICS = "GICS"
+    GECS = "GECS"
 
 
 class ClassificationLevel(IntEnum):

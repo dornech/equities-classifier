@@ -43,3 +43,10 @@ class ClientRateLimitError(ClientError):
 
 class MatchingError(EquitiesClassifierError):
     """Base class for all library exceptions."""
+
+
+# Classification error
+
+
+class ClassificationError(EquitiesClassifierError):
+    """Base class for all library exceptions."""
