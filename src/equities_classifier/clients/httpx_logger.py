@@ -19,6 +19,7 @@ import httpx
 
 
 def log_request(request: httpx.Request) -> None:
+    """simple logger for httpx request event"""
 
     print("=" * 80)
     print(f">>> {request.method} {request.url}")
@@ -35,6 +36,8 @@ def log_request(request: httpx.Request) -> None:
 
 
 def log_response(response: httpx.Response) -> None:
+    """simple logger for httpx response event"""
+
     response.read()
 
     print(f"<<< {response.status_code} {response.reason_phrase}")
