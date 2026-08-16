@@ -5,6 +5,22 @@
 - First pre-alpha
 - ...
 
+## [v0.7.1](https://github.com/dornech/equities-classifier/releases/tag/v0.7.1)  (2026-08-16) 
+
+### Features
+
+- Logging and some refinement on client error handling
+(['5d704fb'](https://github.com/dornech/equities-classifier/commit/5d704fbb9173419cfcd0227ea4de655e8ef9aabe))
+- Include py-gcis to enrich/validate GICS information from Motely Fool
+(['053644e'](https://github.com/dornech/equities-classifier/commit/053644ebd911d10b6ee4a827588feef45fca95b0))
+
+### Bug fixes
+
+- Processflow - openfigi always first to ensure ISIN and ticker
+(['0817aea'](https://github.com/dornech/equities-classifier/commit/0817aea2ca2e658fd3d5b75c58f5fc7b4eacfc03))
+- Improve conftest.py
+(['e026111'](https://github.com/dornech/equities-classifier/commit/e02611124cfdbaf7776bb82003ae84f0d40dab5d))
+
 ## [v0.7.0](https://github.com/dornech/equities-classifier/releases/tag/v0.7.0)  (2026-08-15) 
 
 ### Features
