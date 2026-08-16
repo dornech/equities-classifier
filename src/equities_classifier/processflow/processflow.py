@@ -11,16 +11,17 @@
 
 from collections.abc import Sequence
 
+from equities_classifier.enums import SecurityIdentifierType
+from equities_classifier.models import (
+    SecurityIdentifier,
+    Security,
+)
 from equities_classifier.clients.morningstar.client import MorningstarClient
 from equities_classifier.clients.morningstar.models import MorningstarRecord
 from equities_classifier.clients.openfigi.client import OpenFIGIClient
 from equities_classifier.clients.openfigi.models import OpenFIGIRecord
 from equities_classifier.clients.motleyfool.client import MotleyFoolClient
 from equities_classifier.clients.motleyfool.models import MotleyFoolRecord
-from equities_classifier.models import (
-    SecurityIdentifier,
-    Security,
-)
 from equities_classifier.matching.merger import (
     SecurityMerger,
     JoinType,
@@ -35,7 +36,7 @@ class SecurityProcessFlow:
         self,
         *,
         morningstar: bool = True,
-        openfigi: bool = False,
+        openfigi: bool = True,
         motleyfool: bool = False,
     ) -> None:
         """Initialize process flow class."""
@@ -48,6 +49,13 @@ class SecurityProcessFlow:
         self._classificationgenerator = ClassificationGenerator()
 
     @staticmethod
+    def _read_openfigi(
+        source_identifiers: Sequence[SecurityIdentifier],
+    ) -> list[OpenFIGIRecord]:
+        with OpenFIGIClient() as client:
+            return client.read_provider_base_data(source_identifiers, )
+
+    @staticmethod
     def _read_morningstar(
         source_identifiers: Sequence[SecurityIdentifier],
     ) -> list[MorningstarRecord]:
@@ -55,14 +63,6 @@ class SecurityProcessFlow:
         with MorningstarClient() as client:
             base_data = client.read_provider_base_data(source_identifiers,)
             return client.read_provider_profile_data(base_data)
-
-    @staticmethod
-    def _read_openfigi(
-        source_identifiers: Sequence[SecurityIdentifier],
-    ) -> list[OpenFIGIRecord]:
-
-        with OpenFIGIClient() as client:
-            return client.read_provider_base_data(source_identifiers,)
 
     @staticmethod
     def _read_motleyfool(
@@ -76,24 +76,58 @@ class SecurityProcessFlow:
         self,
         source_identifiers: Sequence[SecurityIdentifier],
     ) -> list[Security]:
-        """Proccess flow core routine."""
+        """Process flow core routine."""
 
-        morningstar_records = self._read_morningstar(source_identifiers,)
+        # morningstar_records = self._read_morningstar(source_identifiers,)
+        # securities = self._merger.create_securities(morningstar_records)
+        openfigi_records = self._read_openfigi(source_identifiers, )
+        securities = self._merger.create_securities(openfigi_records)
 
-        securities = self._merger.create_securities(morningstar_records)
+        if self._use_morningstar:
+            morningstar_identifiers_isin = [
+                identifier
+                for security in securities
+                for identifier in security.identifiers
+                if identifier.type is SecurityIdentifierType.ISIN
+            ]
+            morningstar_identifiers_only_ticker = [
+                identifier
+                for security in securities
+                for identifier in security.identifiers
+                if security.has_identifier(SecurityIdentifierType.TICKER) and not
+                   security.has_identifier(SecurityIdentifierType.ISIN)
+                if identifier.type is SecurityIdentifierType.TICKER
+            ]
+            morningstar_identifiers = morningstar_identifiers_isin + morningstar_identifiers_only_ticker
+            morningstar_records = self._read_morningstar(morningstar_identifiers, )
+
+        if self._use_motleyfool:
+            motelyfool_identifiers = [
+                identifier
+                for security in securities
+                for identifier in security.identifiers
+                if identifier.type is SecurityIdentifierType.TICKER
+            ]
+            motleyfool_records = self._read_motleyfool(motelyfool_identifiers, )
 
         for security in securities:
 
-            if self._use_openfigi:
-                openfigi_records = self._read_openfigi(source_identifiers,)
+            # if self._use_openfigi:
+            #     openfigi_records = self._read_openfigi(security.source_identifiers)
+            #     security = self._merger.merge_enrich_single(
+            #         security,
+            #         openfigi_records,
+            #         join_type=JoinType.LEFT,
+            #     )
+
+            if self._use_morningstar:
                 security = self._merger.merge_enrich_single(
                     security,
-                    openfigi_records,
+                    morningstar_records,
                     join_type=JoinType.LEFT,
                 )
 
             if self._use_motleyfool:
-                motleyfool_records = self._read_motleyfool(source_identifiers,)
                 security = self._merger.merge_enrich_single(
                     security,
                     motleyfool_records,
