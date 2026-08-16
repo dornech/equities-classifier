@@ -42,10 +42,11 @@ dependencies = [
     # "utils-seleniumxp",
     "undetected @ git+https://github.com/dornech/undetected.git",
     "selenium",
-    "waitless",
     "lxml",
-    "rapidfuzz",
     # "openpyxl",
+    "rapidfuzz",
+    "utils-mystuff",
+    "waitless",
 ]
 
 dynamic = ["version"]

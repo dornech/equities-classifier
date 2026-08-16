@@ -11,6 +11,7 @@
 
 
 from equities_classifier.exceptions import MatchingError
+from equities_classifier.logginghelper import logger_equities_classifier
 
 
 class MatchingHelper:
@@ -22,6 +23,8 @@ class MatchingHelper:
         raise_object: type[MatchingError] | None = None
     ) -> None:
         """Called when the provider is called with invalid security type."""
+
+        logger_equities_classifier.error(message)
 
         if raise_object:
             raise raise_object(message)

@@ -86,10 +86,10 @@ def test_parse_profile_to_record(client_dummy: MorningstarClient, identifier: Se
     assert record.industry == "Consumer Electronics"
 
 
-def test_parse_profile_to_dict(client_dummy: MorningstarClient):
+def test_parse_profile_to_dict(client_dummy: MorningstarClient, identifier: SecurityIdentifier):
 
     profile = load_json(DATA_DIR, "profile_apple.json")
-    attributes = client_dummy._parse_profile_to_dict(profile)
+    attributes = client_dummy._parse_profile_to_dict(identifier, profile)
 
     assert attributes["sector"] == "Technology"
     assert attributes["industry"] == "Consumer Electronics"

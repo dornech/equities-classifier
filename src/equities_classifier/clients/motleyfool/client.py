@@ -173,8 +173,7 @@ class MotleyFoolClient:
             if source_identifier.type != SecurityIdentifierType.TICKER:
                 ClientHelper.invalid_security_type(
                     DataSourceID.MOTLEYFOOL,
-                    source_identifier.type,
-                    source_identifier.value
+                    source_identifier
                 )
                 continue
 
@@ -273,8 +272,7 @@ class MotleyFoolClient:
         if match is None:
             ClientHelper.other_error_with_message(
                 DataSourceID.MOTLEYFOOL,
-                f"{DataSourceID.MOTLEYFOOL} response does not contain any search results.",
-                MotleyFoolResponseError if raise_error else None,
+                f"{DataSourceID.MOTLEYFOOL} search result response for identifier ({source_identifier.type}, {source_identifier.value}) does not contain any search result.",
             )
             return []
 
@@ -292,6 +290,7 @@ class MotleyFoolClient:
                         DataSourceID.MOTLEYFOOL,
                         attribute,
                         value,
+                        "_MOTLEYFOOL_SEARCH_RESULT_MAP",
                     )
             results.append(result)
 
@@ -312,8 +311,7 @@ class MotleyFoolClient:
         if len(htmlitems) == 0:
             ClientHelper.other_error_with_message(
                 DataSourceID.MOTLEYFOOL,
-                f"{DataSourceID.MOTLEYFOOL} response does not contain any search results.",
-                MotleyFoolResponseError if raise_error else None,
+                f"{DataSourceID.MOTLEYFOOL} website search for identifier ({source_identifier.type}, {source_identifier.value}) does not contain any search result.",
             )
             return []
 
@@ -345,15 +343,14 @@ class MotleyFoolClient:
         if not matches:
             ClientHelper.other_error_with_message(
                 DataSourceID.MOTLEYFOOL,
-                f"{DataSourceID.MOTLEYFOOL} does not provide a valid search result for {source_identifier.value}.",
+                f"{DataSourceID.MOTLEYFOOL} does not provide a valid search result for identifier ({source_identifier.type}, {source_identifier.value}).",
                 MotleyFoolResponseError if raise_error else None,
             )
             return None
         if len(matches) > 1:
             ClientHelper.search_result_not_unique(
                 DataSourceID.MOTLEYFOOL,
-                source_identifier.type,
-                source_identifier.value
+                source_identifier,
             )
 
         return matches[0]
@@ -395,8 +392,7 @@ class MotleyFoolClient:
         if search_result is None:
             ClientHelper.other_error_with_message(
                 DataSourceID.MOTLEYFOOL,
-                f"No {DataSourceID.MOTLEYFOOL} search result available.",
-                MotleyFoolResponseError if raise_error else None,
+                f"No {DataSourceID.MOTLEYFOOL} search result available for ticker {search_result.value}).",
             )
             return None
 
@@ -413,6 +409,12 @@ class MotleyFoolClient:
 
         for attribute, xpath in self._MOTLEYFOOL_PROFILE_SECTION_FIELDS_XPATH_USED.items():
             value = text(xpath)
+            if not value:
+                ClientHelper.missing_provider_attribute(
+                    DataSourceID.MOTLEYFOOL,
+                    record.identifier,
+                    attribute
+                )
             if hasattr(record, attribute):
                 setattr(record, attribute, value)
             else:
@@ -420,6 +422,7 @@ class MotleyFoolClient:
                     DataSourceID.MOTLEYFOOL,
                     attribute,
                     value,
+                    "_MOTLEYFOOL_PROFILE_SECTION_FIELDS_XPATH_USED",
                 )
 
         return record

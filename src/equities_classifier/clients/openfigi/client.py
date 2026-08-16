@@ -162,7 +162,7 @@ class OpenFIGIClient:
             identifier for identifier in identifiers if identifier.type not in self._OPENFIGI_IDENTIFIER_TYPE_MAP
         ]
         for identifier in temp_identifiers:
-            ClientHelper.invalid_security_type(DataSourceID.OPENFIGI, identifier.type, identifier.value)
+            ClientHelper.invalid_security_type(DataSourceID.OPENFIGI, identifier)
 
         temp_identifiers = [
             identifier for identifier in identifiers if identifier.type in self._OPENFIGI_IDENTIFIER_TYPE_MAP
@@ -263,7 +263,7 @@ class OpenFIGIClient:
 
             if newrecord:
 
-                # Copy provider fields.
+                # Copy provider fields
                 for json_name, value in record_data.items():
                     attribute = self._OPENFIGI_RECORDMAP.get(json_name)
                     if attribute is not None:
@@ -276,17 +276,20 @@ class OpenFIGIClient:
                         else:
                             ClientHelper.missing_record_attribute(
                                 DataSourceID.OPENFIGI,
-                                attribute,
+                                json_name,
                                 value,
+                                "_OPENFIGI_RECORDMAP",
                             )
                     else:
                         ClientHelper.unknown_provider_attribute(
                             DataSourceID.OPENFIGI,
+                            source_identifier,
                             json_name,
                             value,
+                            "_OPENFIGI_RECORDMAP"
                         )
 
-                # Create canonical security identifiers (including source identifier).
+                # Create canonical security identifiers (including source identifier)
                 identifiers: list[SecurityIdentifier] = [source_identifier]
                 for identifier_fieldname, identifier_type in self._OPENFIGI_IDENTIFIER_TYPES.items():
                     value = record_data.get(identifier_fieldname)

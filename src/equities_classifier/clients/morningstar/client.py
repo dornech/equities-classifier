@@ -8,7 +8,7 @@
 # boolean-type arguments
 # ruff: noqa: FBT001, FBT002
 # others
-# ruff: noqa: PLR1702, PLR6301, RUF050, RUF105
+# ruff: noqa: E501, PLR1702, PLR6301, RUF050, RUF105
 #
 # disable mypy errors
 # mypy: disable-error-code = "arg-type, no-any-return"
@@ -186,6 +186,11 @@ class MorningstarClient:
 
     # public API
 
+    @classmethod
+    def supports_identifier_type(cls, identifier_type: SecurityIdentifierType,) -> bool:
+        """Check if identifier type supported"""
+        return identifier_type in cls._MORNINGSTAR_IDENTIFIER_TYPES
+
     def read_provider_base_data(
         self,
         source_identifiers: Sequence[SecurityIdentifier],
@@ -200,8 +205,7 @@ class MorningstarClient:
             if source_identifier.type not in self._MORNINGSTAR_IDENTIFIER_TYPES.values():
                 ClientHelper.invalid_security_type(
                     DataSourceID.MORNINGSTAR,
-                    source_identifier.type,
-                    source_identifier.value
+                    source_identifier
                 )
                 continue
 
@@ -329,8 +333,7 @@ class MorningstarClient:
         if len(results) == 0:
             ClientHelper.other_error_with_message(
                 DataSourceID.MORNINGSTAR,
-                f"{DataSourceID.MORNINGSTAR} returned no search data.",
-                MorningstarResponseError if raise_error else None,
+                f"{DataSourceID.MORNINGSTAR} search result response for identifier ({source_identifier.type}, {source_identifier.value}) does not contain any search result.",
             )
         if not results:
             return []
@@ -341,10 +344,12 @@ class MorningstarClient:
 
             missing = (
                 self.leaf_paths(item, exclude_leaves=["score", "sortAs"]) -
-                self._MORNINGSTAR_SEARCH_RESULT_MAP.keys())
+                self._MORNINGSTAR_SEARCH_RESULT_MAP.keys()
+            )
             if len(missing) != 0:
                 ClientHelper.unknown_provider_attributes(
                     DataSourceID.MORNINGSTAR,
+                    source_identifier,
                     missing,
                     "_MORNINGSTAR_SEARCH_RESULT_MAP"
                 )
@@ -361,6 +366,7 @@ class MorningstarClient:
                             DataSourceID.MORNINGSTAR,
                             attribute,
                             value,
+                            "_MORNINGSTAR_SEARCH_RESULT_MAP",
                         )
 
             search_results.append(result)
@@ -369,8 +375,7 @@ class MorningstarClient:
             if count != len(search_results):
                 ClientHelper.search_result_counter_issue(
                     DataSourceID.MORNINGSTAR,
-                    source_identifier.type,
-                    source_identifier.value,
+                    source_identifier,
                     count_provider=count,
                     count_found=len(response_data) + 1,
                 )
@@ -388,8 +393,7 @@ class MorningstarClient:
         if not search_results:
             ClientHelper.other_error_with_message(
                 DataSourceID.MORNINGSTAR,
-                f"No {DataSourceID.MORNINGSTAR} search results available.",
-                MorningstarResponseError if raise_error else None,
+                f"No {DataSourceID.MORNINGSTAR} search result available for identifier ({source_identifier.type}, {source_identifier.value}).",
             )
             return None
 
@@ -399,8 +403,7 @@ class MorningstarClient:
         if len({r.company_id for r in search_results}) != 1:
             ClientHelper.other_error_with_message(
                 DataSourceID.MORNINGSTAR,
-                f"{DataSourceID.MORNINGSTAR} CompanyID is not unique for selected identifier.",
-                MorningstarResponseError if raise_error else None,
+                f"{DataSourceID.MORNINGSTAR} CompanyID is not unique for ({source_identifier.type}, {source_identifier.value}).",
             )
 
         # Copy scalar fields from first search result. Consider differing tickers in case of ISIN search
@@ -427,12 +430,16 @@ class MorningstarClient:
                                 f"field '{field.name}' differs between listings."
                             )
                             raise MorningstarResponseError(message)
-                    else:
+                    elif field.name not in {"source_identifier", "isin", "short_name"}:
+                        # differences between MorningstarSearchResult and MorningstarRecord are intended
+                        # -> probably delete error caller
                         ClientHelper.missing_record_attribute(
                             DataSourceID.MORNINGSTAR,
                             field.name,
                             getattr(search_result, field.name, None),
+                            "n. a.",
                         )
+                        pass
                 else:
                     record.ticker_exchange.append(search_result.ticker)
 
@@ -526,6 +533,7 @@ class MorningstarClient:
         if len(missing) != 0:
             ClientHelper.unknown_provider_attributes(
                 DataSourceID.MORNINGSTAR,
+                record.identifiers[0],
                 missing,
                 "_MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_COMPLETE",
             )
@@ -542,18 +550,22 @@ class MorningstarClient:
                         DataSourceID.MORNINGSTAR,
                         attribute,
                         section.get("value"),
+                        "_MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_USED",
                     )
             else:
                 ClientHelper.unknown_provider_attribute(
                     DataSourceID.MORNINGSTAR,
+                    record.identifiers[0],
                     json_name,
                     section.get("value"),
+                    "_MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_USED",
                 )
 
         return record
 
     def _parse_profile_to_dict(
         self,
+        identifier: SecurityIdentifier,
         profile: dict[str, Any],
         raise_error: bool = False,
     ) -> dict[str, Any]:
@@ -593,9 +605,11 @@ class MorningstarClient:
                 provider_attributes[attribute] = section.get("value")
             else:
                 ClientHelper.unknown_provider_attribute(
-                    provider=DataSourceID.MORNINGSTAR,
-                    attribute=json_name,
-                    value=section,
+                    DataSourceID.MORNINGSTAR,
+                    identifier,
+                    json_name,
+                    section.get("value"),
+                    "_MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_USED",
                 )
 
         return provider_attributes

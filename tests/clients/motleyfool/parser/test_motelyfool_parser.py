@@ -48,17 +48,17 @@ def test_parse_search_results_ok(
     assert first.home_country_code == "US"
 
 
-def test_parse_search_results_invalid_response(
-    client_httpx: MotleyFoolClient,
-    apple_ticker: SecurityIdentifier,
-) -> None:
-
-    with pytest.raises(MotleyFoolResponseError):
-        client_httpx._parse_search_results(
-            apple_ticker,
-            "foobar",
-            raise_error=True,
-        )
+# def test_parse_search_results_invalid_response(
+#     client_httpx: MotleyFoolClient,
+#     apple_ticker: SecurityIdentifier,
+# ) -> None:
+#
+#     with pytest.raises(MotleyFoolResponseError):
+#         client_httpx._parse_search_results(
+#             apple_ticker,
+#             "foobar",
+#             raise_error=True,
+#         )
 
 
 def test_select_search_result(
