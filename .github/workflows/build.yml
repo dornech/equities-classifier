@@ -46,6 +46,10 @@ jobs:
         with:
           install-dependencies: true
           install-chromedriver: true
+      - name: Check Chrome (for analysis in case of an error)
+        run: |
+          google-chrome --version || true
+          which google-chrome || true
       - name: Run Tests with coverage analysis
         run: |
           hatch test --cover -m "not local"

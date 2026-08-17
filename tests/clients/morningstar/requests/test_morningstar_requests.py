@@ -15,11 +15,16 @@ from equities_classifier.models import SecurityIdentifier
 from equities_classifier.clients.morningstar.client import MorningstarClient
 
 
+# note: testcases can be executed successfully only locally
+# (issue with undetected-chromedriver / CloudFront)
+
+
 pytestmark = [
-    pytest.mark.usebrowser,
-    pytest.mark.usechrome,
     pytest.mark.usefixtures("client"),
     pytest.mark.usefixtures("apple_isin"),
+    pytest.mark.usebrowser,
+    pytest.mark.usechrome,
+    pytest.mark.local,
 ]
 
 

@@ -39,7 +39,6 @@ dependencies = [
     "httpx",
     "immutabledict",
     # "undetected-chromedriver",
-    # "utils-seleniumxp",
     "undetected @ git+https://github.com/dornech/undetected.git",
     "selenium",
     "lxml",

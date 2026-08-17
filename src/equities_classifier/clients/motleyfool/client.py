@@ -24,7 +24,8 @@ from urllib.parse import urljoin
 import httpx
 from equities_classifier.clients.httpx_logger import log_request, log_response
 import undetected as uc
-from waitless import stabilize
+from waitless import stabilize, get_diagnostics, StabilizationConfig, StabilizationTimeout
+from waitless.diagnostics import print_report
 from selenium.webdriver.common.by import By
 
 from lxml import html
@@ -91,25 +92,40 @@ class MotleyFoolClient:
 
         self._mode = mode
         if self._mode == MotleyFoolMode.HTTPX:
-
             self._client = httpx.Client(
                 base_url=self._BASE_URL,
                 timeout=timeout,
                 follow_redirects=True,
                 event_hooks={"request": [log_request], "response": [log_response], } if requestlog else None
             )
-
             # determine action code for next.js
             self._next_action = self._get_next_action()
-
         elif self._mode == MotleyFoolMode.SELENIUM:
-
-            self._client = stabilize(uc.Chrome())
+            options = uc.ChromeOptions()
+            options.add_argument("--headless=new")
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-dev-shm-usage")
+            try:
+                self._client = uc.Chrome(options=options)
+            except Exception as e:
+                print("Failed to start Chrome")
+                raise e
+            try:
+                config = StabilizationConfig(
+                    timeout=10,  # Max wait time (seconds)
+                    network_idle_threshold=5,  # Max pending requests (allows background traffic)
+                    strictness='normal',  # 'strict' | 'normal' | 'relaxed'
+                    debug_mode=False  # Enable logging
+                )
+                self._client = stabilize(self._client, config=config)
+            except StabilizationTimeout as e:
+                print("Failed to stabilize Chrome  with 'waitless'")
+                diagnostics = get_diagnostics(self._client)
+                print_report(diagnostics)  # Print detailed report
+                raise e
             self._client.get(self._BASE_URL)
             self._client.find_element(By.XPATH, "//button[@id='onetrust-accept-btn-handler']").click()
-
         else:
-
             msg = f"MotleyFoolClient mode '{self._mode}' not valid.)"
             raise MotleyFoolResponseError(msg)
 
@@ -155,7 +171,11 @@ class MotleyFoolClient:
 
     def close(self) -> None:
         """Release client resources."""
-        self._client.close()
+
+        # check self_client before execution due to potential double-close when using pytest
+        if self._client:
+            self._client.close()
+            self._client = None
 
     # public API
 

@@ -24,7 +24,8 @@ from immutabledict import immutabledict
 from dataclasses import fields
 
 import undetected as uc
-from waitless import stabilize
+from waitless import stabilize, get_diagnostics, StabilizationConfig, StabilizationTimeout
+from waitless.diagnostics import print_report
 from selenium.webdriver.common.by import By
 from urllib.parse import urlencode
 import json
@@ -155,15 +156,30 @@ class MorningstarClient:
 
         if not test_wo_browser:
             if seleniumwrapper is None:
-                # self._client = utils_seleniumxp.init_webdriver(
-                #     stealthmode=False,
-                #     optimizedscraping=False,
-                #     URL="https://global.morningstar.com/en-eu",
-                #     browser="chrome",
-                #     alt_cls_webdriverwrapper=uc.Chrome,
-                #     alt_cls_options=uc.ChromeOptions,
-                # )
-                self._client = stabilize(uc.Chrome())
+                options = uc.ChromeOptions()
+                # options.add_argument("--headless=new")   # does not work with Morningstar because CloudFront-detected
+                options.add_argument("--no-sandbox")
+                options.add_argument("--disable-dev-shm-usage")
+                options.add_argument("--disable-gpu")
+                options.add_argument("--window-size=1920,1080")
+                try:
+                    self._client = uc.Chrome(options=options)
+                except Exception as e:
+                    print("Failed to start Chrome")
+                    raise e
+                try:
+                    config = StabilizationConfig(
+                        timeout=10,  # Max wait time (seconds)
+                        network_idle_threshold=5,  # Max pending requests (allows background traffic)
+                        strictness='normal',  # 'strict' | 'normal' | 'relaxed'
+                        debug_mode=False  # Enable logging
+                    )
+                    self._client = stabilize(self._client, config=config)
+                except StabilizationTimeout as e:
+                    print("Failed to stabilize Chrome  with 'waitless'")
+                    diagnostics = get_diagnostics(self._client)
+                    print_report(diagnostics)  # Print detailed report
+                    raise e
             else:
                 self._client = seleniumwrapper
         else:
@@ -182,7 +198,11 @@ class MorningstarClient:
 
     def close(self) -> None:
         """Release browser resources."""
-        self._client.close()
+
+        # check self_client before execution due to potential double-close when using pytest
+        if self._client:
+            self._client.close()
+            self._client = None
 
     # public API
 
