@@ -43,7 +43,7 @@ jobs:
           hatch run lint:all
       - name: Run Tests with coverage analysis
         run: |
-          hatch test --cover
+          hatch test --cover -m "not local"
       - uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
