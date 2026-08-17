@@ -5,6 +5,22 @@
 - First pre-alpha
 - ...
 
+## [v0.7.2](https://github.com/dornech/equities-classifier/releases/tag/v0.7.2)  (2026-08-18) 
+
+### Bug fixes
+
+- Further finetuning for Chrome test on GitHub
+(['74c62e8'](https://github.com/dornech/equities-classifier/commit/74c62e82bb7517933834f6db2c34af84159cc203))
+- Template improvements regarding optional browser tests, fixes
+(['3d96bb0'](https://github.com/dornech/equities-classifier/commit/3d96bb0ca7e7c3fc60d981af9ac75c343fde04b8))
+- Allow browser tests on GitHub Action by adding Chrome installer action, correct browser fixtures
+(['b138254'](https://github.com/dornech/equities-classifier/commit/b1382548392c6a8e748e69a641fc1053fd1edb58))
+- No testcases marked local considered in GitHub Action for build-test
+(['5da374e'](https://github.com/dornech/equities-classifier/commit/5da374e5f30cef908fb41102d179c196903fcfbf))
+
+### Testing
+
+
 ## [v0.7.1](https://github.com/dornech/equities-classifier/releases/tag/v0.7.1)  (2026-08-16) 
 
 ### Features
