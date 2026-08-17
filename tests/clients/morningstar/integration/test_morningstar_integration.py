@@ -17,7 +17,8 @@ from equities_classifier.clients.morningstar.client import MorningstarClient
 pytestmark = [
     pytest.mark.usefixtures("client"),
     pytest.mark.usefixtures("apple_isin"),
-    pytest.mark.local,
+    pytest.mark.usebrowser,
+    pytest.mark.usechrome,
     pytest.mark.integration,
 ]
 

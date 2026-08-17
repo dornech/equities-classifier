@@ -11,7 +11,9 @@ import pytest
 from equities_classifier.clients.morningstar import MorningstarClient
 
 
-@pytest.fixture(scope="module")
-def client():
+@pytest.fixture(scope="module", autouse=True)
+def client(request):
 
-    yield MorningstarClient()
+    if request.node.get_closest_marker("usebrowser") or request.node.get_closest_marker("usechrome"):
+        with MorningstarClient() as clientobject:
+            yield clientobject

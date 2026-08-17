@@ -18,7 +18,8 @@ from equities_classifier.models import SecurityIdentifier
 
 pytestmark = [
     pytest.mark.usefixtures("apple_ticker"),
-    pytest.mark.local,
+    pytest.mark.usebrowser,
+    pytest.mark.usechrome,
     pytest.mark.integration,
 ]
 

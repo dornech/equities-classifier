@@ -47,6 +47,11 @@ jobs:
       - name: Lint and typecheck
         run: |
           hatch run lint:all
+      - name: Install Chrome browser
+        uses: browser-actions/setup-chrome@v2
+        with:
+          install-dependencies: true
+          install-chromedriver: true
       - name: Run Tests
         run: |
           hatch test -m "not local"
