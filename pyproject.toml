@@ -266,8 +266,10 @@ testpaths = [
     "tests",
 ]
 markers = [
-    "integration: Tests requiring internet access",
-    "local: tests that are not suitable for CI",
+    "integration: integration test cases",
+    "local: test cases not suitable for CI",
+    "usechrome: test cases use/require Chrome browser",
+    "usebrowser: tests cases use/require browser",
 ]
 
 [tool.coverage.run]

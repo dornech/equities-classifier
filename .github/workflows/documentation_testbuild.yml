@@ -30,7 +30,7 @@ jobs:
             echo "Tag identified as release for purpose of this GitHub Action."
           else
             echo "is_release=false" >> "$GITHUB_OUTPUT"
-            echo "Tag identified as release for purpose of this GitHub Action."
+            echo "Tag not identified as release for purpose of this GitHub Action."
           fi
 
   dump-context:
