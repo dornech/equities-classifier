@@ -34,15 +34,18 @@ classifiers = [
 ]
 # direct dependencies of this package, installed when users `pip install equities-classifier` later.
 dependencies = [
+    "FreeSimpleGUI",
     # "gics",
-    "gics @ git+https://github.com/dornech/py-gics.git",
+    # "gics @ git+https://github.com/dornech/py-gics.git",
+    "py-gics-updated",
     "httpx",
     "immutabledict",
     # "undetected-chromedriver",
-    "undetected @ git+https://github.com/dornech/undetected.git",
+    # "undetected @ git+https://github.com/dornech/undetected.git",
+    "undetected-updated",
     "selenium",
     "lxml",
-    # "openpyxl",
+    "openpyxl",
     "rapidfuzz",
     "utils-mystuff",
     "waitless",
@@ -254,6 +257,11 @@ exclude = ["docs", "tests"]
 ignore_notebooks = true
 github_output = true
 github_warning_errors = ["DEP003"]
+
+[tool.deptry.package_module_name_map]
+FreeSimpleGUI = "FreeSimpleGUI"
+py-gics-updated = "gics"
+undetected-updated = "undetected"
 
 [tool.cruft]
 skip = ["README.md", "CHANGELOG.MD", "src/", "tests/", "docs/", "notebooks/"]

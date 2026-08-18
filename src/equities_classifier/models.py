@@ -30,6 +30,7 @@ class ClassificationSystem:
 
     id: ClassificationSystemID
     display_name: str
+    short_name: str
     authorities: tuple[str, ...]
     hierarchy: tuple[str, ...]
     supports_codes: bool
@@ -48,7 +49,7 @@ class SecurityClassification:
     """Classification of a security."""
 
     system: ClassificationSystem
-    nodes:  dict[ClassificationLevel, ClassificationNode]
+    nodes: dict[ClassificationLevel, ClassificationNode]
 
 
 # classes regarding securities themselves

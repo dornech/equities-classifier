@@ -4,7 +4,7 @@
 # ruff and mypy per file settings
 #
 # others
-# ruff: noqa: RUF105
+# ruff: noqa: PLR2004, RUF105
 
 # fmt: off
 
@@ -29,20 +29,18 @@ from equities_classifier.matching.merger import (
 from equities_classifier.classification.generator import ClassificationGenerator
 
 
-class SecurityProcessFlow:
+class ProcessFlow:
     """Process security data from providers."""
 
     def __init__(
         self,
         *,
         morningstar: bool = True,
-        openfigi: bool = True,
         motleyfool: bool = False,
     ) -> None:
         """Initialize process flow class."""
 
         self._use_morningstar = morningstar
-        self._use_openfigi = openfigi
         self._use_motleyfool = motleyfool
 
         self._merger = SecurityMerger()
@@ -72,7 +70,7 @@ class SecurityProcessFlow:
         with MotleyFoolClient() as client:
             return client.read_provider_profile_data(source_identifiers)
 
-    def process(
+    def run(
         self,
         source_identifiers: Sequence[SecurityIdentifier],
     ) -> list[Security]:

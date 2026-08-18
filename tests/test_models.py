@@ -68,6 +68,7 @@ def test_create_classification() -> None:
     classification_system = ClassificationSystem(
         id=ClassificationSystemID.GECS,
         display_name="Global Equity Classification Structure",
+        short_name="GECS",
         authorities=("Morningstar",),
         hierarchy=(
             "Super Sector",

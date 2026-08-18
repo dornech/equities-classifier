@@ -38,6 +38,7 @@ from gics import GICS as GICSDefinition
 GECS = ClassificationSystem(
     id=ClassificationSystemID.GECS,
     display_name="Global Equity Classification Structure",
+    short_name="GECS",
     authorities=("Morningstar",),
     hierarchy=(
         "Super Sector",
@@ -92,6 +93,7 @@ def resolve_gecs_supersector(
 GICS = ClassificationSystem(
     id=ClassificationSystemID.GICS,
     display_name="Global Industry Classification Standard",
+    short_name="GICS",
     authorities=(
         "MSCI",
         "S&P Dow Jones Indices",
