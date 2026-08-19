@@ -11,6 +11,7 @@
 
 import pytest
 
+from equities_classifier.clients.openfigi.models import OpenFIGIRecord
 from equities_classifier.clients.openfigi.client import OpenFIGIClient, OpenFIGIResponseError
 from equities_classifier.models import SecurityIdentifier, SecurityIdentifierType
 
@@ -57,7 +58,8 @@ def test_parse_single_record(
         ]
     }
 
-    records = client._parse_records(item, source_identifier, raise_error=True)
+    records: list[OpenFIGIRecord] = []
+    client._parse_records(item, source_identifier, records=records, raise_error=True)
 
     assert len(records) == 1
 
@@ -98,10 +100,8 @@ def test_parse_multiple_records(
         ]
     }
 
-    records = client._parse_records(
-        item,
-        source_identifier
-    )
+    records: list[OpenFIGIRecord] = []
+    client._parse_records(item, source_identifier, records=records)
 
     assert len(records) == 2
 
@@ -131,7 +131,8 @@ def test_parse_unique_share_class_figi(
         ]
     }
 
-    records = client._parse_records(item, source_identifier, raise_error=True)
+    records: list[OpenFIGIRecord] = []
+    client._parse_records(item, source_identifier, records=records, raise_error=True)
 
     assert len(records) == 1
 
@@ -149,7 +150,8 @@ def test_parse_error_response(
     )
 
     with pytest.raises(OpenFIGIResponseError):
-        client._parse_records(item, source_identifier, raise_error=True)
+        records: list[OpenFIGIRecord] = []
+        client._parse_records(item, source_identifier, records=records, raise_error=True)
 
 
 def test_missing_data_raises(
@@ -163,7 +165,8 @@ def test_missing_data_raises(
     )
 
     with pytest.raises(OpenFIGIResponseError):
-        client._parse_records({}, source_identifier, raise_error=True)
+        records: list[OpenFIGIRecord] = []
+        client._parse_records({}, source_identifier, records=records, raise_error=True)
 
 
 def test_map_apple_isin(

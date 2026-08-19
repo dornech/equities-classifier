@@ -63,7 +63,7 @@ class OpenFIGIClient:
         SecurityIdentifierType.ISIN: "ID_ISIN",
         SecurityIdentifierType.SEDOL: "ID_SEDOL",
         SecurityIdentifierType.TICKER: "TICKER",
-        SecurityIdentifierType.WKN: "WKN"
+        SecurityIdentifierType.WKN: "ID_WERTPAPIER",
     })
 
     @classmethod
@@ -83,7 +83,7 @@ class OpenFIGIClient:
         "exchCode": "exch_code",
         "micCode": "mic_code",
         "currency": "currency",
-        "stateCode": "state_code"
+        "stateCode": "state_code",
     })
 
     _ANONYMOUS_LIMITS = RateLimits(
@@ -133,22 +133,52 @@ class OpenFIGIClient:
     ) -> list[OpenFIGIRecord]:
         """Read base date for one or more identifiers from OpenFIGI."""
 
-        records: list[OpenFIGIRecord] = []
+        results: list[OpenFIGIRecord] = []
 
         batches = self._create_batches(source_identifiers)
         for batch in batches:
 
             response_data = self._execute_request(batch)
             for source_identifier, item in zip(batch, response_data, strict=True):
-                records.extend(
-                    self._parse_records(
-                        item=item,
-                        source_identifier=source_identifier,
-                        raise_error=raise_error
-                    )
+                # parsing accroSs batches for comprehension of data for duplicate source identifiers
+                # (i.e. ticker and ISIN)
+                self._parse_records(
+                    item=item,
+                    source_identifier=source_identifier,
+                    records=results,
+                    raise_error=raise_error
                 )
 
-        return records
+        return results
+
+    @staticmethod
+    def remove_records_without_share_class_figi(
+        records: list[OpenFIGIRecord],
+    ) -> list[OpenFIGIRecord]:
+        """Remove records without share_class_FIGI if a ISIN-matching record exists."""
+
+        identifiers_with_share_class_figi: set[tuple[SecurityIdentifierType, str]] = {
+            (identifier.type, identifier.value)
+            for record in records
+            if record.share_class_figi is not None
+            for identifier in record.identifiers
+            if identifier.type == SecurityIdentifierType.ISIN
+        }
+
+        return [
+            record
+            for record in records
+            if (
+                record.share_class_figi is not None
+                or not any(
+                    (identifier.type, identifier.value)
+                    in identifiers_with_share_class_figi
+                    for identifier in record.identifiers
+                    if identifier.type == SecurityIdentifierType.ISIN
+                )
+            )
+        ]
+
 
     # internal routines
 
@@ -216,9 +246,9 @@ class OpenFIGIClient:
         self,
         item: dict[str, Any],
         source_identifier: SecurityIdentifier,
+        records: list[OpenFIGIRecord],
         raise_error: bool = False
-    ) -> list[OpenFIGIRecord]:
-        """Parse a single OpenFIGI mapping response."""
+    ) -> None:
 
         if "error" in item:
             openFIGI_msg = item["error"]
@@ -248,20 +278,34 @@ class OpenFIGIClient:
                 OpenFIGIResponseError if raise_error else None,
             )
         if not data:
-            return []
-
-        records: list[OpenFIGIRecord] = []
+            # return []
+            return None
 
         for record_data in data:
 
             # find existing record with share_class_figi otherwise new record
-            record = next(
-                (record for record in records if record.share_class_figi == record_data.get("shareClassFIGI")),
-                OpenFIGIRecord()
-            )
-            newrecord = record.share_class_figi is None
+            # NOTE: share_class_figi might be empty due to non-share security type or data error
+            record = None
+            if record_data.get("shareClassFIGI"):
+                record = next(
+                    (existing_record for existing_record in records
+                        if existing_record.share_class_figi == record_data.get("shareClassFIGI")
+                    ),
+                    None
+                )
+            else:
+                record = next(
+                    (existing_record for existing_record in records if (
+                        existing_record.share_class_figi is None and
+                        existing_record.market_sector == record_data.get("marketSector") and
+                        existing_record.security_type2 == record_data.get("securityType2")
+                    )),
+                    None
+                )
 
-            if newrecord:
+            if not record:
+
+                record = OpenFIGIRecord()
 
                 # Copy provider fields
                 for json_name, value in record_data.items():
@@ -312,8 +356,6 @@ class OpenFIGIClient:
                     if attribute is not None and hasattr(record, attribute):
                         if isinstance(getattr(record, attribute), list):
                             getattr(record, attribute).append(value)
-
-        return records
 
 
 if __name__ == "__main__":

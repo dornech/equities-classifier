@@ -51,7 +51,8 @@ class ProcessFlow:
         source_identifiers: Sequence[SecurityIdentifier],
     ) -> list[OpenFIGIRecord]:
         with OpenFIGIClient() as client:
-            return client.read_provider_base_data(source_identifiers, )
+            openfigi_records = client.read_provider_base_data(source_identifiers)
+            return client.remove_records_without_share_class_figi(openfigi_records)
 
     @staticmethod
     def _read_morningstar(
@@ -59,7 +60,7 @@ class ProcessFlow:
     ) -> list[MorningstarRecord]:
 
         with MorningstarClient() as client:
-            base_data = client.read_provider_base_data(source_identifiers,)
+            base_data = client.read_provider_base_data(source_identifiers)
             return client.read_provider_profile_data(base_data)
 
     @staticmethod
@@ -76,9 +77,12 @@ class ProcessFlow:
     ) -> list[Security]:
         """Process flow core routine."""
 
-        # morningstar_records = self._read_morningstar(source_identifiers,)
-        # securities = self._merger.create_securities(morningstar_records)
-        openfigi_records = self._read_openfigi(source_identifiers, )
+        openfigi_records = self._read_openfigi(source_identifiers)
+        openfigi_records = [
+            openfigi_record
+            for openfigi_record in openfigi_records
+            if openfigi_record.security_type == "Common Stock" or openfigi_record.security_type2 == "Common Stock"
+        ]
         securities = self._merger.create_securities(openfigi_records)
 
         if self._use_morningstar:
@@ -109,14 +113,6 @@ class ProcessFlow:
             motleyfool_records = self._read_motleyfool(motelyfool_identifiers, )
 
         for security in securities:
-
-            # if self._use_openfigi:
-            #     openfigi_records = self._read_openfigi(security.source_identifiers)
-            #     security = self._merger.merge_enrich_single(
-            #         security,
-            #         openfigi_records,
-            #         join_type=JoinType.LEFT,
-            #     )
 
             if self._use_morningstar:
                 security = self._merger.merge_enrich_single(
