@@ -30,7 +30,7 @@ def read_identifiers(
     """
 
     path = Path(filename)
-    workbook = load_workbook(path, read_only=True, data_only=True,)
+    workbook = load_workbook(path, read_only=True, data_only=True)
 
     try:
         worksheet = workbook.active
@@ -53,7 +53,7 @@ def read_identifiers(
         workbook.close()
 
 
-def _get_header_map(headers: tuple[object, ...],) -> dict[str, int]:
+def _get_header_map(headers: tuple[object, ...]) -> dict[str, int]:
     """Create a normalized header-to-column mapping."""
 
     return {

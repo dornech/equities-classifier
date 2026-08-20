@@ -264,7 +264,7 @@ def test_write_excel_gecs_and_gics(
         ]
     )
 
-    write_excel([security], filename, classifications=ClassificationOutput.BOTH,)
+    write_excel([security], filename, classifications=ClassificationOutput.ALL,)
 
     worksheet = _load_worksheet(filename)
 

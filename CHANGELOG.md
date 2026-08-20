@@ -5,6 +5,22 @@
 - First pre-alpha
 - ...
 
+## [v0.8.0](https://github.com/dornech/equities-classifier/releases/tag/v0.8.0)  (2026-08-20) 
+
+### Features
+
+- Country-postfix for tickers and fix comprehension in OpenFIGI and Morningstar incl. test cases
+(['f22b785'](https://github.com/dornech/equities-classifier/commit/f22b78550d4c5f483dc6a7cbf6b4251b0031dd35))
+- In-/output incl. test cases
+(['88cf17b'](https://github.com/dornech/equities-classifier/commit/88cf17bcbc7aa90785f507156435a3b540db7a0a))
+
+### Bug fixes
+
+- Improve Morningstar selection regarding ticker processing
+(['8393476'](https://github.com/dornech/equities-classifier/commit/8393476f3220f7d919f1505a78cae7e5c875aea9))
+- Improve OpenFIGI record comprehension
+(['112f5d2'](https://github.com/dornech/equities-classifier/commit/112f5d242f8650d4722cf56533bce37d1f843f2f))
+
 ## [v0.7.2](https://github.com/dornech/equities-classifier/releases/tag/v0.7.2)  (2026-08-18) 
 
 ### Bug fixes

@@ -4,7 +4,7 @@
 # ruff and mypy per file settings
 #
 # others
-# ruff: noqa: PLR2004, RUF105
+# ruff: noqa: PLR2004, RUF050, RUF105
 
 # fmt: off
 
@@ -86,31 +86,34 @@ class ProcessFlow:
         securities = self._merger.create_securities(openfigi_records)
 
         if self._use_morningstar:
-            morningstar_identifiers_isin = [
+            morningstar_identifiers_isin = {
                 identifier
                 for security in securities
                 for identifier in security.identifiers
                 if identifier.type is SecurityIdentifierType.ISIN
-            ]
-            morningstar_identifiers_only_ticker = [
+            }
+            # avoid re-duplication of tickers resulting form OpenFIGI finding non-US securities for a ticker
+            morningstar_identifiers_only_ticker = {
                 identifier
                 for security in securities
                 for identifier in security.identifiers
                 if security.has_identifier(SecurityIdentifierType.TICKER) and not
                    security.has_identifier(SecurityIdentifierType.ISIN)
                 if identifier.type is SecurityIdentifierType.TICKER
-            ]
-            morningstar_identifiers = morningstar_identifiers_isin + morningstar_identifiers_only_ticker
-            morningstar_records = self._read_morningstar(morningstar_identifiers, )
+            }
+            morningstar_identifiers: list[SecurityIdentifier] = list(
+                morningstar_identifiers_isin.union(morningstar_identifiers_only_ticker)
+            )
+            morningstar_records = self._read_morningstar(morningstar_identifiers)
 
         if self._use_motleyfool:
-            motelyfool_identifiers = [
+            motelyfool_identifiers: list[SecurityIdentifier] = list({
                 identifier
                 for security in securities
                 for identifier in security.identifiers
                 if identifier.type is SecurityIdentifierType.TICKER
-            ]
-            motleyfool_records = self._read_motleyfool(motelyfool_identifiers, )
+            })
+            motleyfool_records = self._read_motleyfool(motelyfool_identifiers)
 
         for security in securities:
 
@@ -127,6 +130,6 @@ class ProcessFlow:
                     motleyfool_records,
                 )
 
-            self._classificationgenerator.generate(security, )
+            self._classificationgenerator.generate(security)
 
         return securities

@@ -38,7 +38,23 @@ class ClassificationOutput(Enum):
     NONE = "none"
     GECS = "gecs"
     GICS = "gics"
-    BOTH = "both"
+    ALL = "all"
+
+
+def get_classification_output(
+    gecs: bool = False,
+    gics: bool = False,
+) -> ClassificationOutput:
+    """Return selected classification output."""
+
+    if gecs and gics:
+        return ClassificationOutput.ALL
+    if gecs:
+        return ClassificationOutput.GECS
+    if gics:
+        return ClassificationOutput.GICS
+
+    return ClassificationOutput.NONE
 
 
 def write_excel(
@@ -84,14 +100,14 @@ def _create_columns(
 ) -> list[str]:
     """Create output columns."""
 
-    columns = ["Name", "Ticker",]
+    columns = ["Name", "Ticker"]
 
     identifier_types = _get_identifier_types(securities)
     columns.extend(identifier_type.value.upper() for identifier_type in identifier_types)
 
-    if classifications in {ClassificationOutput.GECS, ClassificationOutput.BOTH}:
+    if classifications in {ClassificationOutput.GECS, ClassificationOutput.ALL}:
         columns.extend(_classification_columns(GECS))
-    if classifications in {ClassificationOutput.GICS, ClassificationOutput.BOTH}:
+    if classifications in {ClassificationOutput.GICS, ClassificationOutput.ALL}:
         columns.extend(_classification_columns(GICS))
 
     if provider_details:
@@ -161,13 +177,13 @@ def _create_row(
     for identifier in security.identifiers:
         values[identifier.type.value.upper()] = identifier.value
 
-    if classifications in {ClassificationOutput.GECS, ClassificationOutput.BOTH}:
+    if classifications in {ClassificationOutput.GECS, ClassificationOutput.ALL}:
         _add_classification_values(values, security, GECS)
-    if classifications in {ClassificationOutput.GICS, ClassificationOutput.BOTH}:
+    if classifications in {ClassificationOutput.GICS, ClassificationOutput.ALL}:
         _add_classification_values(values, security, GICS)
 
     if provider_details:
-        _add_provider_values(values, security,)
+        _add_provider_values(values, security)
 
     return [
         values.get(column)

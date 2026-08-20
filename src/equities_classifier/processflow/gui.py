@@ -6,7 +6,7 @@
 # boolean-type arguments
 # ruff: noqa: FBT001, FBT002
 # others
-# ruff: noqa: N813, PLR6201, RUF105
+# ruff: noqa: N813, PLR6201, RUF050, RUF105
 #
 # fmt: off
 
@@ -16,7 +16,11 @@ from pathlib import Path
 import FreeSimpleGUI as sg
 
 from equities_classifier.processflow.input import read_identifiers
-from equities_classifier.processflow.output import ClassificationOutput, write_excel
+from equities_classifier.processflow.output import (
+    ClassificationOutput,
+    get_classification_output,
+    write_excel,
+)
 from equities_classifier.processflow.processflow import ProcessFlow
 
 
@@ -33,38 +37,38 @@ def run_gui() -> None:
             ),
         ],
         [
-            sg.Text("Input-Datei:", size=(14, 1)),
+            sg.Text("Input file:", size=(14, 1)),
             sg.Input(
                 key="-INPUT-",
                 expand_x=True,
             ),
             sg.FileBrowse(
-                "Auswählen ...",
+                "Select ...",
                 target="-INPUT-",
                 file_types=(
-                    ("Excel-Dateien", "*.xlsx"),
-                    ("Alle Dateien", "*.*"),
+                    ("Excel files", "*.xlsx"),
+                    ("All files", "*.*"),
                 ),
             ),
         ],
         [
-            sg.Text("Ausgabedatei:", size=(14, 1)),
+            sg.Text("Output file:", size=(14, 1)),
             sg.Input(
                 key="-OUTPUT-",
                 expand_x=True,
             ),
             sg.FileSaveAs(
-                "Auswählen ...",
+                "Select ...",
                 target="-OUTPUT-",
                 file_types=(
-                    ("Excel-Dateien", "*.xlsx"),
+                    ("Excel files", "*.xlsx"),
                 ),
                 default_extension=".xlsx",
             ),
         ],
         [
             sg.Frame(
-                "Klassifikation",
+                "Classification",
                 [
                     [
                         sg.Checkbox(
@@ -81,11 +85,11 @@ def run_gui() -> None:
         ],
         [
             sg.Frame(
-                "Zusätzliche Ausgabe",
+                "Additional output",
                 [
                     [
                         sg.Checkbox(
-                            "Provider-Details",
+                            "Detailed provider information",
                             key="-PROVIDER-",
                         ),
                     ],
@@ -100,7 +104,7 @@ def run_gui() -> None:
                 bind_return_key=True,
             ),
             sg.Button(
-                "Abbrechen",
+                "Cancel",
                 key="-CANCEL-",
             ),
         ],
@@ -128,14 +132,14 @@ def _event_loop(
 
     while True:
         event, values = window.read()
-        if event in (sg.WIN_CLOSED, "-CANCEL-"):
+        if event in {sg.WIN_CLOSED, "-CANCEL-"}:
             return
         if event == "-START-":
             try:
                 _run_process(window, values)
             except Exception as exc:
                 sg.popup_error(
-                    "Die Verarbeitung konnte nicht durchgeführt werden.",
+                    "Processing not successful.",
                     str(exc),
                     title="Equities Classifier"
                 )
@@ -149,63 +153,39 @@ def _run_process(
 
     input_file = _get_path(values, "-INPUT-")
     if input_file is None:
-        sg.popup_error("Bitte eine Input-Datei auswählen.", title="Equities Classifier")
+        sg.popup_error("No input file specified.", title="Equities Classifier")
         return
 
     output_file = _get_path(values, "-OUTPUT-")
     if output_file is None:
-        sg.popup_error("Bitte eine Ausgabedatei auswählen.", title="Equities Classifier")
+        sg.popup_error("No output file specified..", title="Equities Classifier")
         return
 
-    classification_output = _get_classification_output(values)
+    classification_output = get_classification_output(bool(values.get("-GECS-")), bool(values.get("-GICS-")))
     provider_details = bool(values.get("-PROVIDER-"))
-    if (
-        classification_output is ClassificationOutput.NONE
-        and not provider_details
-    ):
-        sg.popup_error("Bitte mindestens eine Ausgabe auswählen.", title="Equities Classifier")
+    if (classification_output is ClassificationOutput.NONE and not provider_details):
+        sg.popup_error("No output specified.", title="Equities Classifier")
         return
 
-    window["-STATUS-"].update(
-        "Lese Input-Datei ..."
-    )
+    window["-STATUS-"].update("Specifiy and read input file ...")
     window.refresh()
     identifiers = read_identifiers(input_file)
 
-    window["-STATUS-"].update(f"{len(identifiers)} Identifier gelesen. " "Starte Verarbeitung ...")
+    window["-STATUS-"].update(f"{len(identifiers)} identifiers read from input file. Processing ...")
     window.refresh()
     processflow = ProcessFlow()
     securities = processflow.run(identifiers)
 
-    window["-STATUS-"].update(f"{len(securities)} Securities erzeugt. " "Schreibe Ausgabe ...")
+    window["-STATUS-"].update(f"Data for {len(securities)} input found an processed. " "Write output file ...")
     window.refresh()
     write_excel(securities, output_file, classifications=classification_output, provider_details=provider_details)
 
-    window["-STATUS-"].update(f"Fertig: {output_file}")
+    window["-STATUS-"].update(f"Generated output file is: {output_file}")
 
     sg.popup_ok(
-        f"Verarbeitung abgeschlossen.\n\n"
-        f"{len(securities)} Securities geschrieben.",
+        f"Processing finished.\n\nData for {len(securities)} written to file.",
         title="Equities Classifier",
     )
-
-
-def _get_classification_output(
-    values: dict[str, object],
-) -> ClassificationOutput:
-    """Return selected classification output."""
-
-    gecs = bool(values.get("-GECS-"))
-    gics = bool(values.get("-GICS-"))
-
-    if gecs and gics:
-        return ClassificationOutput.BOTH
-    if gecs:
-        return ClassificationOutput.GECS
-    if gics:
-        return ClassificationOutput.GICS
-
-    return ClassificationOutput.NONE
 
 
 def _get_path(
@@ -223,3 +203,8 @@ def _get_path(
         return None
 
     return Path(value)
+
+
+if __name__ == "__main__":
+
+    pass
