@@ -1,6 +1,5 @@
 """Client for Morningstar."""
 
-
 # ruff and mypy per file settings
 #
 # empty lines
@@ -8,7 +7,7 @@
 # boolean-type arguments
 # ruff: noqa: FBT001, FBT002
 # others
-# ruff: noqa: E501, PLR1702, PLR6301, RUF050, RUF105
+# ruff: noqa: E501, N803, N806, PLR1702, PLR6301, RUF050, RUF105
 #
 # disable mypy errors
 # mypy: disable-error-code = "arg-type, no-any-return"
@@ -73,6 +72,8 @@ class MorningstarClient:
 
         ("fields", "exchangeCountry", "value"): "exchange_country",
         ("fields", "exchangeCountry", "displayAs"): "exchange_country_name",
+
+        ("fields", "baseCurrency", "value"): None,
 
         ("fields", "marketCap", "value"): None,
         ("fields", "marketCap", "properties"): None,
@@ -150,6 +151,7 @@ class MorningstarClient:
         self,
         timeout: float = 30.0,
         seleniumwrapper: object | None = None,
+        clean_nonUS_ticker: bool = True,
         test_wo_browser: bool = False,
     ) -> None:
         """Initialize Morningstar client."""
@@ -190,6 +192,8 @@ class MorningstarClient:
         self._access_token: str | None = None
         self._access_token_expires: datetime.date | None = None
 
+        self._clean_nonUS_ticker = clean_nonUS_ticker
+
     def __enter__(self) -> Self:
         return self
 
@@ -207,14 +211,14 @@ class MorningstarClient:
     # public API
 
     @classmethod
-    def supports_identifier_type(cls, identifier_type: SecurityIdentifierType,) -> bool:
+    def supports_identifier_type(cls, identifier_type: SecurityIdentifierType, ) -> bool:
         """Check if identifier type supported"""
         return identifier_type in cls._MORNINGSTAR_IDENTIFIER_TYPES
 
     def read_provider_base_data(
         self,
         source_identifiers: Sequence[SecurityIdentifier],
-        raise_error: bool = True
+        raise_error: bool = False
     ) -> list[MorningstarRecord]:
         """Read base data for one or more identifiers from Morningstar."""
 
@@ -240,11 +244,11 @@ class MorningstarClient:
                 if (
                        source_identifier.type == SecurityIdentifierType.ISIN
                        and result.isin == source_identifier.value
-                )
-                or (
-                   source_identifier.type == SecurityIdentifierType.TICKER
-                   and result.ticker == source_identifier.value
-               )
+                   )
+                   or (
+                       source_identifier.type == SecurityIdentifierType.TICKER
+                       and result.ticker == source_identifier.value
+                   )
             ]
 
             if search_results is not None:
@@ -257,13 +261,14 @@ class MorningstarClient:
     def read_provider_profile_data(
         self,
         records: list[MorningstarRecord],
-        raise_error: bool = True
+        raise_error: bool = False
     ) -> list[MorningstarRecord]:
         """Read profile data from Morningstar."""
 
         for record in records:
-
-            profile_data = self._execute_profile_request(security_id=record.company_id)
+            profile_data = self._execute_profile_request(
+                security_id=record.company_id if record.company_id else record.performance_id[0]
+            )
             record = self._parse_profile_to_record(profile_data, record, raise_error)
 
         return records
@@ -328,7 +333,7 @@ class MorningstarClient:
         self,
         source_identifier: SecurityIdentifier,
         response_data: dict[str, Any],
-        raise_error: bool = True
+        raise_error: bool = False
     ) -> list[MorningstarSearchResult]:
         """Parse Morningstar search response."""
 
@@ -347,13 +352,13 @@ class MorningstarClient:
         if not isinstance(results, list):
             ClientHelper.other_error_with_message(
                 DataSourceID.MORNINGSTAR,
-                 f"{DataSourceID.MORNINGSTAR} profile 'results' is not list (of dictionaries).",
-                 MorningstarResponseError if raise_error else None,
+                f"{DataSourceID.MORNINGSTAR} profile 'results' is not list (of dictionaries).",
+                MorningstarResponseError if raise_error else None,
             )
         if len(results) == 0:
             ClientHelper.other_error_with_message(
                 DataSourceID.MORNINGSTAR,
-                f"{DataSourceID.MORNINGSTAR} search result response for identifier ({source_identifier.type}, {source_identifier.value}) does not contain any search result.",
+                f"{DataSourceID.MORNINGSTAR} search result response for identifier {source_identifier.type} '{source_identifier.value}' does not contain any search result.",
             )
         if not results:
             return []
@@ -361,6 +366,9 @@ class MorningstarClient:
         search_results: list[MorningstarSearchResult] = []
 
         for item in results:
+
+            if "fundID" in item["meta"]:
+                continue
 
             missing = (
                 self.leaf_paths(item, exclude_leaves=["score", "sortAs"]) -
@@ -391,14 +399,13 @@ class MorningstarClient:
 
             search_results.append(result)
 
-            count = response_data["count"] - len(response_data) + 1
-            if count != len(search_results):
-                ClientHelper.search_result_counter_issue(
-                    DataSourceID.MORNINGSTAR,
-                    source_identifier,
-                    count_provider=count,
-                    count_found=len(response_data) + 1,
-                )
+        if response_data["count"] != len(response_data["results"]):
+            ClientHelper.search_result_counter_issue(
+                DataSourceID.MORNINGSTAR,
+                source_identifier,
+                count_provider=response_data["count"],
+                count_found=len(response_data["results"]),
+            )
 
         return search_results
 
@@ -413,20 +420,81 @@ class MorningstarClient:
         if not search_results:
             ClientHelper.other_error_with_message(
                 DataSourceID.MORNINGSTAR,
-                f"No {DataSourceID.MORNINGSTAR} search result available for identifier ({source_identifier.type}, {source_identifier.value}).",
+                f"No {DataSourceID.MORNINGSTAR} search result available for identifier "
+                f"{source_identifier.type} '{source_identifier.value}'.",
             )
             return None
 
         record = MorningstarRecord()
 
-        counter_ticker = Counter(search_result.ticker for search_result in search_results)
-        if len({r.company_id for r in search_results}) != 1:
+        # clean non-stock search result entries
+        for search_result in search_results:
+            if search_result.universe not in {"EQ", "FC"}:
+                ClientHelper.other_error_with_message(
+                    DataSourceID.MORNINGSTAR,
+                    f"{DataSourceID.MORNINGSTAR} search result contained non-equity result '{search_result.name}' "
+                    f"for identifier {source_identifier.type} '{source_identifier.value}'. Deleted.",
+                )
+        search_results = [search_result for search_result in search_results if search_result.universe in {"EQ", "FC"}]
+
+        # analyse search results - if ticker, valid ticker should preferably have a US stock registration
+        if self._clean_nonUS_ticker and source_identifier.type == SecurityIdentifierType.TICKER:
+
+            selected_name = None
+            counter_name = Counter(search_result.name for search_result in search_results)
+            if len(counter_name.most_common()) > 1:
+                for counted_name in counter_name.most_common():
+                    for search_result in search_results:
+                        if search_result.name == counted_name[0] and search_result.exchange_country == "USA":
+                            selected_name = search_result.name
+                            ClientHelper.other_error_with_message(
+                                DataSourceID.MORNINGSTAR,
+                                f"On {DataSourceID.MORNINGSTAR} '{selected_name}' is most mentioned security name "
+                                f"with US registration for identifier {source_identifier.type} '{source_identifier.value}'."
+                            )
+                            break
+
+            if selected_name:
+                for search_result in search_results:
+                    if search_result.name != selected_name:
+                        ClientHelper.other_error_with_message(
+                            DataSourceID.MORNINGSTAR,
+                            f"{DataSourceID.MORNINGSTAR} search result contained non-US registered result "
+                            f"'{search_result.name}' for identifier type {source_identifier.type} '{source_identifier.value}'. Deleted.",
+                        )
+                search_results = [
+                    search_result
+                    for search_result in search_results
+                    if search_result.name == selected_name
+                ]
+
+        if not search_results:
             ClientHelper.other_error_with_message(
                 DataSourceID.MORNINGSTAR,
-                f"{DataSourceID.MORNINGSTAR} CompanyID is not unique for ({source_identifier.type}, {source_identifier.value}).",
+                f"{DataSourceID.MORNINGSTAR} search result for identifier "
+                        f"{source_identifier.type} '{source_identifier.value}' empty after cleaning.",
+            )
+            return None
+
+        # analyse search results -  ticker might not be unique if search for ISIN
+        counter_ticker = Counter(search_result.ticker for search_result in search_results)
+
+        # analyse search results - companyID not present or not unique
+        counter_companyID = len({search_result.company_id for search_result in search_results})
+        if counter_companyID == 0:
+            ClientHelper.other_error_with_message(
+                DataSourceID.MORNINGSTAR,
+                f"{DataSourceID.MORNINGSTAR} CompanyID not provided for "
+                f"{source_identifier.type} '{source_identifier.value}'.",
+            )
+        elif counter_companyID > 1:
+            ClientHelper.other_error_with_message(
+                DataSourceID.MORNINGSTAR,
+                f"{DataSourceID.MORNINGSTAR} CompanyID is not unique for "
+                f"{source_identifier.type} '{source_identifier.value}'.",
             )
 
-        # Copy scalar fields from first search result. Consider differing tickers in case of ISIN search
+        # Copy scalar fields from first search result after cleaning. Consider differing tickers in case of ISIN search
         first = search_results[0]
         record.name = first.name or ""
         record.ticker = counter_ticker.most_common(1)[0][0]
@@ -457,7 +525,7 @@ class MorningstarClient:
                             DataSourceID.MORNINGSTAR,
                             field.name,
                             getattr(search_result, field.name, None),
-                            "n. a.",
+                            f"copy from {type(search_result).__name__} to {type(record).__name__}",
                         )
                         pass
                 else:
