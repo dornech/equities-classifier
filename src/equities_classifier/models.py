@@ -61,9 +61,33 @@ class SecurityIdentifier:
 
     type: SecurityIdentifierType
     value: str
+    value_cleaned: str | None = field(init=False)
+    country: str | None = field(init=False)
 
     def __post_init__(self) -> None:
+        """Strip identifier value and for Ticker split into value_cleaned and country provided as postfix.
+         NOTE: derived attributes where not marked with a leading _ to allow transparent access as for orignal value.
+         """
+
+        # strip value
         object.__setattr__(self, "value", self.value.strip())
+
+        # allow country suffix for ticker
+        if self.type != SecurityIdentifierType.TICKER or "." not in self.value:
+            object.__setattr__(self, "value_cleaned", self.value)
+            object.__setattr__(self, "country", None)
+        else:
+            value_cleaned, country = self.value.split(".")
+            object.__setattr__(self, "value_cleaned", value_cleaned)
+            object.__setattr__(self, "country", country)
+
+    def get_value_cleaned(self):
+        """Getter function for value_cleaned"""
+        return self.value_cleaned
+
+    def get_country(self):
+        """Getter functkion for country."""
+        return self.country
 
 
 @dataclass(slots=True, kw_only=True)
@@ -95,6 +119,24 @@ class SecurityIdentifierIdentifiable:
 
         identifier = self.identifier(identifier_type)
         return identifier.value if identifier is not None else None
+
+    def identifier_value_cleaned(
+        self,
+        identifier_type: SecurityIdentifierType,
+    ) -> str | None:
+        """Return cleaned value of an identifier of a specific type."""
+
+        identifier = self.identifier(identifier_type)
+        return identifier.value_cleaned if identifier is not None else None
+
+    def identifier_country(
+        self,
+        identifier_type: SecurityIdentifierType,
+    ) -> str | None:
+        """Return country of an identifier of a type TICKER."""
+
+        identifier = self.identifier(identifier_type)
+        return identifier.country if identifier is not None else None
 
     def has_identifier(
         self,

@@ -28,6 +28,9 @@ class MotleyFoolSearchResult:
 class MotleyFoolRecord(SecurityProviderRecord):
     """Internal representation of a single Motley-Fool mapping result."""
 
+    # identifiers, identifier inherited form SecurityIdentifierIdentifiable via SecurityProviderRecord
+    # name, ticker inherited from SecurityProviderRecord !
+
     datasource: ClassVar[DataSourceID] = DataSourceID.MOTLEYFOOL
 
     exchange: str | None = None

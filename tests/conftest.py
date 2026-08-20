@@ -27,3 +27,35 @@ def apple_ticker() -> SecurityIdentifier:
         type=SecurityIdentifierType.TICKER,
         value="AAPL",
     )
+
+
+@pytest.fixture(scope="session")
+def abt_ticker() -> SecurityIdentifier:
+    return SecurityIdentifier(
+        type=SecurityIdentifierType.TICKER,
+        value="ABT",
+    )
+
+
+@pytest.fixture(scope="session")
+def abt_ticker_country() -> SecurityIdentifier:
+    return SecurityIdentifier(
+        type=SecurityIdentifierType.TICKER,
+        value="ABT.US",
+    )
+
+
+@pytest.fixture(scope="session")
+def deere_ticker() -> SecurityIdentifier:
+    return SecurityIdentifier(
+        type=SecurityIdentifierType.TICKER,
+        value="DE",
+    )
+
+
+@pytest.fixture(scope="session")
+def deere_ticker_country() -> SecurityIdentifier:
+    return SecurityIdentifier(
+        type=SecurityIdentifierType.TICKER,
+        value="DE.US",
+    )

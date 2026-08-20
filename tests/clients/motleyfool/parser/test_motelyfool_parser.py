@@ -11,12 +11,9 @@
 
 import pytest
 
-from equities_classifier.clients.motleyfool.client import (
-    MotleyFoolClient,
-    MotleyFoolResponseError,
-)
 from equities_classifier.enums import SecurityIdentifierType
 from equities_classifier.models import SecurityIdentifier
+from equities_classifier.clients.motleyfool.client import (MotleyFoolClient, MotleyFoolResponseError,)
 
 from pathlib import Path
 from tests.testhelpers import load_text
@@ -36,7 +33,7 @@ def test_parse_search_results_ok(
 ) -> None:
 
     response = load_text(DATA_DIR, "search_response_aapl.txt")
-    results = client_httpx._parse_search_results(apple_ticker, response,)
+    results = client_httpx._parse_search_results(apple_ticker, response)
 
     assert len(results) == 10
 
@@ -78,6 +75,45 @@ def test_select_search_result(
 
     assert result.ticker == "AAPL"
     assert result.exchange == "NASDAQ"
+
+
+def test_select_search_result_country(
+    client_httpx: MotleyFoolClient,
+    deere_ticker_country: SecurityIdentifier,
+) -> None:
+
+    response_data = client_httpx._execute_search_request(deere_ticker_country)
+    results = client_httpx._parse_search_results(
+        deere_ticker_country,
+        response_data,
+        raise_error=True,
+    )
+    result = client_httpx._select_search_result(
+        deere_ticker_country,
+        results,
+        raise_error=True,
+    )
+
+    assert result.ticker == "DE"
+
+
+def test_select_search_result_not_unique(
+    client_httpx: MotleyFoolClient,
+    deere_ticker: SecurityIdentifier,
+) -> None:
+
+    with pytest.raises(MotleyFoolResponseError):
+        response_data = client_httpx._execute_search_request(deere_ticker)
+        results = client_httpx._parse_search_results(
+            deere_ticker,
+            response_data,
+            raise_error=True,
+        )
+        client_httpx._select_search_result(
+            deere_ticker,
+            results,
+            raise_error=True,
+        )
 
 
 def test_select_search_result_not_found(

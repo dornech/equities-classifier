@@ -34,7 +34,23 @@ def test_security_is_identifiable() -> None:
     )
 
     assert security.identifier(SecurityIdentifierType.ISIN) is not None
+    assert security.identifier(SecurityIdentifierType.ISIN).value == "US0378331005"
+    assert security.identifier(SecurityIdentifierType.ISIN).value_cleaned == "US0378331005"
     assert security.has_identifier(SecurityIdentifierType.ISIN)
+
+
+def test_security_cleaned_ticker() -> None:
+
+    securityidentifier = SecurityIdentifier(type=SecurityIdentifierType.TICKER, value="APPL.US")
+    security = Security(
+        name="Apple Inc.",
+        ticker="AAPL",
+        identifiers=[securityidentifier,]
+    )
+
+    assert security.has_identifier(SecurityIdentifierType.TICKER)
+    assert security.identifier(SecurityIdentifierType.TICKER).value_cleaned == "APPL"
+    assert security.identifier(SecurityIdentifierType.TICKER).value == "APPL.US"
 
 
 def test_identifier_lookup() -> None:
@@ -54,6 +70,8 @@ def test_identifier_lookup() -> None:
     assert security.identifier(SecurityIdentifierType.ISIN).value == "US0378331005"
     assert security.identifier_value(SecurityIdentifierType.ISIN) == "US0378331005"
     assert security.identifier(SecurityIdentifierType.SHARE_CLASS_FIGI).value == "BBG000B9XRY4"
+    assert security.identifier(SecurityIdentifierType.SHARE_CLASS_FIGI).value_cleaned == "BBG000B9XRY4"
+    assert security.identifier(SecurityIdentifierType.SHARE_CLASS_FIGI).country is None
     assert not security.has_identifier(SecurityIdentifierType.WKN)
 
 

@@ -7,7 +7,7 @@
 # boolean-type arguments
 # ruff: noqa: FBT001, FBT002
 # others
-# ruff: noqa: E501, N803, N806, PLR1702, PLR6301, RUF050, RUF105
+# ruff: noqa: E501, N803, N806, PLR1702, PLR6301, RUF050, RUF105, S110, SIM102
 #
 # disable mypy errors
 # mypy: disable-error-code = "arg-type, no-any-return"
@@ -29,6 +29,7 @@ from selenium.webdriver.common.by import By
 from urllib.parse import urlencode
 import json
 import datetime
+from iso3166 import countries
 
 from equities_classifier.enums import DataSourceID, SecurityIdentifierType
 from equities_classifier.models import SecurityIdentifier
@@ -247,14 +248,17 @@ class MorningstarClient:
                    )
                    or (
                        source_identifier.type == SecurityIdentifierType.TICKER
-                       and result.ticker == source_identifier.value
+                       and result.ticker == source_identifier.value_cleaned
                    )
             ]
 
             if search_results is not None:
-                record = self._parse_record(source_identifier, search_results, raise_error)
-                if record:
-                    records.append(record)
+                self._parse_records(
+                    source_identifier,
+                    search_results,
+                    records,
+                    raise_error
+                )
 
         return records
 
@@ -316,7 +320,7 @@ class MorningstarClient:
         query = (
             f'(isin ~= "{source_identifier.value}")'
             if source_identifier.type == SecurityIdentifierType.ISIN
-            else f'(ticker ~= "{source_identifier.value}")'
+            else f'(ticker ~= "{source_identifier.value_cleaned}")'
         )
         params = {
             "fields": self._SEARCH_FIELDS,
@@ -355,6 +359,7 @@ class MorningstarClient:
                 f"{DataSourceID.MORNINGSTAR} profile 'results' is not list (of dictionaries).",
                 MorningstarResponseError if raise_error else None,
             )
+            return []
         if len(results) == 0:
             ClientHelper.other_error_with_message(
                 DataSourceID.MORNINGSTAR,
@@ -409,12 +414,13 @@ class MorningstarClient:
 
         return search_results
 
-    def _parse_record(
+    def _parse_records(
         self,
         source_identifier: SecurityIdentifier,
         search_results: Sequence[MorningstarSearchResult],
+        records: list[MorningstarRecord],
         raise_error: bool = False
-    ) -> MorningstarRecord | None:
+    ) -> list[MorningstarRecord] | None:
         """Parse Morningstar search result and create a MorningstarRecord."""
 
         if not search_results:
@@ -425,9 +431,7 @@ class MorningstarClient:
             )
             return None
 
-        record = MorningstarRecord()
-
-        # clean non-stock search result entries
+        # delete non-stock search result entries
         for search_result in search_results:
             if search_result.universe not in {"EQ", "FC"}:
                 ClientHelper.other_error_with_message(
@@ -437,114 +441,157 @@ class MorningstarClient:
                 )
         search_results = [search_result for search_result in search_results if search_result.universe in {"EQ", "FC"}]
 
-        # analyse search results - if ticker, valid ticker should preferably have a US stock registration
-        if self._clean_nonUS_ticker and source_identifier.type == SecurityIdentifierType.TICKER:
+        # analyse search results - if ticker, check for country, otherwise valid ticker should preferably have
+        # a US stock exchange registration
+        if source_identifier.type == SecurityIdentifierType.TICKER:
 
-            selected_name = None
-            counter_name = Counter(search_result.name for search_result in search_results)
-            if len(counter_name.most_common()) > 1:
-                for counted_name in counter_name.most_common():
+            if source_identifier.country:
+
+                try:
+                    country_alpha2 = countries.get(source_identifier.country).alpha2
+                    country_alpha3 = countries.get(source_identifier.country).alpha3
+                    search_results = [
+                        search_result
+                        for search_result in search_results
+                        if search_result.exchange_country in {country_alpha2, country_alpha3}
+                    ]
+                except Exception:
+                    pass
+
+            elif self._clean_nonUS_ticker:
+
+                selected_name = None
+                counter_name = Counter(search_result.name for search_result in search_results)
+                if len(counter_name.most_common()) > 1:
+                    for counted_name in counter_name.most_common():
+                        for search_result in search_results:
+                            if search_result.name == counted_name[0] and search_result.exchange_country == "USA":
+                                selected_name = search_result.name
+                                ClientHelper.other_error_with_message(
+                                    DataSourceID.MORNINGSTAR,
+                                    f"On {DataSourceID.MORNINGSTAR} '{selected_name}' is most mentioned security name "
+                                    f"with US registration for identifier {source_identifier.type} '{source_identifier.value}'."
+                                )
+                                break
+
+                if selected_name:
                     for search_result in search_results:
-                        if search_result.name == counted_name[0] and search_result.exchange_country == "USA":
-                            selected_name = search_result.name
+                        if search_result.name != selected_name:
                             ClientHelper.other_error_with_message(
                                 DataSourceID.MORNINGSTAR,
-                                f"On {DataSourceID.MORNINGSTAR} '{selected_name}' is most mentioned security name "
-                                f"with US registration for identifier {source_identifier.type} '{source_identifier.value}'."
+                                f"{DataSourceID.MORNINGSTAR} search result contained non-US registered result "
+                                f"'{search_result.name}' for identifier type {source_identifier.type} '{source_identifier.value}'. Deleted.",
                             )
-                            break
+                    search_results = [
+                        search_result
+                        for search_result in search_results
+                        if search_result.name == selected_name
+                    ]
 
-            if selected_name:
-                for search_result in search_results:
-                    if search_result.name != selected_name:
-                        ClientHelper.other_error_with_message(
-                            DataSourceID.MORNINGSTAR,
-                            f"{DataSourceID.MORNINGSTAR} search result contained non-US registered result "
-                            f"'{search_result.name}' for identifier type {source_identifier.type} '{source_identifier.value}'. Deleted.",
-                        )
-                search_results = [
-                    search_result
-                    for search_result in search_results
-                    if search_result.name == selected_name
-                ]
-
+        # cleaned everything :-(
         if not search_results:
             ClientHelper.other_error_with_message(
                 DataSourceID.MORNINGSTAR,
                 f"{DataSourceID.MORNINGSTAR} search result for identifier "
                         f"{source_identifier.type} '{source_identifier.value}' empty after cleaning.",
             )
-            return None
-
-        # analyse search results -  ticker might not be unique if search for ISIN
-        counter_ticker = Counter(search_result.ticker for search_result in search_results)
-
-        # analyse search results - companyID not present or not unique
-        counter_companyID = len({search_result.company_id for search_result in search_results})
-        if counter_companyID == 0:
-            ClientHelper.other_error_with_message(
-                DataSourceID.MORNINGSTAR,
-                f"{DataSourceID.MORNINGSTAR} CompanyID not provided for "
-                f"{source_identifier.type} '{source_identifier.value}'.",
-            )
-        elif counter_companyID > 1:
-            ClientHelper.other_error_with_message(
-                DataSourceID.MORNINGSTAR,
-                f"{DataSourceID.MORNINGSTAR} CompanyID is not unique for "
-                f"{source_identifier.type} '{source_identifier.value}'.",
-            )
-
-        # Copy scalar fields from first search result after cleaning. Consider differing tickers in case of ISIN search
-        first = search_results[0]
-        record.name = first.name or ""
-        record.ticker = counter_ticker.most_common(1)[0][0]
-        record.company_id = first.company_id
-        record.universe = first.universe
+            return []
 
         for search_result in search_results:
 
-            # copy other provider fields
-            for field in fields(search_result):
-                if field.name != "ticker":
-                    if hasattr(record, field.name):
-                        target = getattr(record, field.name)
-                        if isinstance(target, list):
-                            # Preserve positional correspondence between all listing-specific attributes.
-                            value = getattr(search_result, field.name, None)
-                            target.append(value)
-                        elif getattr(search_result, field.name) != getattr(record, field.name):
-                            message = (
-                                f"Inconsistency between Morningstar search results and modelling assumption: "
-                                f"field '{field.name}' differs between listings."
-                            )
-                            raise MorningstarResponseError(message)
-                    elif field.name not in {"source_identifier", "isin", "short_name"}:
-                        # differences between MorningstarSearchResult and MorningstarRecord are intended
-                        # -> probably delete error caller
-                        ClientHelper.missing_record_attribute(
-                            DataSourceID.MORNINGSTAR,
-                            field.name,
-                            getattr(search_result, field.name, None),
-                            f"copy from {type(search_result).__name__} to {type(record).__name__}",
-                        )
-                        pass
-                else:
-                    record.ticker_exchange.append(search_result.ticker)
-
-        # Create canonical security identifiers (including source identifier).
-        identifiers: list[SecurityIdentifier] = [source_identifier]
-        for identifierfield_name, identifier_type in self._MORNINGSTAR_IDENTIFIER_TYPES.items():
-            value = getattr(search_result, identifierfield_name)
-            if value and identifier_type != source_identifier.type:
-                identifiers.append(
-                    SecurityIdentifier(
-                        type=identifier_type,
-                        value=value,
-                    )
+            # Find existing record with ISIN (assumed standard field by Morningstar!) otherwise new record
+            if search_result.isin:
+                record = next(
+                    (existing_record for existing_record in records if existing_record.isin == search_result.isin),
+                    None,
                 )
-        record.identifiers = identifiers
+            else:
+                record = None
 
-        return record
+            if not record:
+
+                record = MorningstarRecord()
+
+                # Determine ticker
+                if source_identifier.type == SecurityIdentifierType.ISIN:
+                    try:
+                        # Take ticker on exchange in country of registration form ISIN
+                        country_alpha2 = countries.get(source_identifier.value[:2]).alpha2
+                        country_alpha3 = countries.get(source_identifier.value[:2]).alpha3
+                        counter_ticker = Counter(
+                            search_result.ticker
+                            for search_result in search_results
+                            if search_result.exchange_country in {country_alpha2, country_alpha3}
+                        )
+                    except Exception:
+                        # Take ticker on exchange mentioned most
+                        counter_ticker = Counter(search_result.ticker for search_result in search_results)
+                    if len(counter_ticker) > 0:
+                        record.ticker = counter_ticker.most_common(1)[0][0]
+                    else:
+                        record.ticker = search_result.ticker
+                elif source_identifier.type == SecurityIdentifierType.TICKER:
+                    record.ticker = source_identifier.value_cleaned
+
+                # Copy provider fields
+                for field in fields(search_result):
+                    if field.name != "ticker":
+                        value = getattr(search_result, field.name, None)
+                        if hasattr(record, field.name):
+                            if isinstance(getattr(record, field.name), list):
+                                # Preserve positional correspondence between all listing-specific attributes.
+                                getattr(record, field.name).append(value)
+                            else:
+                                if getattr(record, field.name) and getattr(record, field.name) != value :
+                                    ClientHelper.other_error_with_message(
+                                        DataSourceID.MORNINGSTAR,
+                                        f"Inconsistency between Morningstar search results and modelling"
+                                        f"assumption: field '{field.name}' differs between listings. Current "
+                                        f"value '{getattr(record, field.name)}', new '{value}'."
+                                    )
+                                setattr(record, field.name, value)
+                        elif field.name not in {"source_identifier", "isin", "short_name"}:
+                            # differences between MorningstarSearchResult and MorningstarRecord are intended
+                            # -> probably delete error caller
+                            ClientHelper.missing_record_attribute(
+                                DataSourceID.MORNINGSTAR,
+                                field.name,
+                                getattr(search_result, field.name, None),
+                                f"copy from {type(search_result).__name__} to {type(record).__name__}",
+                            )
+                record.ticker_exchange.append(getattr(search_result, "ticker", None))
+
+                # Create canonical security identifiers (including source identifier).
+                identifiers: list[SecurityIdentifier] = [source_identifier]
+                for identifierfield_name, identifier_type in self._MORNINGSTAR_IDENTIFIER_TYPES.items():
+                    value = getattr(record, identifierfield_name)
+                    if value and identifier_type != source_identifier.type:
+                        identifiers.append(
+                            SecurityIdentifier(
+                                type=identifier_type,
+                                value=value,
+                            )
+                        )
+                record.identifiers = identifiers
+
+                records.append(record)
+
+                if not record.company_id:
+                    ClientHelper.other_error_with_message(
+                        DataSourceID.MORNINGSTAR,
+                        f"{DataSourceID.MORNINGSTAR} CompanyID not provided for "
+                        f"{source_identifier.type} '{source_identifier.value}'.",
+                    )
+
+            else:
+
+                # only add new values for existing list fields for entry with same ISIN
+                for field in fields(search_result):
+                    value = getattr(search_result, field.name, None)
+                    if field.name != "ticker":
+                        if hasattr(record, field.name) and isinstance(getattr(record, field.name), list):
+                            getattr(record, field.name).append(value)
+                record.ticker_exchange.append(getattr(search_result, "ticker", None))
 
     def _access_token_expired(self) -> bool:
         """Return token expiration check."""

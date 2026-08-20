@@ -12,6 +12,7 @@
 import pytest
 
 from equities_classifier.models import SecurityIdentifier
+from equities_classifier.clients.morningstar.models import MorningstarRecord
 from equities_classifier.clients.morningstar.client import MorningstarClient
 
 
@@ -63,15 +64,17 @@ def test_execute_profile_request(client: MorningstarClient, apple_isin: Security
         apple_isin,
         search_response,
     )
-    record = client._parse_record(
+    records: list[MorningstarRecord] = []
+    client._parse_records(
         source_identifier=apple_isin,
         search_results=search_results,
+        records=records
     )
 
     profile = client._execute_profile_request(
-        security_id=record.company_id,
+        security_id=records[0].company_id,
     )
 
     assert isinstance(profile, dict)
     assert "sections" in profile
-    assert profile["performanceId"] == record.company_id
+    assert profile["performanceId"] == records[0].company_id

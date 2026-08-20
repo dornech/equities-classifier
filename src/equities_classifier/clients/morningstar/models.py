@@ -42,7 +42,13 @@ class MorningstarSearchResult:
 class MorningstarRecord(SecurityProviderRecord):
     """Internal representation of a Morningstar search result and classification record."""
 
+    # identifiers, identifier inherited form SecurityIdentifierIdentifiable via SecurityProviderRecord
+    # name, ticker inherited from SecurityProviderRecord !
+
     datasource: ClassVar[DataSourceID] = DataSourceID.MORNINGSTAR
+
+    short_name: str | None = None
+    isin: str | None = None
 
     company_id: str | None = None
     business_description: str | None = None

@@ -18,6 +18,9 @@ from equities_classifier.models import SecurityProviderRecord
 class OpenFIGIRecord(SecurityProviderRecord):
     """Internal representation of a single OpenFIGI mapping result."""
 
+    # identifiers, identifier inherited form SecurityIdentifierIdentifiable via SecurityProviderRecord
+    # name, ticker inherited from SecurityProviderRecord !
+
     datasource: ClassVar[DataSourceID] = DataSourceID.OPENFIGI
 
     figi: list[str] = field(default_factory=list)

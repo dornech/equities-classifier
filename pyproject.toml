@@ -40,6 +40,7 @@ dependencies = [
     "py-gics-updated",
     "httpx",
     "immutabledict",
+    "iso3166",
     # "undetected-chromedriver",
     # "undetected @ git+https://github.com/dornech/undetected.git",
     "undetected-updated",
@@ -50,13 +51,13 @@ dependencies = [
     "utils-mystuff",
     "waitless",
 ]
-
 dynamic = ["version"]
 
 [project.optional-dependencies]
 # n. a.
 
 [project.scripts]
+# n. a.
 
 [project.urls]
 # important URLs for this project

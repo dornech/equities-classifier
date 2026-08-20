@@ -158,7 +158,7 @@ class OpenFIGIClient:
         """Remove records without share_class_FIGI if a ISIN-matching record exists."""
 
         identifiers_with_share_class_figi: set[tuple[SecurityIdentifierType, str]] = {
-            (identifier.type, identifier.value)
+            (identifier.type, str(identifier.value_cleaned))
             for record in records
             if record.share_class_figi is not None
             for identifier in record.identifiers
@@ -171,7 +171,7 @@ class OpenFIGIClient:
             if (
                 record.share_class_figi is not None
                 or not any(
-                    (identifier.type, identifier.value)
+                    (identifier.type, identifier.value_cleaned)
                     in identifiers_with_share_class_figi
                     for identifier in record.identifiers
                     if identifier.type == SecurityIdentifierType.ISIN
@@ -212,7 +212,7 @@ class OpenFIGIClient:
         payload = [
             {
                 "idType": self._to_openfigi_identifier_type(identifier.type),
-                "idValue": identifier.value,
+                "idValue": identifier.value_cleaned,
             }
             for identifier in batch
         ]
@@ -334,7 +334,13 @@ class OpenFIGIClient:
                         )
 
                 # Create canonical security identifiers (including source identifier)
-                identifiers: list[SecurityIdentifier] = [source_identifier]
+                # identifiers: list[SecurityIdentifier] = [source_identifier]
+                identifiers: list[SecurityIdentifier] = [
+                    SecurityIdentifier(
+                        type=source_identifier.type,
+                        value=source_identifier.value_cleaned
+                    )
+                ]
                 for identifier_fieldname, identifier_type in self._OPENFIGI_IDENTIFIER_TYPES.items():
                     value = record_data.get(identifier_fieldname)
                     if value and identifier_type != source_identifier.type:

@@ -13,7 +13,8 @@ import pytest
 
 from equities_classifier.enums import SecurityIdentifierType
 from equities_classifier.models import SecurityIdentifier
-from equities_classifier.clients.morningstar.client import MorningstarClient, MorningstarResponseError
+from equities_classifier.clients.morningstar.models import MorningstarRecord
+from equities_classifier.clients.morningstar.client import MorningstarClient
 
 from pathlib import Path
 from tests.testhelpers import load_json
@@ -42,24 +43,13 @@ def test_parse_search_results_ok(client_dummy: MorningstarClient, identifier: Se
     assert results[0].company_id == "0C00000ADA"
 
 
-def test_parse_record_companyid_not_unique(client_dummy: MorningstarClient, identifier: SecurityIdentifier):
-
-    search_result_error_companyid = load_json(DATA_DIR, "search_result_apple_error_companyid.json")
-    results = client_dummy._parse_search_results(identifier, search_result_error_companyid,)
-
-    with pytest.raises(MorningstarResponseError):
-        client_dummy._parse_record(
-            identifier,
-            results,
-            raise_error=True
-        )
-
-
 def test_parse_record_ok(client_dummy: MorningstarClient, identifier: SecurityIdentifier):
 
     search_result = load_json(DATA_DIR, "search_result_apple.json")
     results = client_dummy._parse_search_results(identifier, search_result)
-    record = client_dummy._parse_record(identifier, results)
+    records: list[MorningstarRecord] = []
+    client_dummy._parse_records(identifier, results, records)
+    record = records[0]
 
     assert record.name == "Apple Inc"
     assert record.ticker == "AAPL"
@@ -74,13 +64,14 @@ def test_parse_profile_to_record(client_dummy: MorningstarClient, identifier: Se
 
     search_result = load_json(DATA_DIR, "search_result_apple.json")
     search_results = client_dummy._parse_search_results(identifier, search_result,)
-    record = client_dummy._parse_record(identifier, search_results)
+    records: list[MorningstarRecord] = []
+    client_dummy._parse_records(identifier, search_results, records)
 
     profile = load_json(DATA_DIR, "profile_apple.json")
 
     assert "sections" in profile
 
-    record = client_dummy._parse_profile_to_record(profile, record)
+    record = client_dummy._parse_profile_to_record(profile, records[0])
 
     assert record.sector == "Technology"
     assert record.industry == "Consumer Electronics"

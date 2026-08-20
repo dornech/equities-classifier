@@ -6,7 +6,7 @@
 # boolean-type arguments
 # ruff: noqa: FBT001, FBT002
 # others
-# ruff: noqa: E501, RUF050, RUF105
+# ruff: noqa: E501, RUF050, RUF105, S110
 # disable mypy errors
 # mypy: disable-error-code = "arg-type, index, operator, type-var, union-attr"
 
@@ -18,6 +18,7 @@ from collections.abc import Sequence
 from enum import StrEnum
 from immutabledict import immutabledict
 
+import time
 import json
 import re
 from urllib.parse import urljoin
@@ -28,6 +29,7 @@ from waitless import stabilize, get_diagnostics, StabilizationConfig, Stabilizat
 from waitless.diagnostics import print_report
 from selenium.webdriver.common.by import By
 
+from iso3166 import countries
 from lxml import html
 
 from equities_classifier.clients.clienthelper import ClientHelper
@@ -124,6 +126,7 @@ class MotleyFoolClient:
                 print_report(diagnostics)  # Print detailed report
                 raise e
             self._client.get(self._BASE_URL)
+            time.sleep(5)  # additional wait for cookie popup (required in GitHub Action environment)
             self._client.find_element(By.XPATH, "//button[@id='onetrust-accept-btn-handler']").click()
         else:
             msg = f"MotleyFoolClient mode '{self._mode}' not valid.)"
@@ -182,7 +185,7 @@ class MotleyFoolClient:
     def read_provider_profile_data(
         self,
         source_identifiers: Sequence[SecurityIdentifier],
-        raise_error: bool = True,
+        raise_error: bool = False,
     ) -> list[MotleyFoolRecord]:
         """Read profile data for one or more identifiers from Motley-Fool."""
 
@@ -276,7 +279,7 @@ class MotleyFoolClient:
             method="POST",
             url=self._BASE_URL,
             headers=headers,
-            json_param=[identifier.value],
+            json_param=[identifier.value_cleaned],
         )
 
         return response
@@ -319,12 +322,12 @@ class MotleyFoolClient:
     def _get_search_results(
         self,
         source_identifier: SecurityIdentifier,
-        raise_error: bool = True,
+        raise_error: bool = False,
     ) -> list[MotleyFoolSearchResult]:
 
         self._client.find_element(
             By.XPATH, "//div[./label[@id='company-search-label']]/descendant::input"
-        ).send_keys(source_identifier.value)
+        ).send_keys(source_identifier.value_cleaned)
         htmlitems = self._client.find_elements(
             By.XPATH, "//div[@data-radix-popper-content-wrapper]/descendant::div[@cmdk-group-items]/div[@cmdk-item]"
         )
@@ -347,30 +350,48 @@ class MotleyFoolClient:
     @staticmethod
     def _select_search_result(
         source_identifier: SecurityIdentifier,
-        results: list[MotleyFoolSearchResult],
-        raise_error: bool = True,
+        search_results: list[MotleyFoolSearchResult],
+        raise_error: bool = False,
     ) -> MotleyFoolSearchResult | None:
 
-        matches = [
-            result
-            for result in results
+        search_results_cleaned = [
+            search_result
+            for search_result in search_results
             if (
-                result.ticker == source_identifier.value and
-                result.exchange != "CRYPTO" and
-                result.home_country_code != "?undefined"
+                search_result.ticker == source_identifier.value_cleaned and
+                search_result.exchange != "CRYPTO" and
+                search_result.home_country_code not in {"?undefined", "$undefined"}
             )
         ]
-        if not matches:
+        if not search_results_cleaned:
             ClientHelper.other_error_with_message(
                 DataSourceID.MOTLEYFOOL,
                 f"{DataSourceID.MOTLEYFOOL} does not provide a valid search result for identifier ({source_identifier.type}, {source_identifier.value}).",
                 MotleyFoolResponseError if raise_error else None,
             )
             return None
+
+        if len(search_results_cleaned) > 1 and source_identifier.country:
+            try:
+                country_alpha2 = countries.get(source_identifier.country).alpha2
+                country_alpha3 = countries.get(source_identifier.country).alpha3
+                matches = [
+                    search_result_cleaned
+                    for search_result_cleaned in search_results_cleaned
+                    if search_result_cleaned.home_country_code in {country_alpha2, country_alpha3}
+                ]
+            except Exception:
+                pass
+            if len(matches) == 0:
+                matches = search_results_cleaned
+        else:
+            matches = search_results_cleaned
+
         if len(matches) > 1:
             ClientHelper.search_result_not_unique(
                 DataSourceID.MOTLEYFOOL,
                 source_identifier,
+                MotleyFoolResponseError if raise_error else None,
             )
 
         return matches[0]
