@@ -31,7 +31,7 @@ def test_read_provider_profile_data_httpx(
 ):
     """Integration test against the live Motley Fool website using httpx."""
 
-    records = client_httpx.read_provider_profile_data([apple_ticker], raise_error=True,)
+    records = client_httpx.read_provider_profile_data([apple_ticker], raise_error=True)
 
     assert len(records) == 1
 
@@ -46,11 +46,14 @@ def test_read_provider_profile_data_httpx(
     assert record.sector == "Information Technology"
     assert record.industry == "Technology Hardware, Storage and Peripherals"
 
-    isin = record.identifier(SecurityIdentifierType.TICKER)
-    assert isin is not None
-    assert isin.value == "AAPL"
+    ticker = record.identifier(SecurityIdentifierType.TICKER)
+    assert ticker is not None
+    assert ticker.value == "AAPL.US"
+    assert ticker.value_cleaned == "AAPL"
+    assert ticker.country == "US"
 
 
+@pytest.mark.local
 @pytest.mark.usefixtures("client_selenium")
 def test_read_provider_profile_data_selenium(
     client_selenium: MotleyFoolClient,
@@ -58,7 +61,7 @@ def test_read_provider_profile_data_selenium(
 ):
     """Integration test against the live Motley Fool website using Selenium."""
 
-    records = client_selenium.read_provider_profile_data([apple_ticker], raise_error=True,)
+    records = client_selenium.read_provider_profile_data([apple_ticker], raise_error=True)
 
     assert len(records) == 1
 
@@ -68,11 +71,14 @@ def test_read_provider_profile_data_selenium(
     assert record.name.startswith("Apple")
 
     assert record.ticker == "AAPL"
+    assert record.home_country_code == "US"
     assert record.exchange == "NASDAQ"
 
     assert record.sector == "Information Technology"
     assert record.industry == "Technology Hardware, Storage and Peripherals"
 
-    isin = record.identifier(SecurityIdentifierType.TICKER)
-    assert isin is not None
-    assert isin.value == "AAPL"
+    ticker = record.identifier(SecurityIdentifierType.TICKER)
+    assert ticker is not None
+    assert ticker.value == "AAPL.US"
+    assert ticker.value_cleaned == "AAPL"
+    assert ticker.country == "US"

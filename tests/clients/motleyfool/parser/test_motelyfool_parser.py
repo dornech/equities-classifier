@@ -74,6 +74,7 @@ def test_select_search_result(
     )
 
     assert result.ticker == "AAPL"
+    assert result.home_country_code == "US"
     assert result.exchange == "NASDAQ"
 
 
@@ -95,6 +96,7 @@ def test_select_search_result_country(
     )
 
     assert result.ticker == "DE"
+    assert result.home_country_code == "US"
 
 
 def test_select_search_result_not_unique(
@@ -143,11 +145,10 @@ def test_parse_record(
 
     assert record.name == "Apple"
     assert record.ticker == "AAPL"
+    assert record.home_country_code == "US"
     assert record.exchange == "NASDAQ"
 
     assert record.sector == "Information Technology"
     assert record.industry == "Technology Hardware, Storage and Peripherals"
 
-    assert record.identifier(
-        SecurityIdentifierType.TICKER
-    ).value == "AAPL"
+    assert record.identifier(SecurityIdentifierType.TICKER).value == "AAPL.US"

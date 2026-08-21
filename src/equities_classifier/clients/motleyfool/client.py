@@ -70,6 +70,18 @@ class MotleyFoolClient:
         "Chrome/151.0.0.0 Safari/537.36"
     )
 
+    _MOTLEYFOOL_COUNTRY_FROM_EXCHANGE = immutabledict({
+        "CPSE": "DK",
+        "ETR": "DE",
+        "FRA": "DE",
+        "LSE": "GB",
+        "NASDAQ": "US",
+        "NYSE": "US",
+        "TSX": "CA",
+        "TYO": "JP",
+        "XSWX": "CH",
+    })
+
     _MOTLEYFOOL_SEARCH_RESULT_MAP: immutabledict[str, str] = immutabledict({
         "Symbol": "ticker",
         "Name": "name",
@@ -343,6 +355,8 @@ class MotleyFoolClient:
         for htmlitem in htmlitems:
             result = MotleyFoolSearchResult()
             result.ticker, result.exchange, result.name = htmlitem.get_attribute("outerText").split("\n")
+            # html does not contain country -> derive from stock exchange
+            result.home_country_code = self._MOTLEYFOOL_COUNTRY_FROM_EXCHANGE.get(result.exchange, None)
             results.append(result)
 
         return results
@@ -358,7 +372,10 @@ class MotleyFoolClient:
             search_result
             for search_result in search_results
             if (
-                search_result.ticker == source_identifier.value_cleaned and
+                (
+                    search_result.ticker == source_identifier.value_cleaned or
+                    search_result.ticker.replace(" ", "") == source_identifier.value_cleaned
+                  ) and
                 search_result.exchange != "CRYPTO" and
                 search_result.home_country_code not in {"?undefined", "$undefined"}
             )
@@ -440,8 +457,14 @@ class MotleyFoolClient:
         tree = html.fromstring(html_text)
         record = MotleyFoolRecord()
 
+        ticker = search_result.ticker
+        if search_result.home_country_code:
+            ticker = ticker + "." + search_result.home_country_code
         record.identifiers = [
-            SecurityIdentifier(type=SecurityIdentifierType.TICKER, value=search_result.ticker,)
+            SecurityIdentifier(
+                type=SecurityIdentifierType.TICKER,
+                value=ticker,
+            )
         ]
         record.name = search_result.name or ""
         record.ticker = search_result.ticker
