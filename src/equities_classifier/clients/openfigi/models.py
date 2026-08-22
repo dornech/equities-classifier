@@ -32,6 +32,8 @@ class OpenFIGIRecord(SecurityProviderRecord):
     security_type2: str | None = None
     market_sector: str | None = None
 
+    ticker_exchange: list[str] = field(default_factory=list)
+    ticker_mic: list[str] = field(default_factory=list)
     exch_code: list[str] = field(default_factory=list)
     mic_code: list[str] = field(default_factory=list)
     currency: str | None = None

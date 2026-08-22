@@ -51,7 +51,7 @@ def test_read_provider_base_data(client: MorningstarClient, apple_isin: Security
 def test_read_provider_profile_data(client: MorningstarClient, apple_isin: SecurityIdentifier) -> None:
 
     records = client.read_provider_base_data([apple_isin])
-    records = client.read_provider_profile_data(records)
+    client.read_provider_profile_data(records)
 
     record = records[0]
 

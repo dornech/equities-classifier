@@ -10,7 +10,7 @@
 # ruff: noqa: E501, N803, N806, PLR1702, PLR6301, RUF050, RUF105, S110, SIM102
 #
 # disable mypy errors
-# mypy: disable-error-code = "arg-type, no-any-return"
+# mypy: disable-error-code = "arg-type, no-any-return, union-attr"
 
 # fmt: off
 
@@ -32,12 +32,18 @@ import datetime
 from iso3166 import countries
 
 from equities_classifier.enums import DataSourceID, SecurityIdentifierType
-from equities_classifier.models import SecurityIdentifier
+from equities_classifier.models import (
+    SecurityIdentifier,
+    SecurityIdentifierList,
+)
 from equities_classifier.clients.morningstar.models import (
     MorningstarRecord,
-    MorningstarSearchResult
+    MorningstarSearchResult,
 )
-from equities_classifier.clients.clienthelper import ClientHelper
+from equities_classifier.clients.clienthelper import (
+    ClientHelper,
+    get_primary_ticker,
+)
 from equities_classifier.exceptions import ClientResponseError
 
 
@@ -47,6 +53,8 @@ class MorningstarResponseError(ClientResponseError):
 
 class MorningstarClient:
     """Morningstar HTTP / API client."""
+
+    # constants and related evaluation routines
 
     _BASE_URL = "https://global.morningstar.com"
     _SEARCH_URL = "https://global.morningstar.com/api/v1/en-eu/legacy-search/securities"
@@ -98,7 +106,7 @@ class MorningstarClient:
         ("contact", "url"): None,
         ("sector", "value"): "sector",
         ("industry", "value"): "industry",
-        ("mostRecentEarning", "value"): None,
+        ("mostRecentEarnings", "value"): None,
         ("fiscalYearEnds", "value"): None,
         ("totalEmployees", "value"): None,
         ("totalEmployees", "date"): None,
@@ -112,7 +120,7 @@ class MorningstarClient:
     })
 
     @staticmethod
-    def leaf_paths(
+    def _leaf_paths(
         data: Mapping[str, Any],
         path: tuple[str, ...] = (),
         exclude_leaves: Collection[str] = []
@@ -128,8 +136,8 @@ class MorningstarClient:
 
             current = (*path, key)
             if isinstance(value, Mapping):
-                result.extend(MorningstarClient.leaf_paths(value, current, exclude_leaves))
-            else:
+                result.extend(MorningstarClient._leaf_paths(value, current, exclude_leaves))
+            elif value:
                 result.append(current)
 
         return result
@@ -148,11 +156,13 @@ class MorningstarClient:
 
         return value
 
+    # __init__, other ContextManager dunder routines and internal routines used within
+
     def __init__(
         self,
         timeout: float = 30.0,
         seleniumwrapper: object | None = None,
-        clean_nonUS_ticker: bool = True,
+        clean_nonUS_ticker: bool = False,
         test_wo_browser: bool = False,
     ) -> None:
         """Initialize Morningstar client."""
@@ -199,9 +209,9 @@ class MorningstarClient:
         return self
 
     def __exit__(self, *_: object) -> None:
-        self.close()
+        self._close()
 
-    def close(self) -> None:
+    def _close(self) -> None:
         """Release browser resources."""
 
         # check self_client before execution due to potential double-close when using pytest
@@ -262,20 +272,51 @@ class MorningstarClient:
 
         return records
 
+    @staticmethod
+    def check_and_set_primary_ticker(
+        records: list[MorningstarRecord],
+        set_ticker: bool = True,
+        raise_error: bool = False,
+    ) -> None:
+        """Check and optionally set the primary ticker for Morningstar records."""
+
+        for record in records:
+
+            if not record.has_identifier(SecurityIdentifierType.ISIN):
+                ClientHelper.unknown_identifier_type(
+                    DataSourceID.OPENFIGI,
+                    SecurityIdentifierType.ISIN,
+                    record.name,
+                    MorningstarResponseError if raise_error else None,
+                )
+                continue
+
+            isin = record.identifier(SecurityIdentifierType.ISIN).value
+            ticker_new = get_primary_ticker(
+                DataSourceID.OPENFIGI,
+                isin,
+                record.name,
+                record.ticker,
+                record.ticker_exchange,
+                record.exchange,
+                MorningstarResponseError,
+            )
+            if ticker_new and set_ticker:
+                record.ticker = ticker_new
+                record.identifiers.replace(SecurityIdentifier(SecurityIdentifierType.TICKER, ticker_new))
+
     def read_provider_profile_data(
         self,
         records: list[MorningstarRecord],
         raise_error: bool = False
-    ) -> list[MorningstarRecord]:
+    ) -> None:
         """Read profile data from Morningstar."""
 
         for record in records:
             profile_data = self._execute_profile_request(
                 security_id=record.company_id if record.company_id else record.performance_id[0]
             )
-            record = self._parse_profile_to_record(profile_data, record, raise_error)
-
-        return records
+            self._parse_profile_to_record(profile_data, record, raise_error)
 
     # internal routines
 
@@ -376,7 +417,7 @@ class MorningstarClient:
                 continue
 
             missing = (
-                self.leaf_paths(item, exclude_leaves=["score", "sortAs"]) -
+                self._leaf_paths(item, exclude_leaves=["score", "sortAs"]) -
                 self._MORNINGSTAR_SEARCH_RESULT_MAP.keys()
             )
             if len(missing) != 0:
@@ -493,7 +534,7 @@ class MorningstarClient:
             ClientHelper.other_error_with_message(
                 DataSourceID.MORNINGSTAR,
                 f"{DataSourceID.MORNINGSTAR} search result for identifier "
-                        f"{source_identifier.type} '{source_identifier.value}' empty after cleaning.",
+                f"{source_identifier.type} '{source_identifier.value}' empty after cleaning.",
             )
             return []
 
@@ -502,7 +543,9 @@ class MorningstarClient:
             # Find existing record with ISIN (assumed standard field by Morningstar!) otherwise new record
             if search_result.isin:
                 record = next(
-                    (existing_record for existing_record in records if existing_record.isin == search_result.isin),
+                    (existing_record for existing_record in records
+                        if existing_record.isin == search_result.isin
+                    ),
                     None,
                 )
             else:
@@ -515,7 +558,7 @@ class MorningstarClient:
                 # Determine ticker
                 if source_identifier.type == SecurityIdentifierType.ISIN:
                     try:
-                        # Take ticker on exchange in country of registration form ISIN
+                        # Take ticker on exchange in country of registration from ISIN
                         country_alpha2 = countries.get(source_identifier.value[:2]).alpha2
                         country_alpha3 = countries.get(source_identifier.value[:2]).alpha3
                         counter_ticker = Counter(
@@ -542,7 +585,7 @@ class MorningstarClient:
                                 # Preserve positional correspondence between all listing-specific attributes.
                                 getattr(record, field.name).append(value)
                             else:
-                                if getattr(record, field.name) and getattr(record, field.name) != value :
+                                if getattr(record, field.name) and getattr(record, field.name) != value:
                                     ClientHelper.other_error_with_message(
                                         DataSourceID.MORNINGSTAR,
                                         f"Inconsistency between Morningstar search results and modelling"
@@ -562,16 +605,11 @@ class MorningstarClient:
                 record.ticker_exchange.append(getattr(search_result, "ticker", None))
 
                 # Create canonical security identifiers (including source identifier).
-                identifiers: list[SecurityIdentifier] = [source_identifier]
-                for identifierfield_name, identifier_type in self._MORNINGSTAR_IDENTIFIER_TYPES.items():
-                    value = getattr(record, identifierfield_name)
+                identifiers = SecurityIdentifierList([source_identifier])
+                for identifier_field, identifier_type in self._MORNINGSTAR_IDENTIFIER_TYPES.items():
+                    value = getattr(record, identifier_field)
                     if value and identifier_type != source_identifier.type:
-                        identifiers.append(
-                            SecurityIdentifier(
-                                type=identifier_type,
-                                value=value,
-                            )
-                        )
+                        identifiers.append(SecurityIdentifier(type=identifier_type, value=value))
                 record.identifiers = identifiers
 
                 records.append(record)
@@ -593,7 +631,8 @@ class MorningstarClient:
                             getattr(record, field.name).append(value)
                 record.ticker_exchange.append(getattr(search_result, "ticker", None))
 
-    def _access_token_expired(self) -> bool:
+    @staticmethod
+    def _access_token_expired() -> bool:
         """Return token expiration check."""
 
         return True
@@ -618,10 +657,7 @@ class MorningstarClient:
                 MorningstarResponseError
             )
 
-    def _execute_profile_request(
-        self,
-        security_id: str,
-    ) -> dict[str, Any]:
+    def _execute_profile_request(self, security_id: str,) -> dict[str, Any]:
         """Request the Morningstar company profile."""
 
         params = {
@@ -663,7 +699,7 @@ class MorningstarClient:
             return record
 
         missing = (
-            self.leaf_paths(sections, exclude_leaves=["label"]) -
+            self._leaf_paths(sections, exclude_leaves=["label"]) -
             self._MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_COMPLETE.keys())
         if len(missing) != 0:
             ClientHelper.unknown_provider_attributes(
@@ -688,13 +724,15 @@ class MorningstarClient:
                         "_MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_USED",
                     )
             else:
-                ClientHelper.unknown_provider_attribute(
-                    DataSourceID.MORNINGSTAR,
-                    record.identifiers[0],
-                    json_name,
-                    section.get("value"),
-                    "_MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_USED",
-                )
+                # do not report willingly not transfered fields
+                # ClientHelper.unknown_provider_attribute(
+                #     DataSourceID.MORNINGSTAR,
+                #     record.identifiers[0],
+                #     json_name,
+                #     section.get("value"),
+                #     "_MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_USED",
+                # )
+                pass
 
         return record
 
@@ -725,7 +763,7 @@ class MorningstarClient:
         provider_attributes: dict[str, Any] = {}
 
         missing = (
-            self.leaf_paths(sections, exclude_leaves=["label"]) -
+            self._leaf_paths(sections, exclude_leaves=["label"]) -
             self._MORNINGSTAR_PROFILE_SECTION_FIELDS_MAP_COMPLETE.keys())
         if len(missing) != 0:
             message = f"{DataSourceID.MORNINGSTAR} fields {missing} not considered in profile mapping."

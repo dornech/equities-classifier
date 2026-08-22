@@ -59,3 +59,11 @@ def deere_ticker_country() -> SecurityIdentifier:
         type=SecurityIdentifierType.TICKER,
         value="DE.US",
     )
+
+
+@pytest.fixture(scope="session")
+def sedol_dummy() -> SecurityIdentifier:
+    return SecurityIdentifier(
+        type=SecurityIdentifierType.SEDOL,
+        value="2046251",
+    )

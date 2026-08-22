@@ -66,12 +66,11 @@ def test_parse_single_record(
     record = records[0]
 
     assert record.name == "Apple Inc."
-    assert record.ticker == "AAPL"
     assert record.figi == ["BBG000B9XRY4"]
     assert record.share_class_figi == "BBG001S5N8V8"
     assert record.security_type == "Common Stock"
 
-    assert len(record.identifiers) == 2
+    assert len(record.identifiers) == 1
     assert record.identifiers[0] == source_identifier
 
 
@@ -167,6 +166,7 @@ def test_missing_data_raises(
     with pytest.raises(OpenFIGIResponseError):
         records: list[OpenFIGIRecord] = []
         client._parse_records({}, source_identifier, records=records, raise_error=True)
+        client.check_and_set_primary_ticker(records)
 
 
 def test_map_apple_isin(
@@ -180,6 +180,7 @@ def test_map_apple_isin(
     )
 
     records = client.read_provider_base_data([identifier])
+    client.check_and_set_primary_ticker(records)
 
     assert len([record for record in records if record.share_class_figi is not None]) == 1
 
@@ -200,6 +201,7 @@ def test_map_apple_ticker(
     )
 
     records = client.read_provider_base_data([identifier])
+    client.check_and_set_primary_ticker(records)
 
     assert len([
         record for record in records

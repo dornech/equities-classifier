@@ -35,9 +35,9 @@ classifiers = [
 # direct dependencies of this package, installed when users `pip install equities-classifier` later.
 dependencies = [
     "FreeSimpleGUI",
+    "finance-enums",
     # "gics",
     # "gics @ git+https://github.com/dornech/py-gics.git",
-    "py-gics-updated",
     "httpx",
     "immutabledict",
     "iso3166",
@@ -47,6 +47,7 @@ dependencies = [
     "selenium",
     "lxml",
     "openpyxl",
+    "py-gics-updated",
     "rapidfuzz",
     "utils-mystuff",
     "waitless",
@@ -57,7 +58,7 @@ dynamic = ["version"]
 # n. a.
 
 [project.scripts]
-# n. a.
+equities-classifier = "equities_classifier.processflow.cli:main"
 
 [project.urls]
 # important URLs for this project

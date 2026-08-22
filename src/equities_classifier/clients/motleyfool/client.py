@@ -41,7 +41,10 @@ from equities_classifier.enums import (
     DataSourceID,
     SecurityIdentifierType,
 )
-from equities_classifier.models import SecurityIdentifier
+from equities_classifier.models import (
+    SecurityIdentifier,
+    SecurityIdentifierList,
+)
 from equities_classifier.exceptions import (
     ClientConnectionError,
     ClientResponseError,
@@ -60,7 +63,9 @@ class MotleyFoolMode(StrEnum):
 
 
 class MotleyFoolClient:
-    """Motley-Fool HTTP client with httpx or Selenium mode as currenlty used fallback."""
+    """Motley-Fool HTTP client with httpx or Selenium mode as currently used fallback."""
+
+    # constants and related evaluation routines
 
     _BASE_URL = "https://www.fool.com"
 
@@ -93,6 +98,8 @@ class MotleyFoolClient:
         "sector": "//section/descendant::div/p[.='Sector']/following-sibling::a",
         "industry": "//section/descendant::div/p[.='Industry']/following-sibling::p",
     })
+
+    # __init__, other ContextManager dunder routines and internal routines used within
 
     def __init__(
         self,
@@ -182,9 +189,9 @@ class MotleyFoolClient:
         return self
 
     def __exit__(self, *_: object) -> None:
-        self.close()
+        self._close()
 
-    def close(self) -> None:
+    def _close(self) -> None:
         """Release client resources."""
 
         # check self_client before execution due to potential double-close when using pytest
@@ -246,6 +253,31 @@ class MotleyFoolClient:
                 )
                 if record:
                     records.append(record)
+
+        return records
+
+    @staticmethod
+    def remove_records_without_classification(
+        records: list[MotleyFoolRecord],
+    ) -> list[MotleyFoolRecord]:
+        """Remove records without share_class_FIGI if a ISIN-matching record exists."""
+
+        count_before = len(records)
+
+        records = [
+            record
+            for record in records
+            if record.sector and record.industry
+        ]
+
+        count_after = len(records)
+
+        if count_before - count_after > 0:
+            ClientHelper.records_cleaned(
+               DataSourceID.MOTLEYFOOL,
+               count_before - count_after,
+               "records without expected classification data"
+            )
 
         return records
 
@@ -368,17 +400,22 @@ class MotleyFoolClient:
         raise_error: bool = False,
     ) -> MotleyFoolSearchResult | None:
 
+        if not search_results or len(search_results) == 0:
+            ClientHelper.other_error_with_message(
+                DataSourceID.MOTLEYFOOL,
+                f"No {DataSourceID.MOTLEYFOOL} search result available for ticker {source_identifier.value}).",
+            )
+            return None
+
         search_results_cleaned = [
             search_result
             for search_result in search_results
             if (
-                (
                     search_result.ticker == source_identifier.value_cleaned or
                     search_result.ticker.replace(" ", "") == source_identifier.value_cleaned
-                  ) and
+                ) and
                 search_result.exchange != "CRYPTO" and
                 search_result.home_country_code not in {"?undefined", "$undefined"}
-            )
         ]
         if not search_results_cleaned:
             ClientHelper.other_error_with_message(
@@ -447,25 +484,18 @@ class MotleyFoolClient:
             node = nodes[0]
             return " ".join(node.itertext()).strip()
 
-        if search_result is None:
-            ClientHelper.other_error_with_message(
-                DataSourceID.MOTLEYFOOL,
-                f"No {DataSourceID.MOTLEYFOOL} search result available for ticker {search_result.value}).",
-            )
-            return None
-
         tree = html.fromstring(html_text)
         record = MotleyFoolRecord()
 
         ticker = search_result.ticker
         if search_result.home_country_code:
             ticker = ticker + "." + search_result.home_country_code
-        record.identifiers = [
+        record.identifiers = SecurityIdentifierList([
             SecurityIdentifier(
                 type=SecurityIdentifierType.TICKER,
                 value=ticker,
             )
-        ]
+        ])
         record.name = search_result.name or ""
         record.ticker = search_result.ticker
         record.exchange = search_result.exchange
@@ -476,7 +506,7 @@ class MotleyFoolClient:
             if not value:
                 ClientHelper.missing_provider_attribute(
                     DataSourceID.MOTLEYFOOL,
-                    record.identifier,
+                    record.identifier(SecurityIdentifierType.TICKER),
                     attribute
                 )
             if hasattr(record, attribute):

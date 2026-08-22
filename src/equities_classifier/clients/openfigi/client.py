@@ -13,7 +13,7 @@
 # ruff: noqa: PLR1702, RUF050, RUF105, SIM102
 #
 # disable mypy errors
-# mypy: disable-error-code = "arg-type, no-any-return"
+# mypy: disable-error-code = "arg-type, no-any-return, union-attr"
 
 # fmt: off
 
@@ -26,9 +26,16 @@ from immutabledict import immutabledict
 import httpx
 
 from equities_classifier.enums import DataSourceID, SecurityIdentifierType
-from equities_classifier.models import SecurityIdentifier
+from equities_classifier.models import (
+    SecurityIdentifier,
+    SecurityIdentifierList,
+)
 from equities_classifier.clients.openfigi.models import OpenFIGIRecord
-from equities_classifier.clients.clienthelper import ClientHelper
+from equities_classifier.clients.clienthelper import (
+    ClientHelper,
+    get_primary_ticker,
+    bloomberg_exchange_mapping,
+)
 from equities_classifier.clients.ratelimiter import (
     RateLimits,
     RateLimiter
@@ -47,6 +54,8 @@ class OpenFIGIResponseError(ClientResponseError):
 
 class OpenFIGIClient:
     """Client for the OpenFIGI mapping REST API."""
+
+    # constants and related evaluation routines
 
     _BASE_URL = "https://api.openfigi.com/v3/mapping"
 
@@ -96,6 +105,8 @@ class OpenFIGIClient:
         requests_per_minute=250
     )
 
+    # __init__, other ContextManager dunder routines and internal routines used within
+
     def __init__(self, api_key: str | None = None, timeout: float = 30.0) -> None:
         """init the HTTP client."""
 
@@ -118,9 +129,9 @@ class OpenFIGIClient:
         return self
 
     def __exit__(self, *_: object) -> None:
-        self.close()
+        self._close()
 
-    def close(self) -> None:
+    def _close(self) -> None:
         """Close the HTTP client."""
         self._client.close()
 
@@ -140,7 +151,7 @@ class OpenFIGIClient:
 
             response_data = self._execute_request(batch)
             for source_identifier, item in zip(batch, response_data, strict=True):
-                # parsing accroSs batches for comprehension of data for duplicate source identifiers
+                # parsing across batches for comprehension of data for duplicate source identifiers
                 # (i.e. ticker and ISIN)
                 self._parse_records(
                     item=item,
@@ -152,40 +163,134 @@ class OpenFIGIClient:
         return results
 
     @staticmethod
-    def remove_records_without_share_class_figi(
+    def remove_records_without_share_class_figi_1(
         records: list[OpenFIGIRecord],
     ) -> list[OpenFIGIRecord]:
-        """Remove records without share_class_FIGI if a ISIN-matching record exists."""
+        """Remove records without share_class_FIGI if no ISIN-matching record exists."""
 
-        identifiers_with_share_class_figi: set[tuple[SecurityIdentifierType, str]] = {
-            (identifier.type, str(identifier.value_cleaned))
+        count_before = len(records)
+
+        identifiers_with_share_class_figi: set[SecurityIdentifier] = {
+            SecurityIdentifier(identifier.type, str(identifier.value_cleaned))
             for record in records
             if record.share_class_figi is not None
             for identifier in record.identifiers
             if identifier.type == SecurityIdentifierType.ISIN
         }
-
-        return [
+        records = [
             record
             for record in records
             if (
                 record.share_class_figi is not None
                 or not any(
-                    (identifier.type, identifier.value_cleaned)
-                    in identifiers_with_share_class_figi
+                    (identifier.type, identifier.value_cleaned) in identifiers_with_share_class_figi
                     for identifier in record.identifiers
                     if identifier.type == SecurityIdentifierType.ISIN
                 )
             )
         ]
 
+        count_after = len(records)
+
+        if count_before - count_after > 0:
+            ClientHelper.records_cleaned(
+                DataSourceID.OPENFIGI,
+                count_before - count_after,
+                "records without shareClassFIGI and no matching to shareClassFIGI via ISIN"
+            )
+
+        return records
+
+    @staticmethod
+    def remove_records_without_share_class_figi_2(
+        records: list[OpenFIGIRecord],
+    ) -> list[OpenFIGIRecord]:
+        """Remove records without share_class_FIGI  and not Common Stock."""
+
+        count_before = len(records)
+
+        records = [
+            record
+            for record in records
+                if record.share_class_figi and
+                (record.security_type == "Common Stock" or record.security_type2 == "Common Stock")
+        ]
+
+        count_after = len(records)
+
+        if count_before - count_after > 0:
+            ClientHelper.records_cleaned(
+                DataSourceID.OPENFIGI,
+                count_before - count_after,
+                "records without missing shareClassFIGI and no ISIN matching (i. e. non share fiancial instruments)"
+            )
+
+        return records
+
+    @staticmethod
+    def check_and_set_primary_ticker(
+        records: list[OpenFIGIRecord],
+        set_ticker: bool = True,
+        raise_error: bool = False,
+    ) -> None:
+        """Check and optionally set the primary ticker for OpenFIGI records."""
+
+        for record in records:
+
+            if record.has_identifier(SecurityIdentifierType.ISIN):
+
+                isin = record.identifier(SecurityIdentifierType.ISIN).value
+                ticker_new1 = get_primary_ticker(
+                    DataSourceID.OPENFIGI,
+                    isin,
+                    record.name,
+                    record.ticker,
+                    record.ticker_mic,
+                    record.mic_code,
+                    OpenFIGIResponseError,
+                )
+                mics_from_exchange = [
+                    next(
+                        (
+                            entry["operating_mic"]
+                            for entry in bloomberg_exchange_mapping
+                            if entry["bloomberg_exchange"] == exchange
+                        ),
+                        None
+                    )
+                    for exchange in record.exch_code
+                ]
+                ticker_new2 = get_primary_ticker(
+                    DataSourceID.OPENFIGI,
+                    isin,
+                    record.name,
+                    record.ticker,
+                    record.ticker_exchange,
+                    mics_from_exchange,
+                    OpenFIGIResponseError,
+                )
+                if ticker_new1 and ticker_new2 and ticker_new1 != ticker_new2:
+                    ClientHelper.inconsistent_provider_data(
+                        DataSourceID.OPENFIGI,
+                        record.name,
+                        "primary ticker from Bloomberg exchanges and mic-codes differ",
+                        OpenFIGIResponseError,
+                    )
+                if ticker_new1 and set_ticker:
+                    record.ticker = ticker_new1
+                    record.identifiers.replace(SecurityIdentifier(SecurityIdentifierType.TICKER, ticker_new1))
+                elif ticker_new2 and set_ticker:
+                    record.ticker = ticker_new2
+                    record.identifiers.replace(SecurityIdentifier(SecurityIdentifierType.TICKER, ticker_new2))
+
+            elif record.has_identifier(SecurityIdentifierType.TICKER):
+
+                if record.security_type == record.security_type2 == "Common Stock":
+                    record.ticker = record.identifier(SecurityIdentifierType.TICKER).value
 
     # internal routines
 
-    def _create_batches(
-        self,
-        identifiers: Sequence[SecurityIdentifier]
-    ) -> list[list[SecurityIdentifier]]:
+    def _create_batches(self, identifiers: Sequence[SecurityIdentifier]) -> list[list[SecurityIdentifier]]:
         """Split identifiers into batches."""
 
         temp_identifiers = [
@@ -212,7 +317,7 @@ class OpenFIGIClient:
         payload = [
             {
                 "idType": self._to_openfigi_identifier_type(identifier.type),
-                "idValue": identifier.value_cleaned,
+                "idValue": identifier.value_cleaned.replace(" ", ""),
             }
             for identifier in batch
         ]
@@ -254,16 +359,27 @@ class OpenFIGIClient:
             openFIGI_msg = item["error"]
             ClientHelper.other_error_with_message(
                 DataSourceID.OPENFIGI,
-                f"OpenFIGI returned an error: {openFIGI_msg}",
+                f"OpenFIGI returned an error for {source_identifier.type} '{source_identifier.value}: {openFIGI_msg}",
                 OpenFIGIResponseError if raise_error else None,
             )
-
-        if "data" not in item:
+            return
+        elif "warning" in item:
+            openFIGI_msg = item["warning"]
             ClientHelper.other_error_with_message(
                 DataSourceID.OPENFIGI,
-                f"{DataSourceID.OPENFIGI} response does not contain 'data'.",
+                f"OpenFIGI returned a warning for {source_identifier.type} '{source_identifier.value}': {openFIGI_msg}",
                 OpenFIGIResponseError if raise_error else None,
             )
+            return
+        elif "data" not in item:
+            ClientHelper.other_error_with_message(
+                DataSourceID.OPENFIGI,
+                f"{DataSourceID.OPENFIGI} response does not contain 'data' for "
+                f"{source_identifier.type} '{source_identifier.value}'.",
+                OpenFIGIResponseError if raise_error else None,
+            )
+            return
+
         data = item.get("data")
         if not isinstance(data, list):
             ClientHelper.other_error_with_message(
@@ -309,47 +425,44 @@ class OpenFIGIClient:
 
                 # Copy provider fields
                 for json_name, value in record_data.items():
-                    attribute = self._OPENFIGI_RECORDMAP.get(json_name)
-                    if attribute is not None:
-                        # Preserve positional correspondence between all listing-specific attributes.
-                        if hasattr(record, attribute):
-                            if isinstance(getattr(record, attribute), list):
-                                getattr(record, attribute).append(value)
+                    if json_name != "ticker":
+                        attribute = self._OPENFIGI_RECORDMAP.get(json_name)
+                        if attribute is not None:
+                            # Preserve positional correspondence between all listing-specific attributes.
+                            if hasattr(record, attribute):
+                                if isinstance(getattr(record, attribute), list):
+                                    getattr(record, attribute).append(value)
+                                else:
+                                    setattr(record, attribute, value)
                             else:
-                                setattr(record, attribute, value)
+                                ClientHelper.missing_record_attribute(
+                                    DataSourceID.OPENFIGI,
+                                    json_name,
+                                    value,
+                                    "_OPENFIGI_RECORDMAP",
+                                )
                         else:
-                            ClientHelper.missing_record_attribute(
+                            ClientHelper.unknown_provider_attribute(
                                 DataSourceID.OPENFIGI,
+                                source_identifier,
                                 json_name,
                                 value,
-                                "_OPENFIGI_RECORDMAP",
+                                "_OPENFIGI_RECORDMAP"
                             )
-                    else:
-                        ClientHelper.unknown_provider_attribute(
-                            DataSourceID.OPENFIGI,
-                            source_identifier,
-                            json_name,
-                            value,
-                            "_OPENFIGI_RECORDMAP"
-                        )
+                    elif "exchCode" in record_data:
+                        record.ticker_exchange.append(value)
+                    elif "micCode" in record_data:
+                        record.ticker_exchange.append(value)
 
                 # Create canonical security identifiers (including source identifier)
-                # identifiers: list[SecurityIdentifier] = [source_identifier]
-                identifiers: list[SecurityIdentifier] = [
-                    SecurityIdentifier(
-                        type=source_identifier.type,
-                        value=source_identifier.value_cleaned
-                    )
-                ]
-                for identifier_fieldname, identifier_type in self._OPENFIGI_IDENTIFIER_TYPES.items():
-                    value = record_data.get(identifier_fieldname)
-                    if value and identifier_type != source_identifier.type:
-                        identifiers.append(
-                            SecurityIdentifier(
-                                type=identifier_type,
-                                value=value,
-                            )
-                        )
+                # identifiers: SecurityIdentifierList = [source_identifier]
+                identifiers = SecurityIdentifierList([
+                    SecurityIdentifier(type=source_identifier.type, value=source_identifier.value_cleaned)
+                ])
+                for identifier_field, identifier_type in self._OPENFIGI_IDENTIFIER_TYPES.items():
+                    value = getattr(record, identifier_field) if hasattr(record, identifier_field) else None
+                    if value and identifier_type not in {source_identifier.type, SecurityIdentifierType.TICKER}:
+                        identifiers.append(SecurityIdentifier(type=identifier_type, value=value))
                 record.identifiers = identifiers
 
                 records.append(record)
@@ -358,10 +471,15 @@ class OpenFIGIClient:
 
                 # only add new values for existing list fields for entry with same shareclassFIGI
                 for json_name, value in record_data.items():
-                    attribute = self._OPENFIGI_RECORDMAP.get(json_name)
-                    if attribute is not None and hasattr(record, attribute):
-                        if isinstance(getattr(record, attribute), list):
-                            getattr(record, attribute).append(value)
+                    if json_name != "ticker":
+                        attribute = self._OPENFIGI_RECORDMAP.get(json_name)
+                        if attribute is not None and hasattr(record, attribute):
+                            if isinstance(getattr(record, attribute), list):
+                                getattr(record, attribute).append(value)
+                    elif "exchCode" in record_data:
+                        record.ticker_exchange.append(value)
+                    elif "micCode" in record_data:
+                        record.ticker_exchange.append(value)
 
 
 if __name__ == "__main__":
