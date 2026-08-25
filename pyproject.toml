@@ -51,6 +51,7 @@ dependencies = [
     "rapidfuzz",
     "utils-mystuff",
     "waitless",
+    "yfinance",
 ]
 dynamic = ["version"]
 

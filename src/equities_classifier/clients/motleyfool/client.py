@@ -194,7 +194,7 @@ class MotleyFoolClient:
     def _close(self) -> None:
         """Release client resources."""
 
-        # check self_client before execution due to potential double-close when using pytest
+        # check self._client before execution due to potential double-close when using pytest
         if self._client:
             self._client.close()
             self._client = None
@@ -213,32 +213,18 @@ class MotleyFoolClient:
         for source_identifier in source_identifiers:
 
             if source_identifier.type != SecurityIdentifierType.TICKER:
-                ClientHelper.invalid_security_type(
-                    DataSourceID.MOTLEYFOOL,
-                    source_identifier
-                )
+                ClientHelper.invalid_security_type(DataSourceID.MOTLEYFOOL, source_identifier)
                 continue
 
             if self._mode == MotleyFoolMode.HTTPX:
                 # determine search result and fill search_result via requests
                 response_data = self._execute_search_request(source_identifier)
-                search_results = self._parse_search_results(
-                    source_identifier,
-                    response_data,
-                    raise_error,
-                )
+                search_results = self._parse_search_results(source_identifier, response_data, raise_error)
             else:
                 # determine search result and fill search_result via selenium / HTML analysis
-                search_results = self._get_search_results(
-                    source_identifier,
-                    raise_error,
-                )
+                search_results = self._get_search_results(source_identifier, raise_error,)
 
-            search_result = self._select_search_result(
-                source_identifier,
-                search_results,
-                raise_error,
-            )
+            search_result = self._select_search_result(source_identifier, search_results, raise_error)
             if search_result:
 
                 if self._mode == MotleyFoolMode.HTTPX:
@@ -246,11 +232,7 @@ class MotleyFoolClient:
                 else:
                     html = self._get_company_profile_html(search_result)
 
-                record = self._parse_record(
-                    search_result,
-                    html,
-                    raise_error,
-                )
+                record = self._parse_record(search_result, html, raise_error)
                 if record:
                     records.append(record)
 

@@ -214,7 +214,7 @@ class MorningstarClient:
     def _close(self) -> None:
         """Release browser resources."""
 
-        # check self_client before execution due to potential double-close when using pytest
+        # check self._client before execution due to potential double-close when using pytest
         if self._client:
             self._client.close()
             self._client = None
@@ -238,18 +238,11 @@ class MorningstarClient:
         for source_identifier in source_identifiers:
 
             if source_identifier.type not in self._MORNINGSTAR_IDENTIFIER_TYPES.values():
-                ClientHelper.invalid_security_type(
-                    DataSourceID.MORNINGSTAR,
-                    source_identifier
-                )
+                ClientHelper.invalid_security_type(DataSourceID.MORNINGSTAR, source_identifier)
                 continue
 
             response_data = self._execute_search_request(source_identifier)
-            search_results = self._parse_search_results(
-                source_identifier,
-                response_data,
-                raise_error,
-            )
+            search_results = self._parse_search_results(source_identifier, response_data, raise_error)
             search_results = [
                 result for result in search_results
                 if (
@@ -263,12 +256,7 @@ class MorningstarClient:
             ]
 
             if search_results is not None:
-                self._parse_records(
-                    source_identifier,
-                    search_results,
-                    records,
-                    raise_error
-                )
+                self._parse_records(source_identifier, search_results, records, raise_error)
 
         return records
 

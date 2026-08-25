@@ -16,6 +16,7 @@ class DataSourceID(StrEnum):
     MORNINGSTAR = "Morningstar"
     MOTLEYFOOL = "MotleyFool"
     OPENFIGI = "OpenFIGI"
+    YAHOO = "Yahoo"
 
 
 class SecurityIdentifierType(StrEnum):
@@ -38,6 +39,7 @@ class ClassificationSystemID(StrEnum):
 
     GICS = "GICS"
     GECS = "GECS"
+    YAHOOCS = "Yahoo Classification System"
 
 
 class ClassificationLevel(IntEnum):

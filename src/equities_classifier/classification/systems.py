@@ -94,10 +94,7 @@ GICS = ClassificationSystem(
     id=ClassificationSystemID.GICS,
     display_name="Global Industry Classification Standard",
     short_name="GICS",
-    authorities=(
-        "MSCI",
-        "S&P Dow Jones Indices",
-    ),
+    authorities=("MSCI", "S&P Dow Jones Indices",),
     hierarchy=(
         "Sector",
         "Industry Group",
@@ -238,3 +235,18 @@ def resolve_gics_motleyfool(
         )
 
     return result
+
+
+# Yahoo
+
+YAHOOCS = ClassificationSystem(
+    id=ClassificationSystemID.YAHOOCS,
+    display_name="Yahoo Classification Standard",
+    short_name="Yahoo",
+    authorities=("Yahoo",),
+    hierarchy=(
+        "Sector",
+        "Industry",
+    ),
+    supports_codes=False,
+)

@@ -13,7 +13,7 @@
 # ruff: noqa: PLR1702, RUF050, RUF105, SIM102
 #
 # disable mypy errors
-# mypy: disable-error-code = "arg-type, no-any-return, union-attr"
+# mypy: disable-error-code = "arg-type, assignment, no-any-return, union-attr"
 
 # fmt: off
 
@@ -133,7 +133,11 @@ class OpenFIGIClient:
 
     def _close(self) -> None:
         """Close the HTTP client."""
-        self._client.close()
+
+        # check self._client before execution due to potential double-close when using pytest
+        if self._client:
+            self._client.close()
+            self._client = None
 
     # public API
 
