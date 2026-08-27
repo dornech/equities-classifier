@@ -26,26 +26,16 @@ from immutabledict import immutabledict
 import httpx
 
 from equities_classifier.enums import DataSourceID, SecurityIdentifierType
-from equities_classifier.models import (
-    SecurityIdentifier,
-    SecurityIdentifierList,
-)
-from equities_classifier.clients.openfigi.models import OpenFIGIRecord
-from equities_classifier.clients.clienthelper import (
-    ClientHelper,
-    get_primary_ticker,
-    bloomberg_exchange_mapping,
-)
-from equities_classifier.clients.ratelimiter import (
-    RateLimits,
-    RateLimiter
-)
+from equities_classifier.models import SecurityIdentifier, SecurityIdentifierList
 from equities_classifier.exceptions import (
-    ClientAuthenticationError,
-    ClientConnectionError,
-    ClientRateLimitError,
-    ClientResponseError
+    ClientAuthenticationError, ClientConnectionError, ClientRateLimitError, ClientResponseError
 )
+from equities_classifier.clients.clienthelper import (
+    ClientHelperErrorHandler,
+    get_primary_ticker, bloomberg_exchange_mapping
+)
+from equities_classifier.clients.ratelimiter import RateLimits, RateLimiter
+from equities_classifier.clients.openfigi.models import OpenFIGIRecord
 
 
 class OpenFIGIResponseError(ClientResponseError):
@@ -109,6 +99,8 @@ class OpenFIGIClient:
 
     def __init__(self, api_key: str | None = None, timeout: float = 30.0) -> None:
         """init the HTTP client."""
+
+        self._client: httpx.Client | None
 
         headers: dict[str, str] = {
             "Content-Type": "application/json"
@@ -197,7 +189,7 @@ class OpenFIGIClient:
         count_after = len(records)
 
         if count_before - count_after > 0:
-            ClientHelper.records_cleaned(
+            ClientHelperErrorHandler.records_cleaned(
                 DataSourceID.OPENFIGI,
                 count_before - count_after,
                 "records without shareClassFIGI and no matching to shareClassFIGI via ISIN"
@@ -223,7 +215,7 @@ class OpenFIGIClient:
         count_after = len(records)
 
         if count_before - count_after > 0:
-            ClientHelper.records_cleaned(
+            ClientHelperErrorHandler.records_cleaned(
                 DataSourceID.OPENFIGI,
                 count_before - count_after,
                 "records without missing shareClassFIGI and no ISIN matching (i. e. non share fiancial instruments)"
@@ -274,7 +266,7 @@ class OpenFIGIClient:
                     OpenFIGIResponseError,
                 )
                 if ticker_new1 and ticker_new2 and ticker_new1 != ticker_new2:
-                    ClientHelper.inconsistent_provider_data(
+                    ClientHelperErrorHandler.inconsistent_provider_data(
                         DataSourceID.OPENFIGI,
                         record.name,
                         "primary ticker from Bloomberg exchanges and mic-codes differ",
@@ -292,6 +284,28 @@ class OpenFIGIClient:
                 if record.security_type == record.security_type2 == "Common Stock":
                     record.ticker = record.identifier(SecurityIdentifierType.TICKER).value
 
+    @staticmethod
+    def check_and_set_us_ticker(
+        records: list[OpenFIGIRecord],
+        set_ticker: bool = True,
+        raise_error: bool = False,
+    ) -> None:
+        """Check and optionally set the primary ticker for OpenFIGI records."""
+
+        for record in records:
+            for ticker_exchange, exch_code in zip(record.ticker_exchange, record.exch_code, strict=True):
+                country = next(
+                        (
+                            entry["country"]
+                            for entry in bloomberg_exchange_mapping
+                            if entry["bloomberg_exchange"] == exch_code
+                        ),
+                        None
+                    )
+                if country in {"US", "USA"}:
+                    record.identifiers.append(SecurityIdentifier(SecurityIdentifierType.TICKER_US, ticker_exchange))
+                    break
+
     # internal routines
 
     def _create_batches(self, identifiers: Sequence[SecurityIdentifier]) -> list[list[SecurityIdentifier]]:
@@ -301,7 +315,7 @@ class OpenFIGIClient:
             identifier for identifier in identifiers if identifier.type not in self._OPENFIGI_IDENTIFIER_TYPE_MAP
         ]
         for identifier in temp_identifiers:
-            ClientHelper.invalid_security_type(DataSourceID.OPENFIGI, identifier)
+            ClientHelperErrorHandler.invalid_security_type(DataSourceID.OPENFIGI, identifier)
 
         temp_identifiers = [
             identifier for identifier in identifiers if identifier.type in self._OPENFIGI_IDENTIFIER_TYPE_MAP
@@ -343,7 +357,7 @@ class OpenFIGIClient:
 
         response_data = response.json()
         if len(response_data) != len(batch):
-            ClientHelper.other_error_with_message(
+            ClientHelperErrorHandler.other_error_with_message(
                 DataSourceID.OPENFIGI,
                 "Elements in batch and response must match.",
                 OpenFIGIResponseError
@@ -361,7 +375,7 @@ class OpenFIGIClient:
 
         if "error" in item:
             openFIGI_msg = item["error"]
-            ClientHelper.other_error_with_message(
+            ClientHelperErrorHandler.other_error_with_message(
                 DataSourceID.OPENFIGI,
                 f"OpenFIGI returned an error for {source_identifier.type} '{source_identifier.value}: {openFIGI_msg}",
                 OpenFIGIResponseError if raise_error else None,
@@ -369,14 +383,14 @@ class OpenFIGIClient:
             return
         elif "warning" in item:
             openFIGI_msg = item["warning"]
-            ClientHelper.other_error_with_message(
+            ClientHelperErrorHandler.other_error_with_message(
                 DataSourceID.OPENFIGI,
                 f"OpenFIGI returned a warning for {source_identifier.type} '{source_identifier.value}': {openFIGI_msg}",
                 OpenFIGIResponseError if raise_error else None,
             )
             return
         elif "data" not in item:
-            ClientHelper.other_error_with_message(
+            ClientHelperErrorHandler.other_error_with_message(
                 DataSourceID.OPENFIGI,
                 f"{DataSourceID.OPENFIGI} response does not contain 'data' for "
                 f"{source_identifier.type} '{source_identifier.value}'.",
@@ -386,13 +400,13 @@ class OpenFIGIClient:
 
         data = item.get("data")
         if not isinstance(data, list):
-            ClientHelper.other_error_with_message(
+            ClientHelperErrorHandler.other_error_with_message(
                 DataSourceID.OPENFIGI,
-                 f"{DataSourceID.OPENFIGI} response 'results' is not a list (of dictionaries).",
-                 OpenFIGIResponseError if raise_error else None,
+                f"{DataSourceID.OPENFIGI} response 'results' is not a list (of dictionaries).",
+                OpenFIGIResponseError if raise_error else None,
             )
         if len(data) == 0:
-            ClientHelper.other_error_with_message(
+            ClientHelperErrorHandler.other_error_with_message(
                 DataSourceID.OPENFIGI,
                 f"{DataSourceID.OPENFIGI} returned no mapping result data.",
                 OpenFIGIResponseError if raise_error else None,
@@ -439,14 +453,14 @@ class OpenFIGIClient:
                                 else:
                                     setattr(record, attribute, value)
                             else:
-                                ClientHelper.missing_record_attribute(
+                                ClientHelperErrorHandler.missing_record_attribute(
                                     DataSourceID.OPENFIGI,
                                     json_name,
                                     value,
                                     "_OPENFIGI_RECORDMAP",
                                 )
                         else:
-                            ClientHelper.unknown_provider_attribute(
+                            ClientHelperErrorHandler.unknown_provider_attribute(
                                 DataSourceID.OPENFIGI,
                                 source_identifier,
                                 json_name,

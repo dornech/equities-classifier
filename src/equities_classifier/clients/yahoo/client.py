@@ -24,23 +24,11 @@ from equities_classifier.clients.httpx_logger import log_request, log_response
 from finance_enums import exchange_records_by_market_category
 from yfinance.const import _MIC_TO_YAHOO_SUFFIX
 
-from equities_classifier.clients.clienthelper import ClientHelper
-from equities_classifier.clients.yahoo.models import (
-    YahooSearchResult,
-    YahooRecord,
-)
-from equities_classifier.enums import (
-    DataSourceID,
-    SecurityIdentifierType,
-)
-from equities_classifier.models import (
-    SecurityIdentifier,
-    SecurityIdentifierList,
-)
-from equities_classifier.exceptions import (
-    ClientConnectionError,
-    ClientResponseError,
-)
+from equities_classifier.enums import DataSourceID, SecurityIdentifierType
+from equities_classifier.models import SecurityIdentifier, SecurityIdentifierList
+from equities_classifier.exceptions import ClientConnectionError, ClientResponseError
+from equities_classifier.clients.clienthelper import ClientHelperErrorHandler
+from equities_classifier.clients.yahoo.models import YahooSearchResult, YahooRecord
 
 
 def _build_yahoo_suffix_to_countries() -> dict[str, str]:
@@ -107,6 +95,8 @@ class YahooClient:
     ) -> None:
         """Initialize Yahoo Finance client."""
 
+        _client: httpx.Client | None
+
         self._client = httpx.Client(
             base_url=self._BASE_URL,
             timeout=timeout,
@@ -133,7 +123,7 @@ class YahooClient:
     @classmethod
     def supports_identifier_type(cls, identifier_type: SecurityIdentifierType,) -> bool:
         """Check if identifier type is supported."""
-        return identifier_type in cls._YAHOO_IDENTIFIER_TYPES
+        return identifier_type in cls._YAHOO_IDENTIFIER_TYPES.values()
 
     def read_provider_profile_data(
         self,
@@ -147,7 +137,7 @@ class YahooClient:
         for source_identifier in source_identifiers:
 
             if not self.supports_identifier_type(source_identifier.type):
-                ClientHelper.invalid_security_type(DataSourceID.YAHOO, source_identifier,)
+                ClientHelperErrorHandler.invalid_security_type(DataSourceID.YAHOO, source_identifier,)
                 continue
 
             response_data = self._execute_search_request(source_identifier)
@@ -201,7 +191,7 @@ class YahooClient:
         """Parse Yahoo Finance search results."""
 
         if "quotes" not in response:
-            ClientHelper.other_error_with_message(
+            ClientHelperErrorHandler.other_error_with_message(
                 DataSourceID.YAHOO,
                 f"{DataSourceID.YAHOO} search query result does not contain 'quotes'.",
                 YahooResponseError if raise_error else None,
@@ -211,7 +201,7 @@ class YahooClient:
         quotes = response["quotes"]
 
         if not isinstance(quotes, list):
-            ClientHelper.other_error_with_message(
+            ClientHelperErrorHandler.other_error_with_message(
                 DataSourceID.YAHOO,
                 (
                     f"{DataSourceID.YAHOO} search response for identifier "
@@ -235,7 +225,7 @@ class YahooClient:
                 if hasattr(result, attribute):
                     setattr(result, attribute, value)
                 else:
-                    ClientHelper.missing_record_attribute(
+                    ClientHelperErrorHandler.missing_record_attribute(
                         DataSourceID.YAHOO,
                         attribute,
                         value,
@@ -253,7 +243,7 @@ class YahooClient:
         """Create Yahoo Finance provider record."""
 
         if not search_result:
-            ClientHelper.other_error_with_message(
+            ClientHelperErrorHandler.other_error_with_message(
                 DataSourceID.YAHOO,
                 f"No {DataSourceID.YAHOO} search result available for identifier "
                 f"{source_identifier.type} '{source_identifier.value}'.",
@@ -279,7 +269,7 @@ class YahooClient:
             country = "US"
         if source_identifier.type == SecurityIdentifierType.ISIN:
             if country != source_identifier.value:
-                ClientHelper.inconsistent_provider_data(
+                ClientHelperErrorHandler.inconsistent_provider_data(
                     DataSourceID.YAHOO,
                     record.name,
                     "country of standard Yahoo suffix does not match with ISIN country",

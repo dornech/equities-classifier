@@ -32,23 +32,11 @@ from selenium.webdriver.common.by import By
 from iso3166 import countries
 from lxml import html
 
-from equities_classifier.clients.clienthelper import ClientHelper
-from equities_classifier.clients.motleyfool.models import (
-    MotleyFoolSearchResult,
-    MotleyFoolRecord,
-)
-from equities_classifier.enums import (
-    DataSourceID,
-    SecurityIdentifierType,
-)
-from equities_classifier.models import (
-    SecurityIdentifier,
-    SecurityIdentifierList,
-)
-from equities_classifier.exceptions import (
-    ClientConnectionError,
-    ClientResponseError,
-)
+from equities_classifier.enums import DataSourceID, SecurityIdentifierType
+from equities_classifier.models import SecurityIdentifier, SecurityIdentifierList
+from equities_classifier.exceptions import ClientConnectionError, ClientResponseError
+from equities_classifier.clients.clienthelper import ClientHelperErrorHandler
+from equities_classifier.clients.motleyfool.models import MotleyFoolSearchResult, MotleyFoolRecord
 
 
 class MotleyFoolResponseError(ClientResponseError):
@@ -74,6 +62,11 @@ class MotleyFoolClient:
         "AppleWebKit/537.36 (KHTML, like Gecko) "
         "Chrome/151.0.0.0 Safari/537.36"
     )
+
+    _MOTLEYFOOL_IDENTIFIER_TYPES: immutabledict[str, SecurityIdentifierType] = immutabledict({
+        "ticker": SecurityIdentifierType.TICKER,
+        "ticker_us": SecurityIdentifierType.TICKER_US
+    })
 
     _MOTLEYFOOL_COUNTRY_FROM_EXCHANGE = immutabledict({
         "CPSE": "DK",
@@ -109,7 +102,7 @@ class MotleyFoolClient:
     ) -> None:
         """Initialize Motley-Fool client."""
 
-        self._client: httpx.Client | uc.Chrome
+        self._client: httpx.Client | uc.Chrome | None
 
         self._mode = mode
         if self._mode == MotleyFoolMode.HTTPX:
@@ -179,7 +172,7 @@ class MotleyFoolClient:
             if match:
                 return str(match.group(1))
 
-        ClientHelper.other_error_with_message(
+        ClientHelperErrorHandler.other_error_with_message(
             DataSourceID.MOTLEYFOOL,
             f"Next-Action for searchInstruments not found at {DataSourceID.MOTLEYFOOL}.",
             MotleyFoolResponseError,
@@ -201,6 +194,11 @@ class MotleyFoolClient:
 
     # public API
 
+    @classmethod
+    def supports_identifier_type(cls, identifier_type: SecurityIdentifierType, ) -> bool:
+        """Check if identifier type supported"""
+        return identifier_type in cls._MOTLEYFOOL_IDENTIFIER_TYPES.values()
+
     def read_provider_profile_data(
         self,
         source_identifiers: Sequence[SecurityIdentifier],
@@ -212,8 +210,8 @@ class MotleyFoolClient:
 
         for source_identifier in source_identifiers:
 
-            if source_identifier.type != SecurityIdentifierType.TICKER:
-                ClientHelper.invalid_security_type(DataSourceID.MOTLEYFOOL, source_identifier)
+            if not self.supports_identifier_type(source_identifier.type):
+                ClientHelperErrorHandler.invalid_security_type(DataSourceID.MOTLEYFOOL, source_identifier)
                 continue
 
             if self._mode == MotleyFoolMode.HTTPX:
@@ -255,7 +253,7 @@ class MotleyFoolClient:
         count_after = len(records)
 
         if count_before - count_after > 0:
-            ClientHelper.records_cleaned(
+            ClientHelperErrorHandler.records_cleaned(
                DataSourceID.MOTLEYFOOL,
                count_before - count_after,
                "records without expected classification data"
@@ -319,7 +317,7 @@ class MotleyFoolClient:
 
         match = re.search(r"1:(\[.*\])", response, re.DOTALL)
         if match is None:
-            ClientHelper.other_error_with_message(
+            ClientHelperErrorHandler.other_error_with_message(
                 DataSourceID.MOTLEYFOOL,
                 f"{DataSourceID.MOTLEYFOOL} search result response for identifier ({source_identifier.type}, {source_identifier.value}) does not contain any search result.",
             )
@@ -335,7 +333,7 @@ class MotleyFoolClient:
                 if hasattr(result, attribute):
                     setattr(result, attribute, value)
                 else:
-                    ClientHelper.missing_record_attribute(
+                    ClientHelperErrorHandler.missing_record_attribute(
                         DataSourceID.MOTLEYFOOL,
                         attribute,
                         value,
@@ -358,7 +356,7 @@ class MotleyFoolClient:
             By.XPATH, "//div[@data-radix-popper-content-wrapper]/descendant::div[@cmdk-group-items]/div[@cmdk-item]"
         )
         if len(htmlitems) == 0:
-            ClientHelper.other_error_with_message(
+            ClientHelperErrorHandler.other_error_with_message(
                 DataSourceID.MOTLEYFOOL,
                 f"{DataSourceID.MOTLEYFOOL} website search for identifier ({source_identifier.type}, {source_identifier.value}) does not contain any search result.",
             )
@@ -383,7 +381,7 @@ class MotleyFoolClient:
     ) -> MotleyFoolSearchResult | None:
 
         if not search_results or len(search_results) == 0:
-            ClientHelper.other_error_with_message(
+            ClientHelperErrorHandler.other_error_with_message(
                 DataSourceID.MOTLEYFOOL,
                 f"No {DataSourceID.MOTLEYFOOL} search result available for ticker {source_identifier.value}).",
             )
@@ -400,7 +398,7 @@ class MotleyFoolClient:
                 search_result.home_country_code not in {"?undefined", "$undefined"}
         ]
         if not search_results_cleaned:
-            ClientHelper.other_error_with_message(
+            ClientHelperErrorHandler.other_error_with_message(
                 DataSourceID.MOTLEYFOOL,
                 f"{DataSourceID.MOTLEYFOOL} does not provide a valid search result for identifier ({source_identifier.type}, {source_identifier.value}).",
                 MotleyFoolResponseError if raise_error else None,
@@ -424,7 +422,7 @@ class MotleyFoolClient:
             matches = search_results_cleaned
 
         if len(matches) > 1:
-            ClientHelper.search_result_not_unique(
+            ClientHelperErrorHandler.search_result_not_unique(
                 DataSourceID.MOTLEYFOOL,
                 source_identifier,
                 MotleyFoolResponseError if raise_error else None,
@@ -467,16 +465,14 @@ class MotleyFoolClient:
             return " ".join(node.itertext()).strip()
 
         tree = html.fromstring(html_text)
+
         record = MotleyFoolRecord()
 
         ticker = search_result.ticker
         if search_result.home_country_code:
             ticker = ticker + "." + search_result.home_country_code
         record.identifiers = SecurityIdentifierList([
-            SecurityIdentifier(
-                type=SecurityIdentifierType.TICKER,
-                value=ticker,
-            )
+            SecurityIdentifier(type=SecurityIdentifierType.TICKER, value=ticker,)
         ])
         record.name = search_result.name or ""
         record.ticker = search_result.ticker
@@ -486,7 +482,7 @@ class MotleyFoolClient:
         for attribute, xpath in self._MOTLEYFOOL_PROFILE_SECTION_FIELDS_XPATH_USED.items():
             value = text(xpath)
             if not value:
-                ClientHelper.missing_provider_attribute(
+                ClientHelperErrorHandler.missing_provider_attribute(
                     DataSourceID.MOTLEYFOOL,
                     record.identifier(SecurityIdentifierType.TICKER),
                     attribute
@@ -494,7 +490,7 @@ class MotleyFoolClient:
             if hasattr(record, attribute):
                 setattr(record, attribute, value)
             else:
-                ClientHelper.missing_record_attribute(
+                ClientHelperErrorHandler.missing_record_attribute(
                     DataSourceID.MOTLEYFOOL,
                     attribute,
                     value,

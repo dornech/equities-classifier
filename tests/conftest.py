@@ -15,55 +15,40 @@ from equities_classifier.models import SecurityIdentifier
 
 @pytest.fixture(scope="session")
 def apple_isin() -> SecurityIdentifier:
-    return SecurityIdentifier(
-        type=SecurityIdentifierType.ISIN,
-        value="US0378331005",
-    )
+    return SecurityIdentifier(type=SecurityIdentifierType.ISIN, value="US0378331005")
 
 
 @pytest.fixture(scope="session")
 def apple_ticker() -> SecurityIdentifier:
-    return SecurityIdentifier(
-        type=SecurityIdentifierType.TICKER,
-        value="AAPL",
-    )
+    return SecurityIdentifier(type=SecurityIdentifierType.TICKER, value="AAPL")
+
+
+@pytest.fixture(scope="session")
+def apple_ticker_us() -> SecurityIdentifier:
+    """Return Seeking Alpha source identifier."""
+    return SecurityIdentifier(SecurityIdentifierType.TICKER_US, "AAPL")
 
 
 @pytest.fixture(scope="session")
 def abt_ticker() -> SecurityIdentifier:
-    return SecurityIdentifier(
-        type=SecurityIdentifierType.TICKER,
-        value="ABT",
-    )
+    return SecurityIdentifier(type=SecurityIdentifierType.TICKER, value="ABT")
 
 
 @pytest.fixture(scope="session")
 def abt_ticker_country() -> SecurityIdentifier:
-    return SecurityIdentifier(
-        type=SecurityIdentifierType.TICKER,
-        value="ABT.US",
-    )
+    return SecurityIdentifier(type=SecurityIdentifierType.TICKER, value="ABT.US")
 
 
 @pytest.fixture(scope="session")
 def deere_ticker() -> SecurityIdentifier:
-    return SecurityIdentifier(
-        type=SecurityIdentifierType.TICKER,
-        value="DE",
-    )
+    return SecurityIdentifier(type=SecurityIdentifierType.TICKER, value="DE")
 
 
 @pytest.fixture(scope="session")
 def deere_ticker_country() -> SecurityIdentifier:
-    return SecurityIdentifier(
-        type=SecurityIdentifierType.TICKER,
-        value="DE.US",
-    )
+    return SecurityIdentifier(type=SecurityIdentifierType.TICKER, value="DE.US")
 
 
 @pytest.fixture(scope="session")
 def sedol_dummy() -> SecurityIdentifier:
-    return SecurityIdentifier(
-        type=SecurityIdentifierType.SEDOL,
-        value="2046251",
-    )
+    return SecurityIdentifier(type=SecurityIdentifierType.SEDOL, value="2046251")

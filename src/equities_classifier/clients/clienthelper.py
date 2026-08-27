@@ -12,8 +12,8 @@
 
 
 from typing import Any, cast
-
 from collections import Counter
+from collections.abc import Collection, Mapping
 
 import httpx
 from lxml import html
@@ -21,16 +21,16 @@ from lxml.etree import _Element
 
 from finance_enums import exchange_records_by_market_category
 
-from equities_classifier.enums import (
-    DataSourceID,
-    SecurityIdentifierType,
-)
+from equities_classifier.enums import DataSourceID, SecurityIdentifierType
 from equities_classifier.models import SecurityIdentifier
 from equities_classifier.exceptions import ClientResponseError
 from equities_classifier.logginghelper import logger_equities_classifier
 
 
-class ClientHelper:
+# common error handler
+
+
+class ClientHelperErrorHandler:
     """Helper methods for client processing."""
 
     @staticmethod
@@ -290,7 +290,7 @@ def get_primary_ticker(
     if list_ticker and len(list_ticker) > 0 and list_mic_code and len(list_mic_code) > 0:
 
         if len(list_ticker) != len(list_mic_code):
-            ClientHelper.inconsistent_provider_data(
+            ClientHelperErrorHandler.inconsistent_provider_data(
                 provider,
                 name,
                 "count of 'ticker_exchange' and 'mic_code' differ",
@@ -311,7 +311,7 @@ def get_primary_ticker(
         if len(counter_tickers) > 0:
             ticker_new = counter_tickers.most_common(1)[0][0]
             if ticker_for_check and ticker_for_check != ticker_new:
-                ClientHelper.inconsistent_provider_data(
+                ClientHelperErrorHandler.inconsistent_provider_data(
                     DataSourceID.OPENFIGI,
                     name,
                     f"ticker '{ticker_for_check}' currently set does not match assumed primary ticker '{ticker_new}'",
@@ -319,7 +319,7 @@ def get_primary_ticker(
                 )
             if (len(counter_tickers.most_common()) > 1 and
                 counter_tickers.most_common(1)[0][1] == counter_tickers.most_common(2)[1][1]):
-                ClientHelper.primary_ticker_not_unique(
+                ClientHelperErrorHandler.primary_ticker_not_unique(
                     DataSourceID.OPENFIGI,
                     isin,
                     error_object,
@@ -328,3 +328,43 @@ def get_primary_ticker(
             return ticker_new
 
     return None
+
+
+# handling JSON maps
+
+
+def leaf_paths(
+    data: Mapping[str, Any],
+    path: tuple[str, ...] = (),
+    exclude_leaves: Collection[str] = []
+) -> list[tuple[str, ...]]:
+    """Return all key paths from the root to every leaf."""
+
+    result: list[tuple[str, ...]] = []
+
+    for key, value in data.items():
+
+        if key in exclude_leaves:
+            continue
+
+        current = (*path, key)
+        if isinstance(value, Mapping):
+            result.extend(leaf_paths(value, current, exclude_leaves))
+        elif value:
+            result.append(current)
+
+    return result
+
+
+def get_nested_value(data: dict[str, Any], path: tuple[str, ...], ) -> Any:
+    """Return a nested value from a dictionary."""
+
+    value: Any = data
+    for key in path:
+        if not isinstance(value, dict):
+            return None
+        value = value.get(key)
+        if value is None:
+            return None
+
+    return value

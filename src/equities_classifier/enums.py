@@ -16,6 +16,7 @@ class DataSourceID(StrEnum):
     MORNINGSTAR = "Morningstar"
     MOTLEYFOOL = "MotleyFool"
     OPENFIGI = "OpenFIGI"
+    SEEKINGALPHA = "SeekingAlpha"
     YAHOO = "Yahoo"
 
 
@@ -31,6 +32,7 @@ class SecurityIdentifierType(StrEnum):
     SHARE_CLASS_FIGI = "share_class_figi"
     SEDOL = "sedol"
     TICKER = "ticker"
+    TICKER_US = "ticker_us"
     WKN = "wkn"
 
 
