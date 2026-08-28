@@ -30,16 +30,16 @@ pytestmark = [
 
 def test_read_provider_profile_data(client: SeekingAlphaClient, apple_ticker_us: SecurityIdentifier) -> None:
 
-    results = client.read_provider_profile_data([apple_ticker_us])
-    result = results[0]
+    records = client.read_provider_profile_data([apple_ticker_us])
+    record = records[0]
 
-    assert isinstance(result, SeekingAlphaRecord)
+    assert isinstance(record, SeekingAlphaRecord)
 
-    assert result.identifiers == [apple_ticker_us]
-    assert result.ticker_us == "AAPL"
-    assert result.name == "Apple Inc."
-    assert result.exchange == "NASDAQ"
-    assert result.sector == "Information Technology"
-    assert result.sector_code == "45"
-    assert result.subindustry == "Technology Hardware, Storage and Peripherals"
-    assert result.subindustry_code == "45202030"
+    assert record.identifiers == [apple_ticker_us]
+    assert record.ticker_us == "AAPL"
+    assert record.name == "Apple Inc."
+    assert record.exchange == "NASDAQ"
+    assert record.sector == "Information Technology"
+    assert record.sector_code == "45"
+    assert record.subindustry == "Technology Hardware, Storage and Peripherals"
+    assert record.subindustry_code == "45202030"

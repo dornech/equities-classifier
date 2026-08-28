@@ -70,7 +70,7 @@ def test_parse_single_record(
     assert record.share_class_figi == "BBG001S5N8V8"
     assert record.security_type == "Common Stock"
 
-    assert len(record.identifiers) == 1
+    assert len(record.identifiers) == 2
     assert record.identifiers[0] == source_identifier
 
 

@@ -384,6 +384,7 @@ class MotleyFoolClient:
             ClientHelperErrorHandler.other_error_with_message(
                 DataSourceID.MOTLEYFOOL,
                 f"No {DataSourceID.MOTLEYFOOL} search result available for ticker {source_identifier.value}).",
+                MotleyFoolResponseError if raise_error else None,
             )
             return None
 
