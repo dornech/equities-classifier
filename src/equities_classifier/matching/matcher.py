@@ -50,7 +50,7 @@ SecurityMatchSource: TypeAlias = SecurityProviderRecord | Security
 class SecurityMatcher:
     """Match provider records representing the same security."""
 
-    def __init__(self, *, name_similarity_threshold: float = 85.0,) -> None:
+    def __init__(self, *, name_similarity_threshold: float = 85.0) -> None:
         """Initialize SecurityMatcher."""
 
         self._name_similarity_threshold = name_similarity_threshold
@@ -65,14 +65,15 @@ class SecurityMatcher:
         left_ticker = left.identifier_value(SecurityIdentifierType.TICKER)
         left_ticker_cleaned = left.identifier_value_cleaned(SecurityIdentifierType.TICKER)
         left_ticker_country = left.identifier_country(SecurityIdentifierType.TICKER)
-        left_ticker_us = left.identifier_country(SecurityIdentifierType.TICKER_US)
         right_ticker = right.identifier_value(SecurityIdentifierType.TICKER)
         right_ticker_cleaned = right.identifier_value_cleaned(SecurityIdentifierType.TICKER)
         right_ticker_country = right.identifier_country(SecurityIdentifierType.TICKER)
-        right_ticker_us = right.identifier_country(SecurityIdentifierType.TICKER_US)
 
-        left_isin = left.identifier_value(SecurityIdentifierType.ISIN,)
-        right_isin = right.identifier_value(SecurityIdentifierType.ISIN,)
+        left_ticker_us = left.identifier_value(SecurityIdentifierType.TICKER_US)
+        right_ticker_us = right.identifier_value(SecurityIdentifierType.TICKER_US)
+
+        left_isin = left.identifier_value(SecurityIdentifierType.ISIN)
+        right_isin = right.identifier_value(SecurityIdentifierType.ISIN)
 
         # 1a. Ticker + ISIN
         if (

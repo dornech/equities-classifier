@@ -67,7 +67,7 @@ def normalize_name(
     if not name:
         return ""
 
-    value = name.casefold()
+    value = name.casefold().replace(",", " ")
 
     if remove_security_suffix:
         value = re.sub(
@@ -80,7 +80,7 @@ def normalize_name(
     if remove_legal_suffix:
         for suffix in _LEGAL_SUFFIXES:
             pattern = r"\s+" + r"[\s.]*".join(re.escape(char) for char in suffix) + r"[\s.]*$"
-            if re.search(pattern, name, flags=re.IGNORECASE):
+            if re.search(pattern, value, flags=re.IGNORECASE):
                 value = re.sub(
                     pattern,
                     "",
