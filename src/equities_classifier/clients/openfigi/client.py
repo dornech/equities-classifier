@@ -13,7 +13,7 @@
 # ruff: noqa: PLR1702, RUF050, RUF105, SIM102
 #
 # disable mypy errors
-# mypy: disable-error-code = "arg-type, assignment, no-any-return, union-attr"
+# mypy: disable-error-code = "arg-type, assignment, misc, no-any-return, union-attr"
 
 # fmt: off
 
@@ -32,7 +32,7 @@ from equities_classifier.exceptions import (
 )
 from equities_classifier.clients.clienthelper import (
     ClientHelperErrorHandler,
-    get_primary_ticker, bloomberg_exchange_mapping
+    bloomberg_exchange_mapping, get_primary_ticker, get_us_ticker,
 )
 from equities_classifier.clients.ratelimiter import RateLimits, RateLimiter
 from equities_classifier.clients.openfigi.models import OpenFIGIRecord
@@ -143,6 +143,36 @@ class OpenFIGIClient:
         results: list[OpenFIGIRecord] = []
 
         batches = self._create_batches(source_identifiers)
+        for batch in batches:
+
+            response_data = self._execute_request(batch)
+            for source_identifier, item in zip(batch, response_data, strict=True):
+                # parsing across batches for comprehension of data for duplicate source identifiers
+                # (i.e. ticker and ISIN)
+                self._parse_records(
+                    item=item,
+                    source_identifier=source_identifier,
+                    records=results,
+                    raise_error=raise_error
+                )
+
+        # repeat for tickers with share_class_figi to get US tickers
+
+        repeat_ticker_with_share_class_figi: list[SecurityIdentifier] = list({
+            result.identifier(SecurityIdentifierType.SHARE_CLASS_FIGI)
+            for result in results
+            if (
+                result.identifier(SecurityIdentifierType.SHARE_CLASS_FIGI) is not None and
+                not result.has_identifier(SecurityIdentifierType.ISIN) and
+                result.has_identifier(SecurityIdentifierType.TICKER) and
+                result.identifier(SecurityIdentifierType.TICKER).value_cleaned !=
+                get_us_ticker(result.ticker_exchange, result.exch_code)
+            )
+        })
+        if len(repeat_ticker_with_share_class_figi) == 0:
+            return results
+
+        batches = self._create_batches(repeat_ticker_with_share_class_figi)
         for batch in batches:
 
             response_data = self._execute_request(batch)
@@ -293,18 +323,9 @@ class OpenFIGIClient:
         """Check and optionally set the primary ticker for OpenFIGI records."""
 
         for record in records:
-            for ticker_exchange, exch_code in zip(record.ticker_exchange, record.exch_code, strict=True):
-                country = next(
-                        (
-                            entry["country"]
-                            for entry in bloomberg_exchange_mapping
-                            if entry["bloomberg_exchange"] == exch_code
-                        ),
-                        None
-                    )
-                if country in {"US", "USA"}:
-                    record.identifiers.append(SecurityIdentifier(SecurityIdentifierType.TICKER_US, ticker_exchange))
-                    break
+            ticker_us = get_us_ticker(record.ticker_exchange, record.exch_code)
+            if ticker_us:
+                record.identifiers.append(SecurityIdentifier(SecurityIdentifierType.TICKER_US, ticker_us))
 
     # internal routines
 

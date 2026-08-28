@@ -232,7 +232,7 @@ def _get_bloomberg_exchange_mapping() -> list[dict[str, str]]:
         "country",
     )
 
-    response = httpx.get(_URL, timeout=30.0, follow_redirects=True,)
+    response = httpx.get(_URL, timeout=30.0, follow_redirects=True)
     response.raise_for_status()
 
     document = html.fromstring(response.content)
@@ -330,6 +330,26 @@ def get_primary_ticker(
 
     return None
 
+
+def get_us_ticker(
+    list_ticker_exchange: list[str],
+    list_exch_code: list[str],
+) -> str | None:
+    """Get US ticke r- assumption: ticker identical for all (regulated) US exchanges"""
+
+    for ticker_exchange, exch_code in zip(list_ticker_exchange, list_exch_code, strict=True):
+        country = next(
+            (
+                entry["country"]
+                for entry in bloomberg_exchange_mapping
+                if entry["bloomberg_exchange"] == exch_code
+            ),
+            None
+        )
+        if country in {"US", "USA"}:
+            return ticker_exchange
+
+    return None
 
 # handling JSON maps
 
