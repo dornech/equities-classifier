@@ -286,6 +286,7 @@ def get_primary_ticker(
     list_mic_code: list[str],
     error_object: type[ClientResponseError] | None = None,
 ) -> str | None:
+    """Get primary ticker defined as ticker in home country / country of isin registration."""
 
     if list_ticker and len(list_ticker) > 0 and list_mic_code and len(list_mic_code) > 0:
 

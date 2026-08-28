@@ -13,12 +13,7 @@ from typing import Any, ClassVar, SupportsIndex, overload
 from collections.abc import Iterable
 from dataclasses import dataclass, fields, field
 
-from equities_classifier.enums import (
-    DataSourceID,
-    ClassificationSystemID,
-    ClassificationLevel,
-    SecurityIdentifierType
-)
+from equities_classifier.enums import DataSourceID, ClassificationSystemID, ClassificationLevel, SecurityIdentifierType
 
 
 # classes regarding security classification
@@ -95,6 +90,7 @@ class SecurityIdentifierList(list[SecurityIdentifier]):
     """List of security identifiers with unique identifier types."""
 
     def __init__(self, iterable: Iterable[SecurityIdentifier] = ()) -> None:
+        """List of security identifiers with unique identifier types."""
 
         super().__init__()
         self.extend(iterable)
@@ -136,6 +132,7 @@ class SecurityIdentifierList(list[SecurityIdentifier]):
             raise ValueError(message)
 
     def append(self, identifier: SecurityIdentifier) -> None:
+        """List of security identifiers with unique identifier types - append overloading."""
 
         self._validate(identifier)
         self._check_duplicate(identifier)
@@ -143,6 +140,7 @@ class SecurityIdentifierList(list[SecurityIdentifier]):
         super().append(identifier)
 
     def extend(self, iterable: Iterable[SecurityIdentifier]) -> None:
+        """List of security identifiers with unique identifier types - extend overloading."""
 
         identifiers = list(iterable)
 
@@ -153,6 +151,7 @@ class SecurityIdentifierList(list[SecurityIdentifier]):
         super().extend(identifiers)
 
     def insert(self, index: SupportsIndex, identifier: SecurityIdentifier) -> None:
+        """List of security identifiers with unique identifier types - insert overloading."""
 
         self._validate(identifier)
         self._check_duplicate(identifier)
