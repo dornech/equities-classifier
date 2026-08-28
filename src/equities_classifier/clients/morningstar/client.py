@@ -179,7 +179,7 @@ class MorningstarClient:
     @classmethod
     def supports_identifier_type(cls, identifier_type: SecurityIdentifierType, ) -> bool:
         """Check if identifier type supported"""
-        return identifier_type in cls._MORNINGSTAR_IDENTIFIER_TYPES.values
+        return identifier_type in cls._MORNINGSTAR_IDENTIFIER_TYPES.values()
 
     def read_provider_base_data(
         self,
