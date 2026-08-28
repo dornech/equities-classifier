@@ -20,15 +20,8 @@ from functools import cache
 
 from rapidfuzz.fuzz import ratio
 
-from equities_classifier.enums import (
-    DataSourceID,
-    ClassificationSystemID,
-    ClassificationLevel,
-)
-from equities_classifier.models import (
-    ClassificationSystem,
-    ClassificationNode,
-)
+from equities_classifier.enums import DataSourceID, ClassificationSystemID, ClassificationLevel
+from equities_classifier.models import ClassificationSystem, ClassificationNode
 from equities_classifier.classification.classificationhelper import ClassificationHelper
 from gics import GICS as GICSDefinition
 
@@ -224,7 +217,7 @@ def resolve_gics_motleyfool(
             code=industry_group_code,
         )
 
-    # Level 3 comes from Motley Fool but gets the canonical GICS code/name.
+    # Level 3 comes from Motley Fool-but gets the canonical GICS code/name.
     industry_name = GICS_DICT.get(industry_code)
     if industry_name is not None:
         result[ClassificationLevel.LEVEL3] = ClassificationNode(
@@ -235,6 +228,14 @@ def resolve_gics_motleyfool(
         )
 
     return result
+
+
+# def resolve_gics_seekingalpha(
+#     nodes: Mapping[ClassificationLevel, ClassificationNode],
+# ) -> Mapping[ClassificationLevel, ClassificationNode]:
+#     """Resolve and validate SeekingAlpha GICS classification."""
+#
+#     pass
 
 
 # Yahoo

@@ -13,10 +13,8 @@ from pathlib import Path
 
 from openpyxl import load_workbook
 
-from equities_classifier.models import (
-    SecurityIdentifier,
-    SecurityIdentifierType,
-)
+from equities_classifier.enums import SecurityIdentifierType
+from equities_classifier.models import SecurityIdentifier
 
 
 def read_identifiers(
@@ -49,6 +47,7 @@ def read_identifiers(
             _create_identifier(row, header_map, row_number)
             for row_number, row in enumerate(rows, start=2)
         ]
+
     finally:
         workbook.close()
 
@@ -126,7 +125,7 @@ def _detect_identifier_type(
 
     if _is_valid_isin(value):
         return SecurityIdentifierType.ISIN
-    if value.isalpha():
+    if value.replace(" ", "").isalpha():
         return SecurityIdentifierType.TICKER
 
     return None

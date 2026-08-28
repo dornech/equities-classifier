@@ -7,19 +7,10 @@
 # fmt: off
 
 
-from equities_classifier.enums import (
-    DataSourceID,
-    ClassificationLevel,
-)
+from equities_classifier.enums import DataSourceID, ClassificationLevel
 from equities_classifier.models import Security
-from equities_classifier.classification.systems import (
-    GECS,
-    GICS,
-)
-from equities_classifier.classification.generator import (
-    ClassificationGenerator,
-    ClassificationSource,
-)
+from equities_classifier.classification.systems import GECS, GICS
+from equities_classifier.classification.generator import ClassificationGenerator, ClassificationSource
 
 
 def test_generate_gecs() -> None:

@@ -11,11 +11,7 @@
 # fmt: off
 
 
-from equities_classifier.enums import (
-    DataSourceID,
-    ClassificationSystemID,
-    ClassificationLevel,
-)
+from equities_classifier.enums import DataSourceID, ClassificationSystemID, ClassificationLevel
 from equities_classifier.exceptions import ClassificationError
 from equities_classifier.logginghelper import logger_equities_classifier
 

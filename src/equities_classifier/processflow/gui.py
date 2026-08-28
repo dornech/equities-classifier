@@ -16,11 +16,7 @@ from pathlib import Path
 import FreeSimpleGUI as sg
 
 from equities_classifier.processflow.input import read_identifiers
-from equities_classifier.processflow.output import (
-    ClassificationOutput,
-    get_classification_output,
-    write_excel,
-)
+from equities_classifier.processflow.output import ClassificationOutput, get_classification_output, write_excel
 from equities_classifier.processflow.processflow import ProcessFlow
 
 

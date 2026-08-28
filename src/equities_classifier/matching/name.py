@@ -14,9 +14,29 @@ import re
 from rapidfuzz.fuzz import ratio
 
 
+_SECURITY_SUFFIXES = (
+    "b",
+    "class b",
+    "common share",
+    "common shares",
+    "ord",
+    "ordinary share",
+    "ordinary shares",
+    "publ",
+    "(publ.)",
+    "share",
+    "share from split",
+    "shares",
+    "shares from split",
+)
+
 _LEGAL_SUFFIXES = frozenset({
+    "ab",
     "ag",
+    "as",
+    "a/s",
     "asa",
+    "bv",
     "corp",
     "corporation",
     "co",
@@ -28,29 +48,47 @@ _LEGAL_SUFFIXES = frozenset({
     "nv",
     "plc",
     "sa",
+    "sarl",
+    "sas",
     "se",
     "spa",
     "srl",
 })
 
 
-def normalize_name(name: str | None) -> str:
+def normalize_name(
+    name: str,
+    *,
+    remove_security_suffix: bool = True,
+    remove_legal_suffix: bool = True,
+) -> str:
     """Normalize a security/company name for comparison."""
 
     if not name:
         return ""
 
     value = name.casefold()
-    value = re.sub(r"[^\w\s]", " ", value, flags=re.UNICODE)
-    words = value.split()
 
-    words = [
-        word
-        for word in words
-        if word not in _LEGAL_SUFFIXES
-    ]
+    if remove_security_suffix:
+        value = re.sub(
+            rf"[\s-]+(?:{'|'.join(map(re.escape, _SECURITY_SUFFIXES))})$",
+            "",
+            value,
+            flags=re.IGNORECASE,
+        ).strip()
 
-    return " ".join(words)
+    if remove_legal_suffix:
+        for suffix in _LEGAL_SUFFIXES:
+            pattern = r"\s+" + r"[\s.]*".join(re.escape(char) for char in suffix) + r"[\s.]*$"
+            if re.search(pattern, name, flags=re.IGNORECASE):
+                value = re.sub(
+                    pattern,
+                    "",
+                    value,
+                    flags=re.IGNORECASE,
+                ).strip()
+
+    return value
 
 
 def name_similarity(
@@ -59,8 +97,8 @@ def name_similarity(
 ) -> float:
     """Return normalized name similarity in percent."""
 
-    normalized1 = normalize_name(name1)
-    normalized2 = normalize_name(name2)
+    normalized1 = normalize_name(name1) if name1 else None
+    normalized2 = normalize_name(name2) if name2 else None
 
     if not normalized1 or not normalized2:
         return 0.0

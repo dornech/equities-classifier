@@ -21,15 +21,9 @@ from pathlib import Path
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 
-from equities_classifier.models import (
-    SecurityIdentifierType,
-    Security,
-    ClassificationSystem,
-)
-from equities_classifier.classification.systems import (
-    GECS,
-    GICS
-)
+from equities_classifier.enums import SecurityIdentifierType
+from equities_classifier.models import Security, ClassificationSystem
+from equities_classifier.classification.systems import GECS, GICS
 
 
 class ClassificationOutput(Enum):
@@ -86,6 +80,8 @@ def write_excel(
             provider_details,
         )
         for column_index, value in enumerate(values, start=1):
+            if value and isinstance(value, list):
+                value = ", ".join(value) if len(value) > 0 else ""
             worksheet.cell(row=row_index, column=column_index, value=value)
 
     _format_worksheet(worksheet)

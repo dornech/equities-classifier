@@ -15,14 +15,8 @@ import argparse
 from collections.abc import Sequence
 from pathlib import Path
 from equities_classifier.processflow.input import read_identifiers
-from equities_classifier.processflow.output import (
-    get_classification_output,
-    write_excel,
-)
-from equities_classifier.processflow.gui import (
-    ProcessFlow,
-    run_gui,
-)
+from equities_classifier.processflow.output import get_classification_output, write_excel
+from equities_classifier.processflow.gui import ProcessFlow, run_gui
 
 
 def _create_parser() -> argparse.ArgumentParser:
@@ -89,7 +83,8 @@ def main(
 if __name__ == "__main__":
 
     identifiers = read_identifiers(r"H:\EquClass_Test_Input.xlsx")
-    processflow = ProcessFlow(morningstar=True, motleyfool=True)
+    # processflow = ProcessFlow(morningstar=True, motleyfool=True, seekingalpha=True, yahoo=True)
+    processflow = ProcessFlow(morningstar=False, motleyfool=True, seekingalpha=True, yahoo=True)
     securities = processflow.run(identifiers)
     write_excel(
         securities,

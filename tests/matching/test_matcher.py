@@ -89,7 +89,7 @@ def test_match_ticker_and_isin(
     result = SecurityMatcher().match(left, right)
 
     assert result.matched
-    assert result.match_type is MatchType.TICKER_AND_ISIN
+    assert result.match_type is MatchType.ISIN_TICKER
     assert result.warning is None
 
 

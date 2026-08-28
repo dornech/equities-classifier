@@ -10,21 +10,11 @@
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
-from equities_classifier.enums import (
-    DataSourceID,
-    ClassificationLevel,
-)
-from equities_classifier.models import (
-    ClassificationSystem,
-    ClassificationNode,
-    Security,
-    SecurityClassification,
-)
+from equities_classifier.enums import DataSourceID, ClassificationLevel
+from equities_classifier.models import ClassificationSystem, ClassificationNode, Security, SecurityClassification
 from equities_classifier.classification.systems import (
-    GECS,
-    resolve_gecs_supersector,
-    GICS,
-    resolve_gics_motleyfool,
+    GECS, resolve_gecs_supersector,
+    GICS, resolve_gics_motleyfool,  # resolve_gics_seekingalpha
 )
 
 
@@ -60,6 +50,16 @@ _SOURCE_GICS_MOTLEYFOOL = ClassificationSource(
     resolver=resolve_gics_motleyfool,
 )
 
+_SOURCE_GICS_SEEKINGALPHA = ClassificationSource(
+    datasource=DataSourceID.MOTLEYFOOL,
+    system=GICS,
+    level_attributes={
+        ClassificationLevel.LEVEL1: "sector",
+        ClassificationLevel.LEVEL4: "subindustry",
+    },
+    # resolver=resolve_gics_seekingalpha,
+)
+
 
 class ClassificationGenerator:
     """Generate classifications from Security provider attributes."""
@@ -74,6 +74,7 @@ class ClassificationGenerator:
             self._sources: tuple[ClassificationSource, ...] = (
                 _SOURCE_GECS_MORNINGSTAR,
                 _SOURCE_GICS_MOTLEYFOOL,
+                _SOURCE_GICS_SEEKINGALPHA
             )
         else:
             self._sources = sources

@@ -9,23 +9,14 @@
 # fmt: off
 
 
-from enum import Enum
 from collections.abc import Sequence
 
 from equities_classifier.models import (
     Security,
     SecurityProviderRecord,
 )
-
 from .matcher import SecurityMatcher
 from .matchinghelper import MatchingHelper
-
-
-class JoinType(Enum):
-    """Security provider record join type."""
-
-    INNER = "inner"
-    LEFT = "left"
 
 
 class SecurityMerger:
@@ -54,27 +45,26 @@ class SecurityMerger:
         self,
         security: Security,
         right: Sequence[SecurityProviderRecord],
-        *,
-        join_type: JoinType = JoinType.LEFT,
     ) -> Security:
         """Merge provider records into existing Security record."""
 
         matches = [
             provider_record
             for provider_record in right
-            if self._matcher.match(security, provider_record,)
+            if self._matcher.match(security, provider_record).matched
         ]
 
-        if len(matches) > 1:
-            MatchingHelper.other_error_with_message(
-                f"Multiple matching provider records for "
-                f"{security.name!r} / {security.ticker!r}."
-            )
+        if len(matches) >= 1:
 
-        provider_record = matches[0]
+            if len(matches) > 1:
+                MatchingHelper.other_error_with_message(
+                    f"Multiple matching provider records for "
+                    f"{security.name!r} / {security.ticker!r}, {len(matches)} matches."
+                )
 
-        self._merge_identifiers(security, provider_record,)
-        self._merge_provider_attributes(security, provider_record,)
+            provider_record = matches[0]
+            self._merge_identifiers(security, provider_record)
+            self._merge_provider_attributes(security, provider_record)
 
         return security
 
@@ -82,8 +72,6 @@ class SecurityMerger:
         self,
         left: Sequence[Security],
         right: Sequence[SecurityProviderRecord],
-        *,
-        join_type: JoinType = JoinType.LEFT,
     ) -> list[Security]:
         """Merge provider records into existing Security objects."""
 
@@ -98,7 +86,7 @@ class SecurityMerger:
     ) -> Security:
         """Create a Security from a SecurityProviderRecord."""
 
-        security = Security(name=provider_record.name, ticker=provider_record.ticker,)
+        security = Security(name=provider_record.name, ticker=provider_record.ticker)
         security.identifiers = provider_record.identifiers
         security.provider_attributes[provider_record.datasource] = provider_record.provider_attributes()
 
@@ -112,7 +100,7 @@ class SecurityMerger:
         """Merge identifiers from a SecurityProviderRecord into a Security."""
 
         for identifier in provider_record.identifiers:
-            if security.identifier(identifier.type) is None:
+            if not security.has_identifier(identifier.type):
                 security.identifiers.append(identifier)
 
     @staticmethod
@@ -122,7 +110,7 @@ class SecurityMerger:
     ) -> None:
         """Merge SecurityProviderRecord into a Security."""
 
-        if not security.provider_attributes[provider_record.datasource]:
+        if provider_record.datasource not in security.provider_attributes:
             security.provider_attributes[provider_record.datasource] = provider_record.provider_attributes()
         else:
             MatchingHelper.other_error_with_message(

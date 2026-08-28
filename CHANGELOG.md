@@ -1,9 +1,28 @@
-# Changelog
+# CHANGELOG
 
-## Version 0.0.1 (development)
 
-- First pre-alpha
-- ...
+
+## [v0.9.0](https://github.com/dornech/equities-classifier/releases/tag/v0.9.0)  (2026-08-28) 
+
+### Features
+
+- SeekingAlpha as new datasource and Ticker_US as identifier type incl. test cases
+(['23c521c'](https://github.com/dornech/equities-classifier/commit/23c521c508c341959d983dc4f13ca99366320523))
+- Yahoo as new datasource
+(['6891085'](https://github.com/dornech/equities-classifier/commit/6891085906c8c162b1b4bd669bbed1d24178c42f))
+
+### Bug fixes
+
+- Fixes regarding test cases
+(['28db4da'](https://github.com/dornech/equities-classifier/commit/28db4da705b841b217aaa3754a4781b6fde192c8))
+- Add missing docstrings
+(['1649d20'](https://github.com/dornech/equities-classifier/commit/1649d20ca77790ec90a18aef0fbdff899440e066))
+- Minor error Morningstar client
+(['466e581'](https://github.com/dornech/equities-classifier/commit/466e581a497a33faf43ba8648b84f3060d3d22d9))
+- Improvements data provider clients
+(['94b6f89'](https://github.com/dornech/equities-classifier/commit/94b6f890d004c5c081d5c814dd51b694ccbf6135))
+- Improvements MotleyFool
+(['4acc884'](https://github.com/dornech/equities-classifier/commit/4acc884e170733f56062915c602dfd158e4cef64))
 
 ## [v0.8.0](https://github.com/dornech/equities-classifier/releases/tag/v0.8.0)  (2026-08-20) 
 
@@ -21,6 +40,7 @@
 - Improve OpenFIGI record comprehension
 (['112f5d2'](https://github.com/dornech/equities-classifier/commit/112f5d242f8650d4722cf56533bce37d1f843f2f))
 
+
 ## [v0.7.2](https://github.com/dornech/equities-classifier/releases/tag/v0.7.2)  (2026-08-18) 
 
 ### Bug fixes
@@ -35,6 +55,7 @@
 (['5da374e'](https://github.com/dornech/equities-classifier/commit/5da374e5f30cef908fb41102d179c196903fcfbf))
 
 ### Testing
+
 
 
 ## [v0.7.1](https://github.com/dornech/equities-classifier/releases/tag/v0.7.1)  (2026-08-16) 
@@ -52,6 +73,7 @@
 (['0817aea'](https://github.com/dornech/equities-classifier/commit/0817aea2ca2e658fd3d5b75c58f5fc7b4eacfc03))
 - Improve conftest.py
 (['e026111'](https://github.com/dornech/equities-classifier/commit/e02611124cfdbaf7776bb82003ae84f0d40dab5d))
+
 
 ## [v0.7.0](https://github.com/dornech/equities-classifier/releases/tag/v0.7.0)  (2026-08-15) 
 
@@ -82,6 +104,7 @@
 - **deps**: Bump sigstore/gh-action-sigstore-python from 3.4.0 to 3.5.0
  (['b1a7108'](https://github.com/dornech/equities-classifier/commit/b1a71083cab762c755eb799e608f415320617dfc))
 
+
 ## [v0.6.0](https://github.com/dornech/equities-classifier/releases/tag/v0.6.0)  (2026-08-12) 
 
 ### Features
@@ -95,6 +118,7 @@
 
 - Switch from undetected-chromedriver to undetected, add missing dependency lxml
 (['6eb361d'](https://github.com/dornech/equities-classifier/commit/6eb361d8ab08e930e6d2936ad318f82634796dbd))
+
 
 ## [v0.5.1](https://github.com/dornech/equities-classifier/releases/tag/v0.5.1)  (2026-08-09) 
 
@@ -114,6 +138,7 @@
 - Optimize GitHub actions resource usage, avoid especially very expensive macOS-actions
 (['0910fee'](https://github.com/dornech/equities-classifier/commit/0910fee0ed47b5cc6c377ee250ae79b8a7ba0204))
 
+
 ## [v0.5.0](https://github.com/dornech/equities-classifier/releases/tag/v0.5.0)  (2026-08-06) 
 
 ### Features
@@ -128,6 +153,7 @@
 - Various fixes to overcome GitHub lint issues and clean ups
 (['8df8fea'](https://github.com/dornech/equities-classifier/commit/8df8fead70db1b42ce9b63363748e43bb9d58314))
 
+
 ## [v0.4.1](https://github.com/dornech/equities-classifier/releases/tag/v0.4.1)  (2026-08-05) 
 
 ### Bug fixes
@@ -138,6 +164,7 @@
 (['d00ade4'](https://github.com/dornech/equities-classifier/commit/d00ade4421b8740e9fb5a8835fd939e324a5b646))
 - Ruff errors in Morningstar client
 (['34f9e37'](https://github.com/dornech/equities-classifier/commit/34f9e37d38008add042c40378c1b3c9d4ab43e0b))
+
 
 ## [v0.4.0](https://github.com/dornech/equities-classifier/releases/tag/v0.4.0)  (2026-08-05) 
 
@@ -164,12 +191,14 @@
 - Archive latest changes resolver/connector before deleting
 (['74015ff'](https://github.com/dornech/equities-classifier/commit/74015ff6d44d5d80fd67b5b2d1b93a99d071da89))
 
+
 ## [v0.3.2](https://github.com/dornech/equities-classifier/releases/tag/v0.3.2)  (2026-08-01) 
 
 ### Bug fixes
 
 - OpenFIGI client - testcase with http-request and corrections
 (['d6bab53'](https://github.com/dornech/equities-classifier/commit/d6bab532eeb5061627721b6592bf0dbb6b12a267))
+
 
 ## [v0.3.1](https://github.com/dornech/equities-classifier/releases/tag/v0.3.1)  (2026-08-01) 
 
@@ -180,6 +209,7 @@
 - OpenFIGI client - use SHARE_CLASS_FIGI instead FIGI
 (['57ea785'](https://github.com/dornech/equities-classifier/commit/57ea785b2f43414d26463fd45a7857c2b016219f))
 
+
 ## [v0.3.0](https://github.com/dornech/equities-classifier/releases/tag/v0.3.0)  (2026-08-01) 
 
 ### Features
@@ -187,12 +217,14 @@
 - OpenFIGI client
 (['f2fb32f'](https://github.com/dornech/equities-classifier/commit/f2fb32fe8198c236db12003ddd4d1a8c796c0a28))
 
+
 ## [v0.2.0](https://github.com/dornech/equities-classifier/releases/tag/v0.2.0)  (2026-07-30) 
 
 ### Features
 
 - Add abstract resolver and connector interfaces
 (['e93b9c3'](https://github.com/dornech/equities-classifier/commit/e93b9c36fb6e44417fb7aae6d29b3e2c0e55034a))
+
 
 ## [v0.1.0](https://github.com/dornech/equities-classifier/releases/tag/v0.1.0)  (2026-07-30) 
 
