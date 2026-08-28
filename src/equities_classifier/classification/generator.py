@@ -14,7 +14,7 @@ from equities_classifier.enums import DataSourceID, ClassificationLevel
 from equities_classifier.models import ClassificationSystem, ClassificationNode, Security, SecurityClassification
 from equities_classifier.classification.systems import (
     GECS, resolve_gecs_supersector,
-    GICS, resolve_gics_motleyfool,  # resolve_gics_seekingalpha
+    GICS, resolve_gics_motleyfool, resolve_gics_seekingalpha
 )
 
 
@@ -24,17 +24,19 @@ class ClassificationSource:
 
     datasource: DataSourceID
     system: ClassificationSystem
-    level_attributes: Mapping[ClassificationLevel, str]
+    level_attributes: Mapping[ClassificationLevel, tuple[str, str | None]]
 
     resolver: Callable | None = None
+
+    priority: bool = False
 
 
 _SOURCE_GECS_MORNINGSTAR = ClassificationSource(
     datasource=DataSourceID.MORNINGSTAR,
     system=GECS,
     level_attributes={
-        ClassificationLevel.LEVEL2: "sector",
-        ClassificationLevel.LEVEL3: "industry",
+        ClassificationLevel.LEVEL2: ("sector", None),
+        ClassificationLevel.LEVEL3: ("industry", None)
     },
     resolver=resolve_gecs_supersector,
 )
@@ -44,20 +46,21 @@ _SOURCE_GICS_MOTLEYFOOL = ClassificationSource(
     datasource=DataSourceID.MOTLEYFOOL,
     system=GICS,
     level_attributes={
-        ClassificationLevel.LEVEL1: "sector",
-        ClassificationLevel.LEVEL3: "industry",
+        ClassificationLevel.LEVEL1: ("sector", None),
+        ClassificationLevel.LEVEL3: ("industry", None)
     },
     resolver=resolve_gics_motleyfool,
 )
 
 _SOURCE_GICS_SEEKINGALPHA = ClassificationSource(
-    datasource=DataSourceID.MOTLEYFOOL,
+    datasource=DataSourceID.SEEKINGALPHA,
     system=GICS,
     level_attributes={
-        ClassificationLevel.LEVEL1: "sector",
-        ClassificationLevel.LEVEL4: "subindustry",
+        ClassificationLevel.LEVEL1: ("sector", "sector_code"),
+        ClassificationLevel.LEVEL4: ("subindustry", "subindustry_code")
     },
-    # resolver=resolve_gics_seekingalpha,
+    resolver=resolve_gics_seekingalpha,
+    priority=True
 )
 
 
@@ -88,10 +91,24 @@ class ClassificationGenerator:
         classifications: list[SecurityClassification] = []
 
         for source in self._sources:
+            if source.datasource in security.provider_attributes:
 
-            classification = self._generate_classification(security, source,)
-            if classification is not None:
-                classifications.append(classification)
+                new_classification = self._generate_classification(security, source)
+                if new_classification:
+
+                    # check for duplicates
+                    classification_exists = False
+                    for existing_classification in classifications:
+                        if existing_classification.system == new_classification.system:
+                            classification_exists = True
+                            break
+
+                    if classification_exists:
+                        if source.priority:
+                            classifications.remove(existing_classification)
+                            classifications.append(new_classification)
+                    else:
+                        classifications.append(new_classification)
 
         return classifications
 
@@ -102,26 +119,29 @@ class ClassificationGenerator:
     ) -> SecurityClassification | None:
         """Generate one classification from a provider source."""
 
-        provider_attributes = security.provider_attributes.get(source.datasource,)
+        provider_attributes = security.provider_attributes.get(source.datasource)
         if not provider_attributes:
             return None
 
         nodes: dict[ClassificationLevel, ClassificationNode] = {}
 
-        for level, attribute in sorted(
-            source.level_attributes.items(),
-            key=lambda item: item[0],
-        ):
-
-            value = provider_attributes.get(attribute)
+        for level, attribute in sorted(source.level_attributes.items(), key=lambda item: item[0]):
+            value = provider_attributes.get(attribute[0])
             if value is None:
                 continue
             value = str(value).strip()
             if not value:
                 continue
-            nodes[level] = ClassificationNode(
-                value=value,
-            )
+            if attribute[1]:
+                code = provider_attributes.get(attribute[1])
+                if code is None:
+                    continue
+                code = str(code).strip()
+                if not code:
+                    continue
+            else:
+                code = None
+            nodes[level] = ClassificationNode(value=value, code=code)
 
         if source.resolver is not None:
             nodes = source.resolver(nodes)

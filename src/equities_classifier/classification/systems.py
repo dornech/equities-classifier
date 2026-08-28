@@ -7,7 +7,7 @@
 # ruff: noqa: N811, PLR2004, RUF105
 #
 # disable mypy errors
-# mypy: disable-error-code = "no-any-return"
+# mypy: disable-error-code = "arg-type, index, no-any-return"
 
 
 # fmt: off
@@ -68,13 +68,13 @@ def resolve_gecs_supersector(
     if sector is None:
         return result
 
-    super_sector = MAP_GECS_SUPERSECTOR_FROM_SECTOR.get(sector.value,)
+    super_sector = MAP_GECS_SUPERSECTOR_FROM_SECTOR.get(sector.value)
     if super_sector is None:
         return result
 
     result.setdefault(
         ClassificationLevel.LEVEL1,
-        ClassificationNode(value=super_sector,),
+        ClassificationNode(value=super_sector),
     )
 
     return result
@@ -112,7 +112,7 @@ GICS_DICT: dict[str, str] = {
 }
 
 GICS_INVDICT: dict[tuple[str, int], str] = {
-    (_normalize_gics_name(definition["name"],), len(code) // 2,): code
+    (_normalize_gics_name(definition["name"]), len(code) // 2): code
     for code, definition in GICSDefinition("").definition.items()
 }
 
@@ -159,9 +159,8 @@ def resolve_gics_motleyfool(
     if industry_node is None:
         return result
 
-    # Find GICS industry (level 3) from Motley Fool industry name.
+    # Find GICS industry (level 3) from Motley-Fool industry name and validate.
     industry_code: str | None = _find_gics_code(industry_node.value, 3)
-
     if industry_code is None:
         ClassificationHelper.classification_element_invalid(
             DataSourceID.MOTLEYFOOL,
@@ -182,10 +181,9 @@ def resolve_gics_motleyfool(
     # Validate Motley-Fool sector against the sector derived
     # from the GICS industry code.
     if sector_node is not None:
-
         expected_sector = GICS_DICT.get(sector_code)
         if expected_sector is not None:
-            actual_sector = _normalize_gics_name(sector_node.value,)
+            actual_sector = _normalize_gics_name(sector_node.value)
             if actual_sector != expected_sector:
                 # Sector and industry disagree. Do not silently
                 # create an inconsistent classification.
@@ -201,8 +199,6 @@ def resolve_gics_motleyfool(
     sector_name = GICS_DICT.get(sector_code)
     if sector_name is not None:
         result[ClassificationLevel.LEVEL1] = ClassificationNode(
-            # value=sector_name,
-            # use uppercase name from GICS definition
             value=GICSDefinition(sector_code).sector.name,
             code=sector_code,
         )
@@ -211,18 +207,14 @@ def resolve_gics_motleyfool(
     industry_group_name = GICS_DICT.get(industry_group_code)
     if industry_group_name is not None:
         result[ClassificationLevel.LEVEL2] = ClassificationNode(
-            # value=industry_group_name,
-            # use uppercase name from GICS definition
             value=GICSDefinition(industry_group_code).industry_group.name,
             code=industry_group_code,
         )
 
-    # Level 3 comes from Motley Fool-but gets the canonical GICS code/name.
+    # Level 3 comes from Motley-Fool but gets the canonical GICS code/name.
     industry_name = GICS_DICT.get(industry_code)
     if industry_name is not None:
         result[ClassificationLevel.LEVEL3] = ClassificationNode(
-            # value=industry_name,
-            # use uppercase name from GICS definition
             value=GICSDefinition(industry_code).industry.name,
             code=industry_code,
         )
@@ -230,12 +222,98 @@ def resolve_gics_motleyfool(
     return result
 
 
-# def resolve_gics_seekingalpha(
-#     nodes: Mapping[ClassificationLevel, ClassificationNode],
-# ) -> Mapping[ClassificationLevel, ClassificationNode]:
-#     """Resolve and validate SeekingAlpha GICS classification."""
-#
-#     pass
+def resolve_gics_seekingalpha(
+    nodes: Mapping[ClassificationLevel, ClassificationNode],
+) -> Mapping[ClassificationLevel, ClassificationNode] | None:
+    """Resolve and validate SeekingAlpha GICS classification."""
+
+    result = dict(nodes)
+
+    sector_node = result.get(ClassificationLevel.LEVEL1)
+    subindustry_node = result.get(ClassificationLevel.LEVEL4)
+
+    if subindustry_node is None:
+        return result
+
+    # validate codes
+    if sector_node and sector_node.code != subindustry_node.code[:2]:
+        ClassificationHelper.classification_inconsistent(
+            DataSourceID.SEEKINGALPHA,
+            ClassificationSystemID.GICS,
+            ClassificationLevel.LEVEL1,
+            sector_node.value,
+        )
+
+    # Set GICS subindustry (level 4) from SeekingAlpha and validate
+    subindustry_code = subindustry_node.code
+    if GICS_INVDICT.get((_normalize_gics_name(subindustry_node.value), 4)) != subindustry_code:
+        ClassificationHelper.classification_element_invalid(
+            DataSourceID.SEEKINGALPHA,
+            ClassificationSystemID.GICS,
+            ClassificationLevel.LEVEL4,
+            subindustry_node.value,
+        )
+        return result
+
+    # GICS level 4 must consist of eight digits.
+    if subindustry_code and len(subindustry_code) < 8:
+        return result
+
+    # Derive the complete hierarchy from the level-4 code.
+    industry_code = subindustry_code[:6]
+    industry_group_code = subindustry_code[:4]
+    sector_code = subindustry_code[:2]
+
+    # Validate SeekingAlpha sector against the sector derived
+    # from the GICS industry code.
+    if sector_node is not None:
+        expected_sector = GICS_DICT.get(sector_code)
+        if expected_sector is not None:
+            actual_sector = _normalize_gics_name(sector_node.value)
+            if actual_sector != expected_sector:
+                # Sector and subindustry disagree. Do not silently
+                # create an inconsistent classification.
+                ClassificationHelper.classification_mismatch(
+                    DataSourceID.MOTLEYFOOL,
+                    ClassificationSystemID.GICS,
+                    ClassificationLevel.LEVEL1,
+                    actual_sector,
+                    expected_sector,
+                )
+
+    # Replace / enrich level 1 with the canonical GICS value.
+    sector_name = GICS_DICT.get(sector_code)
+    if sector_name is not None:
+        result[ClassificationLevel.LEVEL1] = ClassificationNode(
+            value=GICSDefinition(sector_code).sector.name,
+            code=sector_code,
+        )
+
+    # Level 2 is not supplied by SeekingAlpha.
+    industry_group_name = GICS_DICT.get(industry_group_code)
+    if industry_group_name is not None:
+        result[ClassificationLevel.LEVEL2] = ClassificationNode(
+            value=GICSDefinition(industry_group_code).industry_group.name,
+            code=industry_group_code,
+        )
+
+    # Level 3 is not supplied by SeekingAlpha.
+    industry_name = GICS_DICT.get(industry_code)
+    if industry_name is not None:
+        result[ClassificationLevel.LEVEL3] = ClassificationNode(
+            value=GICSDefinition(industry_code).industry.name,
+            code=industry_code,
+        )
+
+    # Level 4 comes from SeekingAlpha but gets the canonical GICS code/name.
+    subindustry_name = GICS_DICT.get(subindustry_code)
+    if subindustry_name is not None:
+        result[ClassificationLevel.LEVEL4] = ClassificationNode(
+            value=GICSDefinition(subindustry_code).sub_industry.name,
+            code=subindustry_code,
+        )
+
+    return result
 
 
 # Yahoo

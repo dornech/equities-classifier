@@ -31,8 +31,8 @@ def test_generate_gecs() -> None:
         datasource=DataSourceID.MORNINGSTAR,
         system=GECS,
         level_attributes={
-            ClassificationLevel.LEVEL2: "sector",
-            ClassificationLevel.LEVEL3: "industry",
+            ClassificationLevel.LEVEL2: ("sector", None),
+            ClassificationLevel.LEVEL3: ("industry", None),
         },
     )
 
@@ -92,8 +92,8 @@ def test_generate_without_provider_data() -> None:
         datasource=DataSourceID.MORNINGSTAR,
         system=GECS,
         level_attributes={
-            ClassificationLevel.LEVEL2: "sector",
-            ClassificationLevel.LEVEL3: "industry",
+            ClassificationLevel.LEVEL2: ("sector", None),
+            ClassificationLevel.LEVEL3: ("industry", None),
         },
     )
 
@@ -119,8 +119,8 @@ def test_generate_with_missing_level() -> None:
         datasource=DataSourceID.MORNINGSTAR,
         system=GECS,
         level_attributes={
-            ClassificationLevel.LEVEL2: "sector",
-            ClassificationLevel.LEVEL3: "industry",
+            ClassificationLevel.LEVEL2: ("sector", None),
+            ClassificationLevel.LEVEL3: ("industry", None),
         },
     )
 
@@ -155,16 +155,16 @@ def test_generate_multiple_classifications() -> None:
             datasource=DataSourceID.MORNINGSTAR,
             system=GECS,
             level_attributes={
-                ClassificationLevel.LEVEL2: "sector",
-                ClassificationLevel.LEVEL3: "industry",
+                ClassificationLevel.LEVEL2: ("sector", None),
+                ClassificationLevel.LEVEL3: ("industry", None),
             },
         ),
         ClassificationSource(
             datasource=DataSourceID.MOTLEYFOOL,
             system=GICS,
             level_attributes={
-                ClassificationLevel.LEVEL1: "sector",
-                ClassificationLevel.LEVEL3: "industry",
+                ClassificationLevel.LEVEL1: ("sector", None),
+                ClassificationLevel.LEVEL3: ("industry", None),
             },
         ),
     )

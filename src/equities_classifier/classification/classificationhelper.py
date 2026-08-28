@@ -5,6 +5,7 @@
 #
 # others
 # ruff: noqa: E501, RUF105
+#
 # disable mypy errors
 # mypy: disable-error-code = "operator"
 
@@ -18,6 +19,19 @@ from equities_classifier.logginghelper import logger_equities_classifier
 
 class ClassificationHelper:
     """Helper methods for classification processing."""
+
+    @staticmethod
+    def classification_inconsistent(
+        datasource: DataSourceID,
+        system: ClassificationSystemID,
+        level: ClassificationLevel,
+        supplied: str,
+    ) -> None:
+        """Handle a classification mismatch."""
+
+        logger_equities_classifier.warning(
+            f"Classification inconsistent. Code '{supplied}' by source {datasource}' for level {level} does not match to rest of hierarchy of classification system '{system}'."
+        )
 
     @staticmethod
     def classification_element_invalid(
