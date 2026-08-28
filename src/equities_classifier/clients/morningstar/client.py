@@ -600,7 +600,7 @@ class MorningstarClient:
                 MorningstarResponseError
             )
 
-    def _execute_profile_request(self, security_id: str,) -> dict[str, Any]:
+    def _execute_profile_request(self, security_id: str) -> dict[str, Any]:
         """Request the Morningstar company profile."""
 
         params = {

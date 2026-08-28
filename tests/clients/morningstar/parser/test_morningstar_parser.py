@@ -36,7 +36,7 @@ def identifier(apple_isin) -> SecurityIdentifier:
 def test_parse_search_results_ok(client_dummy: MorningstarClient, identifier: SecurityIdentifier):
 
     search_result = load_json(DATA_DIR, "search_result_apple.json")
-    results = client_dummy._parse_search_results(identifier, search_result,)
+    results = client_dummy._parse_search_results(identifier, search_result)
 
     assert len(results) == 20
     assert all(r.isin == "US0378331005" for r in results)
@@ -63,7 +63,7 @@ def test_parse_record_ok(client_dummy: MorningstarClient, identifier: SecurityId
 def test_parse_profile_to_record(client_dummy: MorningstarClient, identifier: SecurityIdentifier):
 
     search_result = load_json(DATA_DIR, "search_result_apple.json")
-    search_results = client_dummy._parse_search_results(identifier, search_result,)
+    search_results = client_dummy._parse_search_results(identifier, search_result)
     records: list[MorningstarRecord] = []
     client_dummy._parse_records(identifier, search_results, records)
 

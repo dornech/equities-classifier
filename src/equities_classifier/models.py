@@ -278,7 +278,7 @@ class Security(SecurityIdentifierIdentifiable):
 
     provider_attributes: dict[str, dict[str, Any]] = field(default_factory=dict)
 
-    classifications: list[SecurityClassification] = field(default_factory=list,)
+    classifications: list[SecurityClassification] = field(default_factory=list)
 
     def provider_attribute(self, provider: DataSourceID, attribute: str) -> Any | None:
         """Return a provider-specific attribute."""

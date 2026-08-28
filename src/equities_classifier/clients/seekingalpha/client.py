@@ -7,6 +7,7 @@
 # ruff: noqa: FBT001, FBT002
 # others
 # ruff: noqa: PLR1702, RUF105
+#
 # disable mypy errors
 # mypy: disable-error-code = "arg-type, no-any-return, union-attr"
 
@@ -21,9 +22,6 @@ import json
 import re
 
 import undetected as uc
-# from waitless import stabilize, get_diagnostics, StabilizationConfig, StabilizationTimeout
-# from waitless.diagnostics import print_report
-# from selenium.webdriver.common.by import By
 
 from equities_classifier.enums import DataSourceID, SecurityIdentifierType
 from equities_classifier.models import SecurityIdentifier
@@ -103,25 +101,6 @@ class SeekingAlphaClient:
     ) -> None:
         """Initialize Seeking Alpha client."""
 
-        # self._client: httpx.Client | None
-        #
-        # self._client = httpx.Client(
-        #     timeout=timeout,
-        #     follow_redirects=True,
-        #     headers={
-        #         "User-Agent": (
-        #             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        #             "AppleWebKit/537.36 (KHTML, like Gecko) "
-        #             "Chrome/139.0.0.0 Safari/537.36"
-        #         ),
-        #         "Accept": (
-        #             "text/html,application/xhtml+xml,application/xml;"
-        #             "q=0.9,image/avif,image/webp,*/*;q=0.8"
-        #         ),
-        #         "Accept-Language": "en-US,en;q=0.9",
-        #     },
-        # )
-
         self._client: uc.Chrome | None
 
         if not test_wo_browser:
@@ -136,19 +115,6 @@ class SeekingAlphaClient:
             except Exception as e:
                 print("Failed to start Chrome")
                 raise e
-            # try:
-            #     config = StabilizationConfig(
-            #         timeout=10,  # Max wait time (seconds)
-            #         network_idle_threshold=10,  # Max pending requests (allows background traffic)
-            #         strictness='normal',  # 'strict' | 'normal' | 'relaxed'
-            #         debug_mode=False  # Enable logging
-            #     )
-            #     self._client = stabilize(self._client, config=config)
-            # except StabilizationTimeout as e:
-            #     print("Failed to stabilize Chrome  with 'waitless'")
-            #     diagnostics = get_diagnostics(self._client)
-            #     print_report(diagnostics)  # Print detailed report
-            #     raise e
         else:
             self._client = None
 
@@ -171,7 +137,7 @@ class SeekingAlphaClient:
     # public API
 
     @classmethod
-    def supports_identifier_type(cls, identifier_type: SecurityIdentifierType,) -> bool:
+    def supports_identifier_type(cls, identifier_type: SecurityIdentifierType) -> bool:
         """Return whether the provider supports an identifier type."""
         return identifier_type in cls._SEEKINGALPHA_IDENTIFIER_TYPES.values()
 
@@ -187,7 +153,7 @@ class SeekingAlphaClient:
         for source_identifier in source_identifiers:
 
             if not self.supports_identifier_type(source_identifier.type):
-                ClientHelperErrorHandler.invalid_security_type(DataSourceID.SEEKINGALPHA, source_identifier,)
+                ClientHelperErrorHandler.invalid_security_type(DataSourceID.SEEKINGALPHA, source_identifier)
                 continue
 
             response = self._execute_request(source_identifier, raise_error)
@@ -214,20 +180,6 @@ class SeekingAlphaClient:
         """Read a Seeking Alpha symbol page."""
 
         url = f"{self._SYMBOL_URL}/{source_identifier.value_cleaned}"
-
-        # try:
-        #     response = self._client.get(self._BASE_URL)   # anti bot detection
-        #     response.raise_for_status()
-        #     response = self._client.get(url)
-        #     response.raise_for_status()
-        # except httpx.HTTPError as exc:
-        #     ClientHelperErrorHandler.other_error_with_message(
-        #         DataSourceID.SEEKINGALPHA,
-        #         f"HTTP request to SeekingAlpha failed for ticker_us"
-        #         f"'{source_identifier.value}': {exc}",
-        #         SeekingAlphaResponseError if raise_error else None,
-        #     )
-        #     return None
 
         try:
             self._client.get(self._BASE_URL)

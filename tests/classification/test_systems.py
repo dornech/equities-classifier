@@ -40,14 +40,14 @@ def test_gics_inverse_dict_contains_level() -> None:
 def test_normalize_gics_name_ampersand() -> None:
     """Test normalization of ampersand and 'and'."""
 
-    assert _normalize_gics_name("Oil & Gas Drilling",) == _normalize_gics_name("Oil and Gas Drilling",)
+    assert _normalize_gics_name("Oil & Gas Drilling") == _normalize_gics_name("Oil and Gas Drilling")
 
 
 @pytest.mark.parametrize(
     ("name", "level", "expected"),
     [
-        ("Information Technology", 1, "45",),
-        ("Technology Hardware, Storage and Peripherals", 3, "452020",),
+        ("Information Technology", 1, "45"),
+        ("Technology Hardware, Storage and Peripherals", 3, "452020"),
     ],
 )
 def test_find_gics_code_exact(
@@ -63,34 +63,34 @@ def test_find_gics_code_exact(
 def test_find_gics_code_ampersand_and() -> None:
     """Test equivalent ampersand and 'and' spelling."""
 
-    assert _find_gics_code("Oil & Gas Drilling", 3,) == _find_gics_code("Oil and Gas Drilling", 3,)
+    assert _find_gics_code("Oil & Gas Drilling", 3) == _find_gics_code("Oil and Gas Drilling", 3)
 
 
 def test_find_gics_code_is_level_specific() -> None:
     """Test that GICS lookup does not cross classification levels."""
 
-    assert _find_gics_code("Information Technology", 1,) == "45"
-    assert _find_gics_code("Information Technology", 2,) is None
+    assert _find_gics_code("Information Technology", 1) == "45"
+    assert _find_gics_code("Information Technology", 2) is None
 
 
 def test_find_gics_code_fuzzy() -> None:
     """Test fuzzy GICS name lookup."""
 
-    assert _find_gics_code("Technology Hardware Storage Peripherals", 3,) == "452020"
+    assert _find_gics_code("Technology Hardware Storage Peripherals", 3) == "452020"
 
 
 def test_find_gics_code_unknown() -> None:
     """Test unknown GICS name."""
 
-    assert _find_gics_code("This is definitely not a GICS classification", 3,) is None
+    assert _find_gics_code("This is definitely not a GICS classification", 3) is None
 
 
 def test_resolve_gics_motleyfool() -> None:
     """Test Motley Fool GICS resolution."""
 
     nodes = {
-        ClassificationLevel.LEVEL1: ClassificationNode(value="Information Technology",),
-        ClassificationLevel.LEVEL3: ClassificationNode(value="Technology Hardware, Storage and Peripherals",),
+        ClassificationLevel.LEVEL1: ClassificationNode(value="Information Technology"),
+        ClassificationLevel.LEVEL3: ClassificationNode(value="Technology Hardware, Storage and Peripherals"),
     }
 
     result = resolve_gics_motleyfool(nodes)
@@ -109,7 +109,7 @@ def test_resolve_gics_motleyfool_without_sector() -> None:
     """Test GICS resolution without Motley Fool sector."""
 
     nodes = {
-        ClassificationLevel.LEVEL3: ClassificationNode(value="Technology Hardware, Storage and Peripherals",),
+        ClassificationLevel.LEVEL3: ClassificationNode(value="Technology Hardware, Storage and Peripherals"),
     }
 
     result = resolve_gics_motleyfool(nodes)
@@ -123,8 +123,8 @@ def test_resolve_gics_motleyfool_sector_mismatch_corrected() -> None:
     """Test handling of inconsistent Motley Fool sector."""
 
     nodes = {
-        ClassificationLevel.LEVEL1: ClassificationNode(value="Energy",),
-        ClassificationLevel.LEVEL3: ClassificationNode(value="Technology Hardware, Storage and Peripherals",),
+        ClassificationLevel.LEVEL1: ClassificationNode(value="Energy"),
+        ClassificationLevel.LEVEL3: ClassificationNode(value="Technology Hardware, Storage and Peripherals"),
     }
 
     result = resolve_gics_motleyfool(nodes)
@@ -155,8 +155,8 @@ def test_resolve_gics_motleyfool_sector_mismatch_monkeypatched(
     )
 
     nodes = {
-        ClassificationLevel.LEVEL1: ClassificationNode(value="Energy",),
-        ClassificationLevel.LEVEL3: ClassificationNode(value="Technology Hardware, Storage and Peripherals",),
+        ClassificationLevel.LEVEL1: ClassificationNode(value="Energy"),
+        ClassificationLevel.LEVEL3: ClassificationNode(value="Technology Hardware, Storage and Peripherals"),
     }
 
     resolve_gics_motleyfool(nodes)

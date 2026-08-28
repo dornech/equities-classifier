@@ -5,6 +5,7 @@
 #
 # others
 # ruff: noqa: E501, N806, PLC2701, PLR0917, RUF052, RUF105
+#
 # disable mypy errors
 # mypy: disable-error-code = "operator"
 

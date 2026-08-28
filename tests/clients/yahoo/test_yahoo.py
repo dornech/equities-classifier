@@ -85,16 +85,16 @@ def test_parse_record(client) -> None:
         sector="Technology",
         industry="Consumer Electronics",
     )
-    record = client._parse_record(source_identifier, search_result,)
+    record = client._parse_record(source_identifier, search_result)
 
     assert record.name == "Apple Inc."
     assert record.ticker == "AAPL"
     assert record.sector == "Technology"
     assert record.industry == "Consumer Electronics"
 
-    assert record.identifier(SecurityIdentifierType.ISIN,) == source_identifier
+    assert record.identifier(SecurityIdentifierType.ISIN) == source_identifier
 
     assert (
-        record.identifier(SecurityIdentifierType.TICKER,) ==
-        SecurityIdentifier(type=SecurityIdentifierType.TICKER, value="AAPL.US",)
+        record.identifier(SecurityIdentifierType.TICKER) ==
+        SecurityIdentifier(type=SecurityIdentifierType.TICKER, value="AAPL.US")
     )

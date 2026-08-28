@@ -121,7 +121,7 @@ class YahooClient:
     # public API
 
     @classmethod
-    def supports_identifier_type(cls, identifier_type: SecurityIdentifierType,) -> bool:
+    def supports_identifier_type(cls, identifier_type: SecurityIdentifierType) -> bool:
         """Check if identifier type is supported."""
         return identifier_type in cls._YAHOO_IDENTIFIER_TYPES.values()
 
@@ -137,15 +137,15 @@ class YahooClient:
         for source_identifier in source_identifiers:
 
             if not self.supports_identifier_type(source_identifier.type):
-                ClientHelperErrorHandler.invalid_security_type(DataSourceID.YAHOO, source_identifier,)
+                ClientHelperErrorHandler.invalid_security_type(DataSourceID.YAHOO, source_identifier)
                 continue
 
             response_data = self._execute_search_request(source_identifier)
-            search_results = self._parse_search_results(source_identifier, response_data, raise_error,)
+            search_results = self._parse_search_results(source_identifier, response_data, raise_error)
             if search_results is None or len(search_results) == 0:
                 continue
 
-            record = self._parse_record(source_identifier, search_results[0],)
+            record = self._parse_record(source_identifier, search_results[0])
             # check for duplicates
             if record:
                 duplicate = False

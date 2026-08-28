@@ -13,7 +13,7 @@ import pytest
 
 from equities_classifier.enums import SecurityIdentifierType
 from equities_classifier.models import SecurityIdentifier
-from equities_classifier.clients.motleyfool.client import (MotleyFoolClient, MotleyFoolResponseError,)
+from equities_classifier.clients.motleyfool.client import (MotleyFoolClient, MotleyFoolResponseError)
 
 from pathlib import Path
 from tests.testhelpers import load_text
@@ -137,11 +137,11 @@ def test_parse_record(
 ) -> None:
 
     search_response = load_text(DATA_DIR, "search_response_aapl.txt")
-    results = client_httpx._parse_search_results(apple_ticker, search_response,)
-    result = client_httpx._select_search_result(apple_ticker, results,)
+    results = client_httpx._parse_search_results(apple_ticker, search_response)
+    result = client_httpx._select_search_result(apple_ticker, results)
 
     html = load_text(DATA_DIR, "company_aapl.html")
-    record = client_httpx._parse_record(result, html,)
+    record = client_httpx._parse_record(result, html)
 
     assert record.name == "Apple"
     assert record.ticker == "AAPL"

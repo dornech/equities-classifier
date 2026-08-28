@@ -7,6 +7,7 @@
 # ruff: noqa: FBT001, FBT002
 # others
 # ruff: noqa: E501, RUF050, RUF105, S110
+#
 # disable mypy errors
 # mypy: disable-error-code = "arg-type, index, operator, type-var, union-attr"
 
@@ -220,7 +221,7 @@ class MotleyFoolClient:
                 search_results = self._parse_search_results(source_identifier, response_data, raise_error)
             else:
                 # determine search result and fill search_result via selenium / HTML analysis
-                search_results = self._get_search_results(source_identifier, raise_error,)
+                search_results = self._get_search_results(source_identifier, raise_error)
 
             search_result = self._select_search_result(source_identifier, search_results, raise_error)
             if search_result:
@@ -470,11 +471,16 @@ class MotleyFoolClient:
         record = MotleyFoolRecord()
 
         ticker = search_result.ticker
-        if search_result.home_country_code:
+        if search_result.home_country_code and search_result.exchange != "OTC":
             ticker = ticker + "." + search_result.home_country_code
         record.identifiers = SecurityIdentifierList([
-            SecurityIdentifier(type=SecurityIdentifierType.TICKER, value=ticker,)
+            SecurityIdentifier(type=SecurityIdentifierType.TICKER, value=ticker)
         ])
+        if search_result.exchange == "OTC":
+            record.identifiers = SecurityIdentifierList([
+                SecurityIdentifier(type=SecurityIdentifierType.TICKER_US, value=search_result.ticker)
+            ])
+
         record.name = search_result.name or ""
         record.ticker = search_result.ticker
         record.exchange = search_result.exchange
