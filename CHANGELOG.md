@@ -2,6 +2,30 @@
 
 
 
+## [v0.10.0](https://github.com/dornech/equities-classifier/releases/tag/v0.10.0)  (2026-08-29) 
+
+### Features
+
+- Build and complete classification hierarchy information
+(['8a65bdd'](https://github.com/dornech/equities-classifier/commit/8a65bdd35759b55257c3f862407d06690c2b3e76))
+- Improved matching provider records including matching based on ticker-us
+(['b903515'](https://github.com/dornech/equities-classifier/commit/b903515596d7f5ebde2fbb0406d805a8a6bbf9c9))
+
+### Bug fixes
+
+- Review motleyfool test fixtures to avoid initialization of Chrome browser in GitHub environment (usually causes error)
+(['53ad873'](https://github.com/dornech/equities-classifier/commit/53ad87378df854938c2849d09aadde6dd65a885b))
+- Fix classification test
+(['6aff0c2'](https://github.com/dornech/equities-classifier/commit/6aff0c20fb0095f1f69b564ed4749273e09d99d5))
+- Corrections for cli and processing flow
+(['baec278'](https://github.com/dornech/equities-classifier/commit/baec27878f602f1da3b2b72add78aa895c34e793))
+- Dummy nodes for classification
+(['492722a'](https://github.com/dornech/equities-classifier/commit/492722a0d989afa37ea4df161fa52f662c19f4f4))
+- Editorial changes and cleanups
+(['f8897c7'](https://github.com/dornech/equities-classifier/commit/f8897c740171d8f521d52d631e2d1812971f9f6d))
+- Re-read OpenFIGI to identify ticker-US if non-US-ticker was provided as source-identifier
+(['cc29822'](https://github.com/dornech/equities-classifier/commit/cc29822d266a520768a17ee6898a07a2695b7c04))
+
 ## [v0.9.0](https://github.com/dornech/equities-classifier/releases/tag/v0.9.0)  (2026-08-28) 
 
 ### Features
@@ -23,6 +47,7 @@
 (['94b6f89'](https://github.com/dornech/equities-classifier/commit/94b6f890d004c5c081d5c814dd51b694ccbf6135))
 - Improvements MotleyFool
 (['4acc884'](https://github.com/dornech/equities-classifier/commit/4acc884e170733f56062915c602dfd158e4cef64))
+
 
 ## [v0.8.0](https://github.com/dornech/equities-classifier/releases/tag/v0.8.0)  (2026-08-20) 
 
