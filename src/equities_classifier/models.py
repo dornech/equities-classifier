@@ -46,6 +46,15 @@ class SecurityClassification:
     system: ClassificationSystem
     nodes: dict[ClassificationLevel, ClassificationNode]
 
+    def __post_init__(self) -> None:
+
+        for level in ClassificationLevel:
+
+            if level.value > len(self.system.hierarchy):
+                break
+
+            self.nodes.setdefault(level, ClassificationNode(value=""))
+
 
 # classes regarding securities themselves
 
