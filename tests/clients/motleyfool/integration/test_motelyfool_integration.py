@@ -18,8 +18,6 @@ from equities_classifier.models import SecurityIdentifier
 
 pytestmark = [
     pytest.mark.usefixtures("apple_ticker"),
-    pytest.mark.usebrowser,
-    pytest.mark.usechrome,
     pytest.mark.integration,
 ]
 
@@ -54,6 +52,8 @@ def test_read_provider_profile_data_httpx(
 
 
 @pytest.mark.local
+@pytest.mark.usebrowser
+@pytest.mark.usechrome
 @pytest.mark.usefixtures("client_selenium")
 def test_read_provider_profile_data_selenium(
     client_selenium: MotleyFoolClient,
