@@ -44,14 +44,14 @@ def test_generate_gecs() -> None:
     classification = classifications[0]
 
     assert classification.system is GECS
-    assert len(classification.nodes) == 2
+    assert len(classification.nodes) == len(classification.system.hierarchy)
 
     assert classification.nodes[ClassificationLevel.LEVEL2].value == "Technology"
 
     assert classification.nodes[ClassificationLevel.LEVEL3].value == "Semiconductors"
 
 
-def test_generate_gecs_ad_suppersector() -> None:
+def test_generate_gecs_ad_supersector() -> None:
     """Generate GECS classification from Morningstar attributes."""
 
     security = Security(
@@ -129,7 +129,7 @@ def test_generate_with_missing_level() -> None:
     classifications = generator.generate(security)
 
     assert len(classifications) == 1
-    assert len(classifications[0].nodes) == 1
+    assert len(classifications[0].nodes) == len(classifications[0].system.hierarchy)
 
 
 def test_generate_multiple_classifications() -> None:
