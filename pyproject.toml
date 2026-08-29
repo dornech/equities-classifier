@@ -118,13 +118,13 @@ example = "'feat: add new endpoint'or 'feat(api): add new endpoint'"
 schema = "'<type>: <subject>' or '<type>(<scope>): <subject>'"
 schema_pattern = "(bump|feat|fix|docs|style|refactor|perf|test|chore|build|deps|ci|revert)(\\([^)]+\\))?:\\s.*"
 bump_pattern = "^(feat|fix|BREAKING CHANGE)"
-bump_map = {"feat" = "MINOR", "fix" = "PATCH", "BREAKING CHANGE" = "MAJOR"}
+bump_map = { "feat" = "MINOR", "fix" = "PATCH", "BREAKING CHANGE" = "MAJOR" }
 # user defined changelog format - standard semantic-release + commit-sha and commit-url
 # w/o Initial Commit in changelog
 # commit_parser = "^(?P<change_type>feat|fix|refactor|perf|docs|style|test|chore|build|ci|revert|BREAKING CHANGE)(\\((?P<scope>[^)]+)\\))?:\\s(?P<message>.*)"
 # changelog_pattern = "^(feat|fix|docs|style|refactor|perf|test|chore|build|ci|revert|BREAKING CHANGE).*"
 # with Initial Commit in changelog
-commit_parser ="^(?P<change_type>[Ii]nitial [Cc]ommit|feat|fix|refactor|perf|docs|style|test|chore|build|ci|revert|BREAKING CHANGE)(\\((?P<scope>[^)]+)\\))?(:\\s(?P<message>.*))?"
+commit_parser = "^(?P<change_type>[Ii]nitial [Cc]ommit|feat|fix|refactor|perf|docs|style|test|chore|build|ci|revert|BREAKING CHANGE)(\\((?P<scope>[^)]+)\\))?(:\\s(?P<message>.*))?"
 changelog_pattern = "^([Ii]nitial [Cc]ommit|feat|fix|docs|style|refactor|perf|test|chore|build|ci|revert|BREAKING CHANGE).*"
 change_type_map = { feat = "Features", fix = "Bug fixes", refactor = "Code refactoring", perf = "Performance improvements", docs = "Documentation", style = "Code style", test = "Testing", chore = "Chores", build = "Build system", ci = "Continuous Integration" }
 change_type_order = ["BREAKING CHANGE", "Features", "Bug fixes", "Code refactoring", "Performance improvements", "Documentation", "Code style", "Testing", "Chore", "Build System", "Continuous Integration", "Initial Commit"]
@@ -145,7 +145,7 @@ check-protected-class-methods = false
 ignore-args = false
 ignore-kwargs = false
 ignore-no-params = true
-ignore_typechecker= false
+ignore_typechecker = false
 # disable = []
 # target = []
 
@@ -159,7 +159,7 @@ include = [
     "tests/**/*.py",
     "tests/**/*.pyi",
 ]
-output-prefer-rule-codes=true
+output-prefer-rule-codes = true
 
 [tool.ruff.lint]
 preview = true # preview features & checks, use with caution

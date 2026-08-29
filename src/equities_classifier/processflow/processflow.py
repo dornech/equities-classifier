@@ -5,6 +5,9 @@
 #
 # others
 # ruff: noqa: PLR2004, RUF050, RUF105
+#
+# disable mypy errors
+# mypy: disable-error-code = "union-attr"
 
 # fmt: off
 
@@ -39,7 +42,7 @@ class ProcessFlow:
         morningstar: bool = True,
         motleyfool: bool = True,
         seekingalpha: bool = True,
-        yahoo: bool = True,
+        yahoo: bool = False,
     ) -> None:
         """Initialize process flow class."""
 
@@ -123,7 +126,7 @@ class ProcessFlow:
             value=f"{identifier.value_cleaned}.{isin.value[:2]}",
         )
 
-    def run(self, source_identifiers: Sequence[SecurityIdentifier],) -> list[Security]:
+    def run(self, source_identifiers: Sequence[SecurityIdentifier]) -> list[Security]:
         """Process flow core routine."""
 
         openfigi_records = self._read_openfigi(source_identifiers)
@@ -162,11 +165,11 @@ class ProcessFlow:
                 identifier
                 for security in securities
                 for identifier in security.identifiers
-                if (security.has_identifier(SecurityIdentifierType.TICKER_US) and not
-                   security.has_identifier(SecurityIdentifierType.TICKER)) or
-                   security.identifier(SecurityIdentifierType.TICKER) !=
-                security.identifier(SecurityIdentifierType.TICKER_US)
-                if identifier.type is SecurityIdentifierType.TICKER_US
+                if identifier.type is SecurityIdentifierType.TICKER_US and
+                    (
+                        not security.has_identifier(SecurityIdentifierType.TICKER) or
+                        security.identifier(SecurityIdentifierType.TICKER).value_cleaned != identifier.value_cleaned
+                    )
             }
             motleyfool_identifiers: list[SecurityIdentifier] = list(
                 motleyfool_identifiers_ticker1.union(motleyfool_identifiers_ticker2)
@@ -199,6 +202,6 @@ class ProcessFlow:
             if self._use_yahoo:
                 security = self._merger.merge_enrich_single(security, yahoo_records)
 
-            self._classificationgenerator.generate(security)
+            security.classifications = self._classificationgenerator.generate(security)
 
         return securities

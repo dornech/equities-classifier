@@ -217,6 +217,8 @@ def _add_provider_values(
 
     for datasource, attributes in security.provider_attributes.items():
         for attribute, value in attributes.items():
+            if isinstance(value, list):
+                value = ", ".join(map(str, value)) if len(value) > 0 else ""
             values[f"{datasource}.{attribute}"] = value
 
 

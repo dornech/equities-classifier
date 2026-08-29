@@ -148,7 +148,7 @@ def test_read_identifiers_missing_value(
         ],
     )
 
-    with pytest.raises(ValueError, match="Missing identifier value",):
+    with pytest.raises(ValueError, match="Missing identifier value"):
         read_identifiers(filename)
 
 
@@ -166,7 +166,7 @@ def test_read_identifiers_unknown_type(
         ],
     )
 
-    with pytest.raises(ValueError, match="Unknown security identifier type",):
+    with pytest.raises(ValueError, match="Unknown security identifier type"):
         read_identifiers(filename)
 
 
@@ -184,7 +184,7 @@ def test_read_identifiers_unknown_identifier(
         ],
     )
 
-    with pytest.raises(ValueError, match="Unable to determine identifier type",):
+    with pytest.raises(ValueError, match="Unable to determine identifier type"):
         read_identifiers(filename)
 
 
@@ -225,5 +225,5 @@ def test_read_identifiers_missing_value_column(
     workbook.save(filename)
     workbook.close()
 
-    with pytest.raises(ValueError, match="must contain a 'Value' column",):
+    with pytest.raises(ValueError, match="must contain a 'Value' column"):
         read_identifiers(filename)

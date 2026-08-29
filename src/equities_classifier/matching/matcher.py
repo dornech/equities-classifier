@@ -86,7 +86,7 @@ class SecurityMatcher:
         ):
             return MatchResult(matched=True, match_type=MatchType.ISIN_TICKER)
 
-        # 1b. Ticker + ISIN
+        # 1b. Ticker-US + ISIN
         if (
             left_ticker_us
             and right_ticker_us

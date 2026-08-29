@@ -76,7 +76,7 @@ def test_write_excel_basic(
     security = _security()
     security.identifiers.append(SecurityIdentifier(type=SecurityIdentifierType.ISIN, value="US0378331005"))
 
-    write_excel([security], filename,)
+    write_excel([security], filename)
 
     worksheet = _load_worksheet(filename)
     headers = _headers(worksheet)
@@ -128,7 +128,7 @@ def test_write_excel_provider_attribute_union(
 
     filename = tmp_path / "output.xlsx"
 
-    apple = Security(name="Apple Inc.", ticker="AAPL",)
+    apple = Security(name="Apple Inc.", ticker="AAPL")
     apple.provider_attributes["morningstar"] = {"sector": "Technology", "industry": "Consumer Electronics"}
 
     microsoft = Security(name="Microsoft Corporation", ticker="MSFT")
@@ -172,14 +172,14 @@ def test_write_excel_gecs(
         SecurityClassification(
             system=GECS,
             nodes={
-                ClassificationLevel.LEVEL1: ClassificationNode(value="Sensitive",),
-                ClassificationLevel.LEVEL2: ClassificationNode(value="Technology",),
-                ClassificationLevel.LEVEL3: ClassificationNode(value="Software",),
+                ClassificationLevel.LEVEL1: ClassificationNode(value="Sensitive"),
+                ClassificationLevel.LEVEL2: ClassificationNode(value="Technology"),
+                ClassificationLevel.LEVEL3: ClassificationNode(value="Software"),
             },
         )
     )
 
-    write_excel([security], filename, classifications=ClassificationOutput.GECS,)
+    write_excel([security], filename, classifications=ClassificationOutput.GECS)
 
     worksheet = _load_worksheet(filename)
 
@@ -204,15 +204,15 @@ def test_write_excel_gics(
         SecurityClassification(
             system=GICS,
             nodes={
-                ClassificationLevel.LEVEL1: ClassificationNode(value="Information Technology", code="45",),
-                ClassificationLevel.LEVEL2: ClassificationNode(value="Software & Services", code="4510",),
-                ClassificationLevel.LEVEL3: ClassificationNode(value="Software", code="451030",),
-                ClassificationLevel.LEVEL4: ClassificationNode(value="Systems Software", code="45103010",),
+                ClassificationLevel.LEVEL1: ClassificationNode(value="Information Technology", code="45"),
+                ClassificationLevel.LEVEL2: ClassificationNode(value="Software & Services", code="4510"),
+                ClassificationLevel.LEVEL3: ClassificationNode(value="Software", code="451030"),
+                ClassificationLevel.LEVEL4: ClassificationNode(value="Systems Software", code="45103010"),
             },
         )
     )
 
-    write_excel([security], filename, classifications=ClassificationOutput.GICS,)
+    write_excel([security], filename, classifications=ClassificationOutput.GICS)
 
     worksheet = _load_worksheet(filename)
 
@@ -247,24 +247,24 @@ def test_write_excel_gecs_and_gics(
             SecurityClassification(
                 system=GECS,
                 nodes={
-                    ClassificationLevel.LEVEL1: ClassificationNode(value="Sensitive",),
-                    ClassificationLevel.LEVEL2: ClassificationNode(value="Technology",),
-                    ClassificationLevel.LEVEL3: ClassificationNode(value="Software",),
+                    ClassificationLevel.LEVEL1: ClassificationNode(value="Sensitive"),
+                    ClassificationLevel.LEVEL2: ClassificationNode(value="Technology"),
+                    ClassificationLevel.LEVEL3: ClassificationNode(value="Software"),
                 },
             ),
             SecurityClassification(
                 system=GICS,
                 nodes={
-                    ClassificationLevel.LEVEL1: ClassificationNode(value="Information Technology", code="45",),
-                    ClassificationLevel.LEVEL2: ClassificationNode(value="Software & Services", code="4510",),
-                    ClassificationLevel.LEVEL3: ClassificationNode(value="Software", code="451030",),
-                    ClassificationLevel.LEVEL4: ClassificationNode(value="Systems Software", code="45103010",),
+                    ClassificationLevel.LEVEL1: ClassificationNode(value="Information Technology", code="45"),
+                    ClassificationLevel.LEVEL2: ClassificationNode(value="Software & Services", code="4510"),
+                    ClassificationLevel.LEVEL3: ClassificationNode(value="Software", code="451030"),
+                    ClassificationLevel.LEVEL4: ClassificationNode(value="Systems Software", code="45103010"),
                 },
             ),
         ]
     )
 
-    write_excel([security], filename, classifications=ClassificationOutput.ALL,)
+    write_excel([security], filename, classifications=ClassificationOutput.ALL)
 
     worksheet = _load_worksheet(filename)
 
@@ -290,9 +290,9 @@ def test_write_excel_provider_details_with_classification(
         SecurityClassification(
             system=GECS,
             nodes={
-                ClassificationLevel.LEVEL1: ClassificationNode(value="Sensitive",),
-                ClassificationLevel.LEVEL2: ClassificationNode(value="Technology",),
-                ClassificationLevel.LEVEL3: ClassificationNode(value="Software",),
+                ClassificationLevel.LEVEL1: ClassificationNode(value="Sensitive"),
+                ClassificationLevel.LEVEL2: ClassificationNode(value="Technology"),
+                ClassificationLevel.LEVEL3: ClassificationNode(value="Software"),
             },
         )
     )
@@ -324,7 +324,7 @@ def test_write_excel_no_output_selection(
 
     security = _security()
 
-    write_excel([security], filename, classifications=ClassificationOutput.NONE, provider_details=False,)
+    write_excel([security], filename, classifications=ClassificationOutput.NONE, provider_details=False)
 
     worksheet = _load_worksheet(filename)
 

@@ -27,38 +27,24 @@ def run_gui() -> None:
 
     layout = [
         [
-            sg.Text(
-                "Equities Classifier",
-                font=("Any", 16),
-            ),
+            sg.Text("Equities Classifier", font=("Any", 16)),
         ],
         [
             sg.Text("Input file:", size=(14, 1)),
-            sg.Input(
-                key="-INPUT-",
-                expand_x=True,
-            ),
+            sg.Input(key="-INPUT-", expand_x=True),
             sg.FileBrowse(
                 "Select ...",
                 target="-INPUT-",
-                file_types=(
-                    ("Excel files", "*.xlsx"),
-                    ("All files", "*.*"),
-                ),
+                file_types=(("Excel files", "*.xlsx"), ("All files", "*.*")),
             ),
         ],
         [
             sg.Text("Output file:", size=(14, 1)),
-            sg.Input(
-                key="-OUTPUT-",
-                expand_x=True,
-            ),
+            sg.Input(key="-OUTPUT-", expand_x=True),
             sg.FileSaveAs(
                 "Select ...",
                 target="-OUTPUT-",
-                file_types=(
-                    ("Excel files", "*.xlsx"),
-                ),
+                file_types=(("Excel files", "*.xlsx")),
                 default_extension=".xlsx",
             ),
         ],
@@ -67,14 +53,8 @@ def run_gui() -> None:
                 "Classification",
                 [
                     [
-                        sg.Checkbox(
-                            "GECS",
-                            key="-GECS-",
-                        ),
-                        sg.Checkbox(
-                            "GICS",
-                            key="-GICS-",
-                        ),
+                        sg.Checkbox("GECS", key="-GECS-"),
+                        sg.Checkbox("GICS", key="-GICS-"),
                     ],
                 ],
             ),
@@ -84,32 +64,18 @@ def run_gui() -> None:
                 "Additional output",
                 [
                     [
-                        sg.Checkbox(
-                            "Detailed provider information",
-                            key="-PROVIDER-",
-                        ),
+                        sg.Checkbox("Detailed provider information", key="-PROVIDER-"),
                     ],
                 ],
             ),
         ],
         [
             sg.Push(),
-            sg.Button(
-                "Start",
-                key="-START-",
-                bind_return_key=True,
-            ),
-            sg.Button(
-                "Cancel",
-                key="-CANCEL-",
-            ),
+            sg.Button("Start", key="-START-", bind_return_key=True),
+            sg.Button("Cancel", key="-CANCEL-"),
         ],
         [
-            sg.Text(
-                "",
-                key="-STATUS-",
-                expand_x=True,
-            ),
+            sg.Text("", key="-STATUS-", expand_x=True),
         ],
     ]
 
@@ -134,11 +100,7 @@ def _event_loop(
             try:
                 _run_process(window, values)
             except Exception as exc:
-                sg.popup_error(
-                    "Processing not successful.",
-                    str(exc),
-                    title="Equities Classifier"
-                )
+                sg.popup_error("Processing not successful.", str(exc), title="Equities Classifier")
 
 
 def _run_process(

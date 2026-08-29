@@ -6,7 +6,7 @@
 # boolean-type arguments
 # ruff: noqa: FBT001, FBT002
 # others
-# ruff: noqa: N813, PLR6201, RUF105
+# ruff: noqa: N813, PLR6201, RUF050, RUF105
 #
 # fmt: off
 
@@ -46,7 +46,17 @@ def _create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--motleyfool",
         action="store_true",
-        help="Enable Motley Fool enrichment.",
+        help="Enable Motley-Fool enrichment.",
+    )
+    parser.add_argument(
+        "--seekingalpha",
+        action="store_true",
+        help="Enable SeekingAlpha enrichment.",
+    )
+    parser.add_argument(
+        "--yahoo",
+        action="store_true",
+        help="Enable Yahoo enrichment.",
     )
 
     return parser
@@ -70,27 +80,24 @@ def main(
         parser.error("input and output must be specified together")
 
     identifiers = read_identifiers(args.input)
-    processflow = ProcessFlow(morningstar=args.morningstar, motleyfool=args.motleyfool)
+    processflow = ProcessFlow(
+        morningstar=args.morningstar,
+        motleyfool=args.motleyfool,
+        seekingalpha=args.seekingalpha,
+        yahoo=args.yahoo
+    )
     securities = processflow.run(identifiers)
     write_excel(
         securities,
         args.output,
-        classifications=get_classification_output(args.morningstar, args.motleyfool),
+        classifications=get_classification_output(
+            args.morningstar,
+            args.motleyfool or args.seekingalpha,
+        ),
         provider_details=True,
     )
 
 
 if __name__ == "__main__":
-
-    identifiers = read_identifiers(r"H:\EquClass_Test_Input.xlsx")
-    # processflow = ProcessFlow(morningstar=True, motleyfool=True, seekingalpha=True, yahoo=True)
-    processflow = ProcessFlow(morningstar=False, motleyfool=True, seekingalpha=True, yahoo=True)
-    securities = processflow.run(identifiers)
-    write_excel(
-        securities,
-        r"H:\EquClass_Test_Output.xlsx",
-        classifications=get_classification_output(True, True),
-        provider_details=True,
-    )
 
     pass
