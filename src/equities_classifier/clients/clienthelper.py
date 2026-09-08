@@ -180,7 +180,7 @@ class ClientHelperErrorHandler:
     ) -> None:
         """Called when Provider record does not allow reliable identification of primary ticker."""
 
-        message = f"Provider record from '{provider}' shows more than one candidate for primary ticker for isin, '{isin}'."
+        message = f"Provider record from '{provider}' shows more than one candidate for primary ticker for ISIN, '{isin}'."
         logger_equities_classifier.warning(message)
 
         if raise_object:
@@ -295,7 +295,7 @@ def get_primary_ticker(
             ClientHelperErrorHandler.inconsistent_provider_data(
                 provider,
                 name,
-                "count of 'ticker_exchange' and 'mic_code' differ",
+                "Count of 'ticker_exchange' and 'mic_code' differ",
                 error_object,
             )
             return None
@@ -314,9 +314,9 @@ def get_primary_ticker(
             ticker_new = counter_tickers.most_common(1)[0][0]
             if ticker_for_check and ticker_for_check != ticker_new:
                 ClientHelperErrorHandler.inconsistent_provider_data(
-                    DataSourceID.OPENFIGI,
+                    provider,
                     name,
-                    f"ticker '{ticker_for_check}' currently set does not match assumed primary ticker '{ticker_new}'",
+                    f"Ticker '{ticker_for_check}' currently set does not match assumed primary ticker '{ticker_new}'",
                     error_object,
                 )
             if (len(counter_tickers.most_common()) > 1 and

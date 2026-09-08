@@ -41,7 +41,7 @@ class RateLimiter:
             self._last_request = monotonic()
             return
 
-        elapsed = monotonic() - self._last_request
+        elapsed = monotonic() - self._last_request - 1
 
         if elapsed < self._min_interval:
             sleep(self._min_interval - elapsed)

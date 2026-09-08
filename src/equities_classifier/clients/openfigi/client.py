@@ -136,7 +136,7 @@ class OpenFIGIClient:
     def read_provider_base_data(
         self,
         source_identifiers: Sequence[SecurityIdentifier],
-        raise_error: bool = True
+        raise_error: bool = False
     ) -> list[OpenFIGIRecord]:
         """Read base date for one or more identifiers from OpenFIGI."""
 
@@ -273,7 +273,7 @@ class OpenFIGIClient:
                     record.ticker,
                     record.ticker_mic,
                     record.mic_code,
-                    OpenFIGIResponseError,
+                    OpenFIGIResponseError if raise_error else None,
                 )
                 mics_from_exchange = [
                     next(
@@ -293,14 +293,14 @@ class OpenFIGIClient:
                     record.ticker,
                     record.ticker_exchange,
                     mics_from_exchange,
-                    OpenFIGIResponseError,
+                    OpenFIGIResponseError if raise_error else None,
                 )
                 if ticker_new1 and ticker_new2 and ticker_new1 != ticker_new2:
                     ClientHelperErrorHandler.inconsistent_provider_data(
                         DataSourceID.OPENFIGI,
                         record.name,
                         "primary ticker from Bloomberg exchanges and mic-codes differ",
-                        OpenFIGIResponseError,
+                        OpenFIGIResponseError if raise_error else None,
                     )
                 if ticker_new1 and set_ticker:
                     record.ticker = ticker_new1

@@ -44,7 +44,7 @@ def run_gui() -> None:
             sg.FileSaveAs(
                 "Select ...",
                 target="-OUTPUT-",
-                file_types=(("Excel files", "*.xlsx")),
+                file_types=(("Excel files", "*.xlsx"),),
                 default_extension=".xlsx",
             ),
         ],
@@ -165,4 +165,4 @@ def _get_path(
 
 if __name__ == "__main__":
 
-    pass
+    run_gui()

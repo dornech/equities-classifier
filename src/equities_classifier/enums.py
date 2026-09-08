@@ -25,15 +25,15 @@ class SecurityIdentifierType(StrEnum):
     possible types see f. e. https://www.openfigi.com/api/documentation#v3-id-type-values
     """
 
-    CIK = "cik"
-    CINS = "cins"
-    CUSIP = "cusip"
-    ISIN = "isin"
-    SHARE_CLASS_FIGI = "share_class_figi"
-    SEDOL = "sedol"
+    CIK = "CIK"
+    CINS = "CINS"
+    CUSIP = "CUSIP"
+    ISIN = "ISIN"
+    SHARE_CLASS_FIGI = "Share_Class_FIGI"
+    SEDOL = "SEDOL"
     TICKER = "ticker"
-    TICKER_US = "ticker_us"
-    WKN = "wkn"
+    TICKER_US = "ticker_US"
+    WKN = "WKN"
 
 
 class ClassificationSystemID(StrEnum):
