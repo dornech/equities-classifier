@@ -2,6 +2,13 @@
 
 
 
+## [v0.10.1](https://github.com/dornech/equities-classifier/releases/tag/v0.10.1)  (2026-09-08) 
+
+### Bug fixes
+
+- Various minor fixes
+(['97ba0c0'](https://github.com/dornech/equities-classifier/commit/97ba0c071d6c531ffadb5b27d0e8a8bbce413418))
+
 ## [v0.10.0](https://github.com/dornech/equities-classifier/releases/tag/v0.10.0)  (2026-08-29) 
 
 ### Features
@@ -25,6 +32,7 @@
 (['f8897c7'](https://github.com/dornech/equities-classifier/commit/f8897c740171d8f521d52d631e2d1812971f9f6d))
 - Re-read OpenFIGI to identify ticker-US if non-US-ticker was provided as source-identifier
 (['cc29822'](https://github.com/dornech/equities-classifier/commit/cc29822d266a520768a17ee6898a07a2695b7c04))
+
 
 ## [v0.9.0](https://github.com/dornech/equities-classifier/releases/tag/v0.9.0)  (2026-08-28) 
 
