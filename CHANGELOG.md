@@ -2,12 +2,28 @@
 
 
 
+## [v0.10.2](https://github.com/dornech/equities-classifier/releases/tag/v0.10.2)  (2026-09-09) 
+
+### Bug fixes
+
+- Improve matching
+(['b9513aa'](https://github.com/dornech/equities-classifier/commit/b9513aa68662f30874409eb140e97ecc21ece9f8))
+- Improve GUI caller, select data source depending on selected classification system
+(['c093023'](https://github.com/dornech/equities-classifier/commit/c0930235ab473969a0a4aefeb542ab6112642fac))
+- Improve retrieval of data
+(['997f636'](https://github.com/dornech/equities-classifier/commit/997f63636252a6fe5b617f706ffe455c665813c9))
+- Some fixes of test cases and reorg MotleyFool
+(['073b799'](https://github.com/dornech/equities-classifier/commit/073b799b68cd73b373044ef0c3583e73d791d831))
+- Slight change of HTML at MotleyFool
+(['d13b049'](https://github.com/dornech/equities-classifier/commit/d13b04998817f63bcbdb89c3211cfb9475770d05))
+
 ## [v0.10.1](https://github.com/dornech/equities-classifier/releases/tag/v0.10.1)  (2026-09-08) 
 
 ### Bug fixes
 
 - Various minor fixes
 (['97ba0c0'](https://github.com/dornech/equities-classifier/commit/97ba0c071d6c531ffadb5b27d0e8a8bbce413418))
+
 
 ## [v0.10.0](https://github.com/dornech/equities-classifier/releases/tag/v0.10.0)  (2026-08-29) 
 
