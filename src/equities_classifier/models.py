@@ -82,7 +82,7 @@ class SecurityIdentifier:
             object.__setattr__(self, "value_cleaned", self.value)
             object.__setattr__(self, "country", None)
         else:
-            value_cleaned, country = self.value.split(".")
+            value_cleaned, country = self.value.rsplit(".", 1)
             object.__setattr__(self, "value_cleaned", value_cleaned)
             object.__setattr__(self, "country", country)
 

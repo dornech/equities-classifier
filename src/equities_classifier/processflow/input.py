@@ -111,11 +111,20 @@ def _parse_identifier_type(
 
     normalized = value.strip().lower()
 
-    try:
-        return SecurityIdentifierType(normalized)
-    except ValueError as exc:
+    identifier_type = next(
+        (
+            identifier_type
+            for identifier_type in SecurityIdentifierType
+            if identifier_type.value.casefold() == normalized
+        ),
+        None,
+    )
+
+    if identifier_type is None:
         message = f"Unknown security identifier type  {value!r} in row {row_number}."
-        raise ValueError(message) from exc
+        raise ValueError(message)
+
+    return identifier_type
 
 
 def _detect_identifier_type(

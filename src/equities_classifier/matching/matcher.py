@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from equities_classifier.enums import SecurityIdentifierType
 from equities_classifier.models import SecurityProviderRecord, Security
 
-from .name import name_similarity
+from .name import name_similarity, name_contains_other_name
 
 
 class MatchType(Enum):
@@ -55,6 +55,15 @@ class SecurityMatcher:
 
         self._name_similarity_threshold = name_similarity_threshold
 
+    @staticmethod
+    def harmonize_ticker(ticker: str | None) -> str | None:
+        """Harmonize different ticker formats for mathing."""
+
+        if ticker:
+            return ticker.replace("-", ".")
+        else:
+            return None
+
     def match(
         self,
         left: SecurityMatchSource,
@@ -62,15 +71,15 @@ class SecurityMatcher:
     ) -> MatchResult:
         """Match SecurityProviderRecords according to matching hierarchy."""
 
-        left_ticker = left.identifier_value(SecurityIdentifierType.TICKER)
-        left_ticker_cleaned = left.identifier_value_cleaned(SecurityIdentifierType.TICKER)
+        left_ticker = self.harmonize_ticker(left.identifier_value(SecurityIdentifierType.TICKER))
+        left_ticker_cleaned = self.harmonize_ticker(left.identifier_value_cleaned(SecurityIdentifierType.TICKER))
         left_ticker_country = left.identifier_country(SecurityIdentifierType.TICKER)
-        right_ticker = right.identifier_value(SecurityIdentifierType.TICKER)
-        right_ticker_cleaned = right.identifier_value_cleaned(SecurityIdentifierType.TICKER)
+        right_ticker = self.harmonize_ticker(right.identifier_value(SecurityIdentifierType.TICKER))
+        right_ticker_cleaned = self.harmonize_ticker(right.identifier_value_cleaned(SecurityIdentifierType.TICKER))
         right_ticker_country = right.identifier_country(SecurityIdentifierType.TICKER)
 
-        left_ticker_us = left.identifier_value(SecurityIdentifierType.TICKER_US)
-        right_ticker_us = right.identifier_value(SecurityIdentifierType.TICKER_US)
+        left_ticker_us = self.harmonize_ticker(left.identifier_value(SecurityIdentifierType.TICKER_US))
+        right_ticker_us = self.harmonize_ticker(right.identifier_value(SecurityIdentifierType.TICKER_US))
 
         left_isin = left.identifier_value(SecurityIdentifierType.ISIN)
         right_isin = right.identifier_value(SecurityIdentifierType.ISIN)
@@ -104,9 +113,10 @@ class SecurityMatcher:
             and left_isin == right_isin
             and left_ticker_cleaned != right_ticker_cleaned
         ):
+
             similarity = name_similarity(left.name, right.name)
 
-            if similarity >= self._name_similarity_threshold:
+            if similarity >= self._name_similarity_threshold or name_contains_other_name(left.name, right.name):
                 return MatchResult(
                     matched=True,
                     match_type=MatchType.ISIN_NAME,
@@ -126,7 +136,7 @@ class SecurityMatcher:
 
             similarity = name_similarity(left.name, right.name)
 
-            if similarity >= self._name_similarity_threshold:
+            if similarity >= self._name_similarity_threshold or name_contains_other_name(left.name, right.name):
                 return MatchResult(
                     matched=True,
                     match_type=MatchType.TICKER_COUNTRY_NAME,
@@ -140,9 +150,10 @@ class SecurityMatcher:
             and right_ticker_cleaned
             and left_ticker_cleaned == right_ticker_cleaned
         ):
+
             similarity = name_similarity(left.name, right.name)
 
-            if similarity >= self._name_similarity_threshold:
+            if similarity >= self._name_similarity_threshold or name_contains_other_name(left.name, right.name):
                 return MatchResult(
                     matched=True,
                     match_type=MatchType.TICKER_NAME,
@@ -156,9 +167,10 @@ class SecurityMatcher:
             and right_ticker_us
             and left_ticker_us == right_ticker_us
         ):
+
             similarity = name_similarity(left.name, right.name)
 
-            if similarity >= self._name_similarity_threshold:
+            if similarity >= self._name_similarity_threshold or name_contains_other_name(left.name, right.name):
                 return MatchResult(
                     matched=True,
                     match_type=MatchType.TICKER_US_NAME,

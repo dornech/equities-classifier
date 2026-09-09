@@ -14,9 +14,11 @@ import re
 from rapidfuzz.fuzz import ratio
 
 
+# note: first longer terms then shorter terms with same ending
 _SECURITY_SUFFIXES = (
-    "b",
+    "cl b",
     "class b",
+    "b",
     "common share",
     "common shares",
     "ord",
@@ -28,6 +30,11 @@ _SECURITY_SUFFIXES = (
     "share from split",
     "shares",
     "shares from split",
+    "shares subord.vtg",
+    "sub vtg shs",
+    "vtg shs",
+    "shs",
+    "shs subord.vtg",
 )
 
 _LEGAL_SUFFIXES = frozenset({
@@ -114,3 +121,18 @@ def names_are_similar(
     """Return whether two names are sufficiently similar."""
 
     return name_similarity(name1, name2) >= threshold
+
+
+def name_contains_other_name(
+    name1: str | None,
+    name2: str | None,
+) -> bool:
+    """Return normalized name similarity in percent."""
+
+    normalized1 = normalize_name(name1) if name1 else None
+    normalized2 = normalize_name(name2) if name2 else None
+
+    if normalized1 and normalized2:
+        return normalized1.find(normalized2) == 0 or normalized2.find(normalized1) == 0
+
+    return False
