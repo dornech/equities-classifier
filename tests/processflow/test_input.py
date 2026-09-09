@@ -97,7 +97,7 @@ def test_read_identifiers_explicit_types(
         filename,
         [
             ("ISIN", "US0378331005"),
-            ("TICKER", "AAPL"),
+            ("Ticker", "AAPL"),
             ("WKN", "865985"),
         ],
     )

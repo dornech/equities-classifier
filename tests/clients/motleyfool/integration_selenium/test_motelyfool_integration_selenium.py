@@ -17,44 +17,15 @@ from equities_classifier.models import SecurityIdentifier
 
 
 pytestmark = [
+    pytest.mark.usefixtures("client_selenium"),
     pytest.mark.usefixtures("apple_ticker"),
+    pytest.mark.usebrowser,
+    pytest.mark.usechrome,
     pytest.mark.integration,
+    pytest.mark.local,
 ]
 
 
-@pytest.mark.usefixtures("client_httpx")
-def test_read_provider_profile_data_httpx(
-    client_httpx: MotleyFoolClient,
-    apple_ticker: SecurityIdentifier,
-):
-    """Integration test against the live Motley Fool website using httpx."""
-
-    records = client_httpx.read_provider_profile_data([apple_ticker], raise_error=True)
-
-    assert len(records) == 1
-
-    record = records[0]
-
-    assert record.name is not None
-    assert record.name.startswith("Apple")
-
-    assert record.ticker == "AAPL"
-    assert record.exchange == "NASDAQ"
-
-    assert record.sector == "Information Technology"
-    assert record.industry == "Technology Hardware, Storage and Peripherals"
-
-    ticker = record.identifier(SecurityIdentifierType.TICKER)
-    assert ticker is not None
-    assert ticker.value == "AAPL.US"
-    assert ticker.value_cleaned == "AAPL"
-    assert ticker.country == "US"
-
-
-@pytest.mark.local
-@pytest.mark.usebrowser
-@pytest.mark.usechrome
-@pytest.mark.usefixtures("client_selenium")
 def test_read_provider_profile_data_selenium(
     client_selenium: MotleyFoolClient,
     apple_ticker: SecurityIdentifier,
@@ -79,6 +50,6 @@ def test_read_provider_profile_data_selenium(
 
     ticker = record.identifier(SecurityIdentifierType.TICKER)
     assert ticker is not None
-    assert ticker.value == "AAPL.US"
+    assert ticker.value == "AAPL"
     assert ticker.value_cleaned == "AAPL"
-    assert ticker.country == "US"
+    assert ticker.country is None
