@@ -179,7 +179,8 @@ class SeekingAlphaClient:
     ) -> str | None:
         """Read a Seeking Alpha symbol page."""
 
-        url = f"{self._SYMBOL_URL}/{source_identifier.value_cleaned}"
+        ticker = source_identifier.value_cleaned.replace("-", ".")
+        url = f"{self._SYMBOL_URL}/{ticker}"
 
         try:
             self._client.get(self._BASE_URL)
@@ -246,8 +247,7 @@ class SeekingAlphaClient:
         if not isinstance(response, dict):
             ClientHelperErrorHandler.other_error_with_message(
                 DataSourceID.SEEKINGALPHA,
-                "Seeking Alpha SSR_DATA 'symbol' does not contain "
-                "'response'.",
+                "Seeking Alpha SSR_DATA 'symbol' does not contain 'response'.",
                 SeekingAlphaResponseError if raise_error else None,
             )
             return None
@@ -256,8 +256,7 @@ class SeekingAlphaClient:
         if not isinstance(data, dict):
             ClientHelperErrorHandler.other_error_with_message(
                 DataSourceID.SEEKINGALPHA,
-                "Seeking Alpha SSR_DATA 'response' -> 'response' does not contain "
-                "'data'.",
+                "Seeking Alpha SSR_DATA 'response' -> 'response' does not contain 'data'.",
                 SeekingAlphaResponseError if raise_error else None,
             )
             return None

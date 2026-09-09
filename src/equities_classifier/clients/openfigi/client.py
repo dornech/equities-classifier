@@ -275,6 +275,8 @@ class OpenFIGIClient:
                     record.mic_code,
                     OpenFIGIResponseError if raise_error else None,
                 )
+                if ticker_new1:
+                    ticker_new1 = ticker_new1.replace("/", "-")
                 mics_from_exchange = [
                     next(
                         (
@@ -295,6 +297,8 @@ class OpenFIGIClient:
                     mics_from_exchange,
                     OpenFIGIResponseError if raise_error else None,
                 )
+                if ticker_new2:
+                    ticker_new2 = ticker_new2.replace("/", "-")
                 if ticker_new1 and ticker_new2 and ticker_new1 != ticker_new2:
                     ClientHelperErrorHandler.inconsistent_provider_data(
                         DataSourceID.OPENFIGI,
@@ -325,6 +329,7 @@ class OpenFIGIClient:
         for record in records:
             ticker_us = get_us_ticker(record.ticker_exchange, record.exch_code)
             if ticker_us:
+                ticker_us = ticker_us.replace("/", "-")
                 record.identifiers.append(SecurityIdentifier(SecurityIdentifierType.TICKER_US, ticker_us))
 
     # internal routines
