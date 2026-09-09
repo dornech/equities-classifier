@@ -25,6 +25,7 @@ _SECURITY_SUFFIXES = (
     "ordinary share",
     "ordinary shares",
     "publ",
+    "(publ)",
     "(publ.)",
     "share",
     "share from split",
