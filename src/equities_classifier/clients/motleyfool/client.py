@@ -37,6 +37,7 @@ from equities_classifier.enums import DataSourceID, SecurityIdentifierType
 from equities_classifier.models import SecurityIdentifier, SecurityIdentifierList
 from equities_classifier.exceptions import ClientConnectionError, ClientResponseError
 from equities_classifier.clients.clienthelper import ClientHelperErrorHandler
+from equities_classifier.clients.ratelimiter import RateLimits, RateLimiter
 from equities_classifier.clients.motleyfool.models import MotleyFoolSearchResult, MotleyFoolRecord
 
 
@@ -93,6 +94,11 @@ class MotleyFoolClient:
         "industry": "//section/descendant::div/p[.='Industry']/following-sibling::p",
     })
 
+    _LIMITS = RateLimits(
+        max_batch_size=0,
+        requests_per_minute=90
+    )
+
     # __init__, other ContextManager dunder routines and internal routines used within
 
     def __init__(
@@ -102,6 +108,8 @@ class MotleyFoolClient:
         requestlog: bool = False
     ) -> None:
         """Initialize Motley-Fool client."""
+
+        self._rate_limiter = RateLimiter(requests_per_minute=self._LIMITS.requests_per_minute)
 
         self._client: httpx.Client | uc.Chrome | None
 
@@ -117,7 +125,7 @@ class MotleyFoolClient:
             self._next_action = self._get_next_action()
         elif self._mode == MotleyFoolMode.SELENIUM:
             options = uc.ChromeOptions()
-            options.add_argument("--headless=new")
+            # options.add_argument("--headless=new")
             options.add_argument("--no-sandbox")
             options.add_argument("--disable-dev-shm-usage")
             try:
@@ -215,25 +223,36 @@ class MotleyFoolClient:
                 ClientHelperErrorHandler.invalid_security_type(DataSourceID.MOTLEYFOOL, source_identifier)
                 continue
 
-            if self._mode == MotleyFoolMode.HTTPX:
-                # determine search result and fill search_result via requests
-                response_data = self._execute_search_request(source_identifier)
-                search_results = self._parse_search_results(source_identifier, response_data, raise_error)
+            if "-" in source_identifier.value_cleaned:
+                source_identifiers_cleaned = [
+                    SecurityIdentifier(type=source_identifier.type, value=source_identifier.value.replace("-", "")),
+                    SecurityIdentifier(type=source_identifier.type, value=source_identifier.value.replace("-", "."))
+                ]
             else:
-                # determine search result and fill search_result via selenium / HTML analysis
-                search_results = self._get_search_results(source_identifier, raise_error)
+                source_identifiers_cleaned = [source_identifier]
 
-            search_result = self._select_search_result(source_identifier, search_results, raise_error)
-            if search_result:
+            for source_identifier_cleaned in source_identifiers_cleaned:
 
                 if self._mode == MotleyFoolMode.HTTPX:
-                    html = self._execute_company_request(search_result)
+                    # determine search result and fill search_result via requests
+                    response_data = self._execute_search_request(source_identifier_cleaned)
+                    search_results = self._parse_search_results(source_identifier_cleaned, response_data, raise_error)
                 else:
-                    html = self._get_company_profile_html(search_result)
+                    # determine search result and fill search_result via selenium / HTML analysis
+                    search_results = self._get_search_results(source_identifier_cleaned, raise_error)
 
-                record = self._parse_record(search_result, html, raise_error)
-                if record:
-                    records.append(record)
+                search_result = self._select_search_result(source_identifier_cleaned, search_results, raise_error)
+                if search_result:
+
+                    if self._mode == MotleyFoolMode.HTTPX:
+                        html = self._execute_company_request(search_result)
+                    else:
+                        html = self._get_company_profile_html(search_result)
+
+                    record = self._parse_record(search_result, html, raise_error)
+                    if record:
+                        record.identifiers.replace(source_identifier)
+                        records.append(record)
 
         return records
 
@@ -272,6 +291,8 @@ class MotleyFoolClient:
         headers: dict[str, str] | None = None,
         json_param: Any | None = None,
     ) -> Any:
+
+        self._rate_limiter.wait()
 
         try:
             request = self._client.build_request(
@@ -350,8 +371,9 @@ class MotleyFoolClient:
         raise_error: bool = False,
     ) -> list[MotleyFoolSearchResult]:
 
+        self._client.find_element(By.XPATH, "//header/descendant::button[@aria-label='Search']").click()
         self._client.find_element(
-            By.XPATH, "//div[./label[@id='company-search-label']]/descendant::input"
+            By.XPATH, "//header/descendant::div[./label[@id='company-search-label']]/descendant::input"
         ).send_keys(source_identifier.value_cleaned)
         htmlitems = self._client.find_elements(
             By.XPATH, "//div[@data-radix-popper-content-wrapper]/descendant::div[@cmdk-group-items]/div[@cmdk-item]"
