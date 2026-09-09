@@ -125,13 +125,18 @@ def _run_process(
         sg.popup_error("No output specified.", title="Equities Classifier")
         return
 
-    window["-STATUS-"].update("Specifiy and read input file ...")
+    window["-STATUS-"].update("Specify and read input file ...")
     window.refresh()
     identifiers = read_identifiers(input_file)
 
     window["-STATUS-"].update(f"{len(identifiers)} identifiers read from input file. Processing ...")
     window.refresh()
-    processflow = ProcessFlow()
+    processflow = ProcessFlow(
+        morningstar=bool(values.get("-GECS-")),
+        motleyfool=bool(values.get("-GICS-")),
+        seekingalpha=bool(values.get("-GICS-")),
+        yahoo=False,
+    )
     securities = processflow.run(identifiers)
 
     window["-STATUS-"].update(f"Data for {len(securities)} input found an processed. " "Write output file ...")
