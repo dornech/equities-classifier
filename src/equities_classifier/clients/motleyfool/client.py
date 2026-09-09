@@ -6,7 +6,7 @@
 # boolean-type arguments
 # ruff: noqa: FBT001, FBT002
 # others
-# ruff: noqa: E501, RUF050, RUF105, S110
+# ruff: noqa: E501, RUF050, RUF105, SIM105, S110
 #
 # disable mypy errors
 # mypy: disable-error-code = "arg-type, index, operator, type-var, union-attr"
@@ -23,6 +23,7 @@ import time
 import json
 import re
 from urllib.parse import urljoin
+
 import httpx
 from equities_classifier.clients.httpx_logger import log_request, log_response
 import undetected as uc
@@ -396,8 +397,8 @@ class MotleyFoolClient:
 
         return results
 
-    @staticmethod
     def _select_search_result(
+        self,
         source_identifier: SecurityIdentifier,
         search_results: list[MotleyFoolSearchResult],
         raise_error: bool = False,
@@ -430,18 +431,27 @@ class MotleyFoolClient:
             return None
 
         if len(search_results_cleaned) > 1 and source_identifier.country:
+            country_alpha2 = countries.get(source_identifier.country).alpha2
+            country_alpha3 = countries.get(source_identifier.country).alpha3
             try:
-                country_alpha2 = countries.get(source_identifier.country).alpha2
-                country_alpha3 = countries.get(source_identifier.country).alpha3
                 matches = [
                     search_result_cleaned
                     for search_result_cleaned in search_results_cleaned
-                    if search_result_cleaned.home_country_code in {country_alpha2, country_alpha3}
+                    if self._MOTLEYFOOL_COUNTRY_FROM_EXCHANGE[search_result_cleaned.exchange] == country_alpha2
                 ]
             except Exception:
                 pass
             if len(matches) == 0:
-                matches = search_results_cleaned
+                try:
+                    matches = [
+                        search_result_cleaned
+                        for search_result_cleaned in search_results_cleaned
+                        if search_result_cleaned.home_country_code in {country_alpha2, country_alpha3}
+                    ]
+                except Exception:
+                    pass
+                if len(matches) == 0:
+                    matches = search_results_cleaned
         else:
             matches = search_results_cleaned
 

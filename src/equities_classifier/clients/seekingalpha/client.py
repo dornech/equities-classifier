@@ -22,6 +22,8 @@ import json
 import re
 
 import undetected as uc
+from waitless import stabilize, get_diagnostics, StabilizationConfig, StabilizationTimeout
+from waitless.diagnostics import print_report
 
 from equities_classifier.enums import DataSourceID, SecurityIdentifierType
 from equities_classifier.models import SecurityIdentifier
@@ -99,7 +101,7 @@ class SeekingAlphaClient:
         timeout: float = 30.0,
         test_wo_browser: bool = False,
     ) -> None:
-        """Initialize Seeking Alpha client."""
+        """Initialize SeekingAlpha client."""
 
         self._client: uc.Chrome | None
 
@@ -115,6 +117,20 @@ class SeekingAlphaClient:
             except Exception as e:
                 print("Failed to start Chrome")
                 raise e
+            try:
+                config = StabilizationConfig(
+                    timeout=20,  # Max wait time (seconds)
+                    network_idle_threshold=5,  # Max pending requests (allows background traffic)
+                    strictness='normal',  # 'strict' | 'normal' | 'relaxed'
+                    debug_mode=False  # Enable logging
+                )
+                self._client = stabilize(self._client, config=config)
+            except StabilizationTimeout as e:
+                print("Failed to stabilize Chrome  with 'waitless'")
+                diagnostics = get_diagnostics(self._client)
+                print_report(diagnostics)  # Print detailed report
+                raise e
+
         else:
             self._client = None
 

@@ -195,7 +195,7 @@ class ClientHelperErrorHandler:
     ) -> None:
         """Called when provider records where cleaned."""
 
-        message = f"{clean_counter} provider record from '{provider}' where cleaned/deleted: {reason}."
+        message = f"{clean_counter} provider record from '{provider}' was/were cleaned/deleted: {reason}."
         logger_equities_classifier.warning(message)
 
         if raise_object:

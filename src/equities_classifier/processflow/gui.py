@@ -121,7 +121,7 @@ def _run_process(
 
     classification_output = get_classification_output(bool(values.get("-GECS-")), bool(values.get("-GICS-")))
     provider_details = bool(values.get("-PROVIDER-"))
-    if (classification_output is ClassificationOutput.NONE and not provider_details):
+    if classification_output is ClassificationOutput.NONE and not provider_details:
         sg.popup_error("No output specified.", title="Equities Classifier")
         return
 
