@@ -14,19 +14,57 @@ import re
 from rapidfuzz.fuzz import ratio
 
 
+_UMLAUT_TRANSLATION = str.maketrans(
+    {
+        "ä": "ae",
+        "ö": "oe",
+        "ü": "ue",
+        "ß": "ss",
+        "é": "e",
+        "è": "e",
+        "ë": "e",
+    }
+)
+
+_PREFIX_REPLACEMENTS = {
+    "the ": "",
+    "cie ": "compagnie ",
+}
+
+_MIDFIX_REPLACEMENTS = {
+    " info ": " information ",
+    " intl ": " international ",
+    "&": " and ",
+}
+
+_SUFFIX_REPLACEMENTS = {
+    "/the": "",
+    "and co": "",
+}
+
 # note: first longer terms then shorter terms with same ending
 _SECURITY_SUFFIXES = (
+    "cl a",
     "cl b",
+    "class a",
     "class b",
+    "a",
+    "a reg",
     "b",
+    "b reg",
     "common share",
     "common shares",
     "ord",
     "ordinary share",
+    "ordinary share - non voting",
     "ordinary shares",
+    "ordinary shares - non voting",
+    "part zert",
+    "pc",
     "publ",
     "(publ)",
     "(publ.)",
+    "reg",
     "share",
     "share from split",
     "shares",
@@ -41,6 +79,7 @@ _SECURITY_SUFFIXES = (
 _LEGAL_SUFFIXES = frozenset({
     "ab",
     "ag",
+    "aktiengesellschaft",
     "as",
     "a/s",
     "asa",
@@ -48,7 +87,10 @@ _LEGAL_SUFFIXES = frozenset({
     "corp",
     "corporation",
     "co",
+    "cos",
     "company",
+    "companies",
+    "companies inc",
     "inc",
     "incorporated",
     "limited",
@@ -59,6 +101,8 @@ _LEGAL_SUFFIXES = frozenset({
     "sarl",
     "sas",
     "se",
+    "société européenne",
+    "société en commandite par actions",
     "spa",
     "srl",
 })
@@ -75,7 +119,18 @@ def normalize_name(
     if not name:
         return ""
 
-    value = name.casefold().replace(",", " ")
+    value = name.casefold().translate(_UMLAUT_TRANSLATION).replace(",", " ").replace("-", " ")
+
+    for prefix, replacement in _PREFIX_REPLACEMENTS.items():
+        if value.startswith(prefix):
+            value = replacement + value.removeprefix(prefix)
+
+    for midfix, replacement in _MIDFIX_REPLACEMENTS.items():
+        value = value.replace(midfix, replacement).replace("  ", " ")
+
+    for suffix, replacement in _SUFFIX_REPLACEMENTS.items():
+        if value.endswith(suffix):
+            value = value.removesuffix(suffix) + replacement
 
     if remove_security_suffix:
         value = re.sub(
