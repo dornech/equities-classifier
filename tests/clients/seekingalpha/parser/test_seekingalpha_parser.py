@@ -1,4 +1,4 @@
-"""Tests for Seeking Alpha client_dummy."""
+"""Tests for SeekingAlpha client_dummy."""
 
 
 # ruff and mypy per file settings
@@ -16,7 +16,7 @@ from equities_classifier.clients.seekingalpha.models import SeekingAlphaRecord
 
 @pytest.fixture
 def ssr_html() -> str:
-    """Return valid Seeking Alpha SSR_DATA HTML."""
+    """Return valid SeekingAlpha SSR_DATA HTML."""
     return """
     <html>
     <script>
@@ -59,7 +59,7 @@ def ssr_html() -> str:
 
 
 def test_parse_record(client_dummy: SeekingAlphaClient, apple_ticker_us: SecurityIdentifier, ssr_html: str) -> None:
-    """Test parsing of Seeking Alpha SSR_DATA."""
+    """Test parsing of SeekingAlpha SSR_DATA."""
 
     result = client_dummy._parse_record(apple_ticker_us, ssr_html, False)
 

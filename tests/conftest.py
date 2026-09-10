@@ -25,7 +25,7 @@ def apple_ticker() -> SecurityIdentifier:
 
 @pytest.fixture(scope="session")
 def apple_ticker_us() -> SecurityIdentifier:
-    """Return Seeking Alpha source identifier."""
+    """Return SeekingAlpha source identifier."""
     return SecurityIdentifier(SecurityIdentifierType.TICKER_US, "AAPL")
 
 

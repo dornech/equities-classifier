@@ -1,4 +1,4 @@
-"""Client for Seeking Alpha."""
+"""Client for SeekingAlpha."""
 
 
 # ruff and mypy per file settings
@@ -33,11 +33,11 @@ from equities_classifier.clients.seekingalpha.models import SeekingAlphaRecord
 
 
 class SeekingAlphaResponseError(ClientResponseError):
-    """Seeking Alpha returned an error response."""
+    """SeekingAlpha returned an error response."""
 
 
 class SeekingAlphaClient:
-    """HTTP client for Seeking Alpha."""
+    """HTTP client for SeekingAlpha."""
 
     _BASE_URL = "https://seekingalpha.com"
     _SYMBOL_URL = f"{_BASE_URL}/symbol"
@@ -112,6 +112,19 @@ class SeekingAlphaClient:
             options.add_argument("--disable-dev-shm-usage")
             options.add_argument("--disable-gpu")
             options.add_argument("--window-size=1920,1080")
+            # preferences (from utils-seleniumxp)
+            prefsdict = {
+                "profile.default_content_setting_values.notifications": 2,
+                "profile.managed_default_content_settings.images": 2,
+                "profile.managed_default_content_settings.stylesheets": 2,
+                "profile.managed_default_content_settings.cookies": 1,
+                "profile.managed_default_content_settings.javascript": 1,
+                "profile.managed_default_content_settings.plugins": 1,
+                "profile.managed_default_content_settings.popups": 2,
+                "profile.managed_default_content_settings.geolocation": 2,
+                "profile.managed_default_content_settings.media_stream": 2
+            }
+            options.add_experimental_option("prefs", prefsdict)
             try:
                 self._client = uc.Chrome(options=options)
             except Exception as e:
@@ -119,9 +132,11 @@ class SeekingAlphaClient:
                 raise e
             try:
                 config = StabilizationConfig(
-                    timeout=20,  # Max wait time (seconds)
+                    timeout=25,  # Max wait time (seconds)
                     network_idle_threshold=5,  # Max pending requests (allows background traffic)
-                    strictness='normal',  # 'strict' | 'normal' | 'relaxed'
+                    animation_detection=False,  # Track CSS animations (non-blocking in normal mode)
+                    layout_stability=True,  # Wait for element positions to stabilized, default True in 'strict' mode
+                    strictness='strict',  # 'strict' | 'normal' | 'relaxed'
                     debug_mode=False  # Enable logging
                 )
                 self._client = stabilize(self._client, config=config)
@@ -173,6 +188,9 @@ class SeekingAlphaClient:
                 continue
 
             response = self._execute_request(source_identifier, raise_error)
+            if response is None:
+                continue
+
             record = self._parse_record(source_identifier, response, raise_error)
             # check for duplicates
             if record:
@@ -193,7 +211,7 @@ class SeekingAlphaClient:
         source_identifier: SecurityIdentifier,
         raise_error: bool,
     ) -> str | None:
-        """Read a Seeking Alpha symbol page."""
+        """Read a SeekingAlpha symbol page."""
 
         ticker = source_identifier.value_cleaned.replace("-", ".")
         url = f"{self._SYMBOL_URL}/{ticker}"
@@ -210,8 +228,16 @@ class SeekingAlphaClient:
             )
             return None
 
-        # return response.text
-        return self._client.page_source
+        # return self._client.page_source
+        response = self._client.page_source
+        if response is None:
+            ClientHelperErrorHandler.other_error_with_message(
+                DataSourceID.SEEKINGALPHA,
+                f"HTTP source code from SeekingAlpha failed for ticker_us '{source_identifier.value}' is None.",
+                SeekingAlphaResponseError if raise_error else None,
+            )
+
+        return response
 
     def _parse_record(
         self,
@@ -245,7 +271,7 @@ class SeekingAlphaClient:
         if not isinstance(data, dict):
             ClientHelperErrorHandler.other_error_with_message(
                 DataSourceID.SEEKINGALPHA,
-                "Seeking Alpha SSR_DATA is not a dictionary.",
+                "SeekingAlpha SSR_DATA is not a dictionary.",
                 SeekingAlphaResponseError if raise_error else None,
             )
             return None
@@ -254,7 +280,7 @@ class SeekingAlphaClient:
         if not isinstance(symbol, dict):
             ClientHelperErrorHandler.other_error_with_message(
                 DataSourceID.SEEKINGALPHA,
-                "Seeking Alpha SSR_DATA does not contain 'symbol'.",
+                "SeekingAlpha SSR_DATA does not contain 'symbol'.",
                 SeekingAlphaResponseError if raise_error else None,
             )
             return None
@@ -263,7 +289,7 @@ class SeekingAlphaClient:
         if not isinstance(response, dict):
             ClientHelperErrorHandler.other_error_with_message(
                 DataSourceID.SEEKINGALPHA,
-                "Seeking Alpha SSR_DATA 'symbol' does not contain 'response'.",
+                "SeekingAlpha SSR_DATA 'symbol' does not contain 'response'.",
                 SeekingAlphaResponseError if raise_error else None,
             )
             return None
@@ -272,7 +298,7 @@ class SeekingAlphaClient:
         if not isinstance(data, dict):
             ClientHelperErrorHandler.other_error_with_message(
                 DataSourceID.SEEKINGALPHA,
-                "Seeking Alpha SSR_DATA 'response' -> 'response' does not contain 'data'.",
+                "SeekingAlpha SSR_DATA 'response' -> 'response' does not contain 'data'.",
                 SeekingAlphaResponseError if raise_error else None,
             )
             return None

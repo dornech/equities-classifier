@@ -1,4 +1,4 @@
-"""Internal data models for Seeking Alpha."""
+"""Internal data models for SeekingAlpha."""
 
 
 # ruff and mypy per file settings
@@ -16,7 +16,7 @@ from equities_classifier.models import SecurityProviderRecord
 
 @dataclass(slots=True, kw_only=True)
 class SeekingAlphaRecord(SecurityProviderRecord):
-    """Seeking Alpha security and GICS classification record."""
+    """SeekingAlpha security and GICS classification record."""
 
     # identifiers, identifier inherited form SecurityIdentifierIdentifiable via SecurityProviderRecord
     # name, ticker inherited from SecurityProviderRecord !

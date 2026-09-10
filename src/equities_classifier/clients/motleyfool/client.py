@@ -431,6 +431,7 @@ class MotleyFoolClient:
             return None
 
         if len(search_results_cleaned) > 1 and source_identifier.country:
+            matches = []
             country_alpha2 = countries.get(source_identifier.country).alpha2
             country_alpha3 = countries.get(source_identifier.country).alpha3
             try:
