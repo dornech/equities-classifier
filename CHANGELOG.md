@@ -2,6 +2,19 @@
 
 
 
+## [v0.10.3](https://github.com/dornech/equities-classifier/releases/tag/v0.10.3)  (2026-09-11) 
+
+### Bug fixes
+
+- Improve name similarity checks to improve matching
+(['760eb1b'](https://github.com/dornech/equities-classifier/commit/760eb1be8399abfd8fb3c991277e5f8bcc860c7f))
+- Improve SeekingAlpha client and other editorial fixes
+(['0bdf4c2'](https://github.com/dornech/equities-classifier/commit/0bdf4c2b546510b5d4e27e0c2ef05b8a94e6eec4))
+- Improve MotelyFool and SeekingAlpha clients
+(['fcd9ad3'](https://github.com/dornech/equities-classifier/commit/fcd9ad3c9af008291cfd78737db6754353058fd0))
+- Improve matching
+(['ccf7e65'](https://github.com/dornech/equities-classifier/commit/ccf7e65846f03bf45f61754d5171feb08e0b6de8))
+
 ## [v0.10.2](https://github.com/dornech/equities-classifier/releases/tag/v0.10.2)  (2026-09-09) 
 
 ### Bug fixes
@@ -16,6 +29,7 @@
 (['073b799'](https://github.com/dornech/equities-classifier/commit/073b799b68cd73b373044ef0c3583e73d791d831))
 - Slight change of HTML at MotleyFool
 (['d13b049'](https://github.com/dornech/equities-classifier/commit/d13b04998817f63bcbdb89c3211cfb9475770d05))
+
 
 ## [v0.10.1](https://github.com/dornech/equities-classifier/releases/tag/v0.10.1)  (2026-09-08) 
 
