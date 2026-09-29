@@ -146,7 +146,7 @@ ignore-args = false
 ignore-kwargs = false
 ignore-no-params = true
 ignore_typechecker = false
-# disable = []
+disable = ["SIG305", "SIG306"]
 # target = []
 
 [tool.ruff]
