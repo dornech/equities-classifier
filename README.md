@@ -2,11 +2,14 @@
 
 Package to retrieve sector/industry assignments based on a flexible connector architecture for different data sources
 
+Use identifiers such as ISINs and ticker symbols to identify listed companies and retrieve their classifications
+through a provider-based architecture.
+
 ## Features
 
+* resolve listed equities from supported identifier types (ISIN, Ticker, ...)
 * retrieve sector / industry classification for companies with listed equities
-* support different types of equity identifier types (i. e. ISIN ...)
-* support for different classification systems
+* support for different classification systems like GICS or GECS
 * support different classification data sources
 * extendable architecture for additional data sources
 * Excel output
@@ -20,12 +23,32 @@ Currently supported classification systems
 Currently supported providers:
 
 * OpenFIGI for master data and identifier reference data
-* Mornigstar for GECS classification
+* Morningstar for GECS classification
 * MotelyFool for GICS classification
 * SeekingAlpha for GICS classification data
 * Yahoo for industry/sector classification close to GICS
 
 Due to license issues f. e. for MSCI GICS not all classification levels might be retrievable.
+
+**Installation**
+
+    pip install equities-classifier
+
+**Usage**
+
+Prepare a xlsx file with two columns, column on being the equity identifier type and column to the identifier
+type (i. e. ISIN). If column two is empty, ISIN is assumed.
+
+Example:
+
+| Value        | Typ  |
+|--------------|------|
+| CH0038863350 |      |
+| DK0060336014 |      |
+
+Enter
+    equities-classifier
+at a command line and follow GUI instructions.
 
 ## Development
 
