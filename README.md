@@ -5,11 +5,27 @@ Package to retrieve sector/industry assignments based on a flexible connector ar
 ## Features
 
 * retrieve sector / industry classification for companies with listed equities
-* support different types of equities identifier types cation (i. e. ISIN ...)
-* support different classificaiton data sources
-* extendable arhcitecture for additional data sources
+* support different types of equity identifier types (i. e. ISIN ...)
+* support for different classification systems
+* support different classification data sources
+* extendable architecture for additional data sources
+* Excel output
 
-Due to license issues for MSCI GICS only first two levels are retrievable.
+Currently supported classification systems
+
+* GECS by Morningstar
+* GICS by MSCI / S&P
+* Yahoo (close to GICS)
+
+Currently supported providers:
+
+* OpenFIGI for master data and identifier reference data
+* Mornigstar for GECS classification
+* MotelyFool for GICS classification
+* SeekingAlpha for GICS classification data
+* Yahoo for industry/sector classification close to GICS
+
+Due to license issues f. e. for MSCI GICS not all classification levels might be retrievable.
 
 ## Development
 
